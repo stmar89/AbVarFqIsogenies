@@ -1,4 +1,6 @@
-    
+    // WARNING TODO some of the edges below might be equivalent!
+
+
     SetColumns(0);
 
     AttachSpec("~/AlgEt/spec");
