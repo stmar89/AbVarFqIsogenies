@@ -76,12 +76,15 @@ intrinsic IsogenyGraphBuilder_ModuloPic(R::AlgEtQOrd,N::RngIntElt) -> .
     icm,icm_map:=IdealClassMonoidAbstract(R);
     PR,pR:=PicardGroup(R);
 
-    classes:=[];
+    classes:=[ ];
     edges:=[];
     for t in Classes(we) do 
         T:=MultiplicatorRing(t);
         eT:=ExtensionHomPicardGroups(R,T);
         PT:=PicardGroup(T);
+        for bbT in PT do
+            Append(~classes,[* t,bbT *]);
+        end for;
         Wt:=we_map(t);
         Ms:=[M:M in IntermediateIdeals(Wt,N*Wt)|N mod Index(Wt,M) eq 0]; //sub-frac.R-ideals M<Wt s.t. [Wt:M]|N
         Ms:=compute_orbits_UT_on_Ms(T,Ms,R);
@@ -97,7 +100,6 @@ intrinsic IsogenyGraphBuilder_ModuloPic(R::AlgEtQOrd,N::RngIntElt) -> .
             test,x:=IsIsomorphic(M,Ws*Iaa);
             assert test; // sanity check
             for bbT in PT do
-                Append(~classes,[* t,bbT *]);
                 bb:=bbT@@eT;
                 Ibb:=pR(bb);
                 Append(~edges,<[* s,aaS *],[* t,bbT *],Ws*Iaa*Ibb,Wt*Ibb,x>);
@@ -113,26 +115,27 @@ end intrinsic;
     Attach("~/AbVarFq_Isogenies_Private/magma/IsogenyGraphBuilders.m");
 
     _<x>:=PolynomialRing(Integers());
-    f:=x^8+16;
+    f:=x^4-2*x^2+121;
+    N:=4;
+    //    f:=x^8+16;
     q:=Round(ConstantCoefficient(f)^(2/Degree(f)));
     K:=EtaleAlgebra(f);
     F:=PrimitiveElement(K);
     V:=q/F;
     R:=Order([F,V]);
-    time _:=IsogenyGraphBuilder_ModuloNothing(R,2);
+    time vert,edges:=IsogenyGraphBuilder_ModuloNothing(R,N);
+    #vert,#edges;
 
 
     //SetDebugOnError(true);
-    _<x>:=PolynomialRing(Integers());
-    f:=x^8+16;
-    q:=Round(ConstantCoefficient(f)^(2/Degree(f)));
     K:=EtaleAlgebra(f);
     F:=PrimitiveElement(K);
     V:=q/F;
     R:=Order([F,V]);
-    time _:=IsogenyGraphBuilder_ModuloPic(R,2);
+    time vert2,edges2:=IsogenyGraphBuilder_ModuloPic(R,N);
+    #vert2,#edges2;
 
-
+    #edges eq #edges2;
 
     _:=IsogenyGraphBuilder_ModuloNothing(R,4);
     _:=IsogenyGraphBuilder_ModuloNothing(R,8);
