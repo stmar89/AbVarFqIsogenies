@@ -1,5 +1,9 @@
 178,0
 A,AlgEtQOrd,1,QuotientsUnitsOverorders
+S,SubIdealsOfIndexDividing,"Given a fractional R-ideal I and a positive integer N, returns all fractional R-ideals J < I such that [I:J] divides N. They are produced recursively from the maximal ones. I is not part of the output",0,2,0,0,0,0,0,0,0,-1,,0,0,644,,82,-38,-38,-38,-38,-38
+S,AreIsogeniesEquivalent,"Given inclusions x1*I1<J1 and x2*I2<J2 of fractional ideals of the Frobenius order representing isogenies, return whether they are equivalent",0,6,0,0,0,0,0,0,0,644,,0,0,644,,0,0,640,,0,0,644,,0,0,644,,0,0,640,,36,-38,-38,-38,-38,-38
+S,AreIsogeniesEquivalent,"Given inclusions x1*I<J and x2*I<J of fractional ideals of the Frobenius order representing isogenies, return whether they are equivalent",0,4,0,0,0,0,0,0,0,644,,0,0,644,,0,0,640,,0,0,640,,36,-38,-38,-38,-38,-38
 S,QuotientsUnitsOverorders,"Given an order R and two overorders T,S of R, returns a sequence of representatives in K of T^*/(S^* meet T^*). The output for each ordered pair <T,S> is stored in an associative array attribute of R, which is populated on demand",0,3,0,0,0,0,0,0,0,645,,0,0,645,,0,0,645,,82,-38,-38,-38,-38,-38
 S,IsogenyGraphBuilder_ModuloNothing,"Given the Frobenius order R of a squarefree ordinary isogeny class and a positive integer N, returns the N-isogeny graph",0,2,0,0,0,0,0,0,0,148,,0,0,645,,-1,-38,-38,-38,-38,-38
 S,IsogenyGraphBuilder_ModuloPic,"Given the Frobenius order R of a squarefree ordinary isogeny class and a positive integer N, returns the N-isogeny graph",0,2,0,0,0,0,0,0,0,148,,0,0,645,,-1,-38,-38,-38,-38,-38
+S,IsogenyGraphBuilder_ModuloPicUsingMinimalEdges,"Given the Frobenius order R of a squarefree ordinary isogeny class and a positive integer N, returns the N-isogeny graph",0,2,0,0,0,0,0,0,0,148,,0,0,645,,-1,-38,-38,-38,-38,-38

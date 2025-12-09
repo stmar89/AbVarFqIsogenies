@@ -2,6 +2,85 @@
 
 declare attributes AlgEtQOrd: QuotientsUnitsOverorders;
 
+intrinsic SubIdealsOfIndexDividing(I::AlgEtQIdl,N:RngIntElt)->SeqEnum[AlgEtQIdl]
+{Given a fractional R-ideal I and a positive integer N, returns all fractional R-ideals J < I such that [I:J] divides N. They are produced recursively from the maximal ones. I is not part of the output.}
+    if N eq 1 then
+        return [I];
+    end if;
+    J:=N*I;
+    queue:={@ I @};
+    output:={@ @};
+    done:={@ @};
+    while #queue gt 0 do
+        pot_new:=&join[_MaximalIntermediateIdeals(elt,J) : elt in queue ];
+        pot_new:={@ K : K in pot_new | N mod Index(I,K) eq 0 @}; // we keep only the ones whose index divides N 
+        output join:={@ K : K in pot_new | not K in done @};
+        done join:=queue;
+        queue := pot_new diff done;
+    end while;
+    return output;
+end intrinsic;
+
+intrinsic AreIsogeniesEquivalent(x1::AlgEtQElt,I1::AlgEtQIdl,J1::AlgEtQIdl,x2::AlgEtQElt,I2::AlgEtQIdl,J2::AlgEtQIdl)->BoolElt
+{Given inclusions x1*I1<J1 and x2*I2<J2 of fractional ideals of the Frobenius order representing isogenies, return whether they are equivalent.}
+    K:=Algebra(I1);
+    one:=One(K);
+    if I1 eq I2 then
+        y:=one;
+    else
+        test,y:=IsIsomorphic(I1,I2); // I1=y*I2
+        if not test then
+            return false;
+        end if;
+    end if;
+    if J1 eq J2 then
+        z:=one;
+    else
+        test,z:=IsIsomorphic(J1,J2); // J1=z*J2
+        if not test then
+            return false;
+        end if;
+    end if;
+    elt:=((x1*y)/(x2*z));
+    inv:=1/elt;
+    S:=MultiplicatorRing(I1);
+    T:=MultiplicatorRing(J1);
+    if S subset T then
+        return inv in T;
+    elif T subset S then
+        return inv in S;
+    end if;
+    OK:=MaximalOrder(K);
+    if inv notin OK then
+        return false;
+    end if;
+    _,uOK:=UnitGroup(OK);
+    U:=UnitGroup(S)+UnitGroup(T); // as a subgroup of OK^*
+    return (elt@@uOK) in U;
+end intrinsic;
+
+intrinsic AreIsogeniesEquivalent(x1::AlgEtQElt,x2::AlgEtQElt,I::AlgEtQIdl,J::AlgEtQIdl)->BoolElt
+{Given inclusions x1*I<J and x2*I<J of fractional ideals of the Frobenius order representing isogenies, return whether they are equivalent.}
+    K:=Algebra(I);
+    one:=One(K);
+    elt:=x1/x2;
+    inv:=1/elt;
+    S:=MultiplicatorRing(I);
+    T:=MultiplicatorRing(J);
+    if S subset T then
+        return inv in T;
+    elif T subset S then
+        return inv in S;
+    end if;
+    OK:=MaximalOrder(K);
+    if inv notin OK then
+        return false;
+    end if;
+    _,uOK:=UnitGroup(OK);
+    U:=UnitGroup(S)+UnitGroup(T); // as a subgroup of OK^*
+    return (elt@@uOK) in U;
+end intrinsic;
+
 intrinsic QuotientsUnitsOverorders(R::AlgEtQOrd,T::AlgEtQOrd,S::AlgEtQOrd)->SeqEnum
 {Given an order R and two overorders T,S of R, returns a sequence of representatives in K of T^*/(S^* meet T^*). The output for each ordered pair <T,S> is stored in an associative array attribute of R, which is populated on demand.}
     if not assigned R`QuotientsUnitsOverorders then
@@ -29,6 +108,9 @@ compute_orbits_UT_on_Ms:=function(T,Ms,R)
 // Input: Ms a sequence of fractional R-ideals, all contained in a fractional ideal J, with multiplicator ring T, 
 // where T is an overorder of R, and such that T^* acts on Ms, that is, for u in T^* and M in Ms, u*M is in Ms.
 // Output: a sequence of elements of Ms, representing the distinct orbits of the action of T^* on Ms.
+    if #Ms eq 0 then
+        return [];
+    end if;
     remaining:={@ M:M in Ms @};
     orbits:=[];
     repeat
@@ -55,7 +137,8 @@ intrinsic IsogenyGraphBuilder_ModuloNothing(R::AlgEtQOrd,N::RngIntElt) -> .
     edges:=[];
     for target in classes do 
         IV:=icm_map(target); //IV is a representative of each vertex, chosen once and for all
-        Ms:=[M:M in IntermediateIdeals(IV,N*IV)|N mod Index(IV,M) eq 0]; //sub-frac.R-ideals M<IV s.t. [IV:M]|N
+        // Ms:=[M:M in IntermediateIdeals(IV,N*IV)|ind ne 1 and N mod ind eq 0 where ind:=Index(IV,M)]; //sub-frac.R-ideals M<IV s.t. [IV:M]|N
+        Ms:=SubIdealsOfIndexDividing(IV,N); //sub-frac.R-ideals M<IV s.t. [IV:M]|N
         T:=MultiplicatorRing(IV);
         Ms:=compute_orbits_UT_on_Ms(T,Ms,R);
         for M in Ms do
@@ -86,7 +169,9 @@ intrinsic IsogenyGraphBuilder_ModuloPic(R::AlgEtQOrd,N::RngIntElt) -> .
             Append(~classes,[* t,bbT *]);
         end for;
         Wt:=we_map(t);
-        Ms:=[M:M in IntermediateIdeals(Wt,N*Wt)|N mod Index(Wt,M) eq 0]; //sub-frac.R-ideals M<Wt s.t. [Wt:M]|N
+        // Ms:=[M:M in IntermediateIdeals(Wt,N*Wt)|ind ne 1 and N mod ind eq 0 where ind:=Index(Wt,M)]; //sub-frac.R-ideals M<Wt s.t. [Wt:M]|N
+        Ms:=SubIdealsOfIndexDividing(Wt,N); //sub-frac.R-ideals M<Wt s.t. [Wt:M]|N
+        assert not Wt in Ms;
         Ms:=compute_orbits_UT_on_Ms(T,Ms,R);
         for M in Ms do
             source_M:=M@@icm_map;
@@ -109,38 +194,178 @@ intrinsic IsogenyGraphBuilder_ModuloPic(R::AlgEtQOrd,N::RngIntElt) -> .
     return classes,edges;
 end intrinsic;
 
+intrinsic IsogenyGraphBuilder_ModuloPicUsingMinimalEdges(R::AlgEtQOrd,N::RngIntElt) -> .
+{Given the Frobenius order R of a squarefree ordinary isogeny class and a positive integer N, returns the N-isogeny graph.}
+    we,we_map:=WeakEquivalenceClassMonoidAbstract(R);
+    icm,icm_map:=IdealClassMonoidAbstract(R);
+    PR,pR:=PicardGroup(R);
+
+    classes:=[ ];
+    edges:=AssociativeArray(); // indexed by degree
+    edges_min:=AssociativeArray(); //indexed by degree
+    for t in Classes(we) do 
+        T:=MultiplicatorRing(t);
+        eT:=ExtensionHomPicardGroups(R,T);
+        PT:=PicardGroup(T);
+        for bbT in PT do
+            Append(~classes,[* t,bbT *]);
+        end for;
+        Wt:=we_map(t);
+        Ms:=[M:M in IntermediateIdeals(Wt,N*Wt:Maximal:=true)|N mod Index(Wt,M) eq 0]; //sub-frac.R-ideals M<Wt s.t. [Wt:M]|N
+        Ms:=compute_orbits_UT_on_Ms(T,Ms,R);
+        for M in Ms do
+            dM:=Index(Wt,M);
+            if not IsDefined(edges_min,dM) then
+                edges_min[dM]:=[];
+            end if;
+            if not IsDefined(edges,dM) then
+                edges[dM]:=AssociativeArray();
+            end if;
+            source_M:=M@@icm_map;
+            s:=WEClass(source_M);
+            aaS:=PicClass(source_M);
+            S:=MultiplicatorRing(s);
+            Ws:=we_map(s);
+            eS:=ExtensionHomPicardGroups(R,S);
+            aa:=aaS@@eS; // in Pic(R);
+            Iaa:=pR(aa);
+            test,x:=IsIsomorphic(M,Ws*Iaa);
+            assert test; // sanity check
+            for bbT in PT do
+                bb:=bbT@@eT;
+                Ibb:=pR(bb);
+                aa1S:=eS(aa+bb);
+                aa1:=aa1S@@eS;
+                Iaa1:=pR(aa1);
+                test,y:=IsIsomorphic(S!!(Iaa*Ibb),S!!Iaa1);
+                assert test;
+                label:=<[* s,aa1S *],[* t,bbT *],Ws*Iaa1,Wt*Ibb,x*y>;
+                target:=label[4];
+                source:=label[3];
+                Append(~edges_min[dM],label);
+                if not IsDefined(edges[dM],target) then
+                    edges[dM][target]:=AssociativeArray(); // indexed by the target
+                end if;
+                if not IsDefined(edges[dM][target],source) then
+                    edges[dM][target][source]:=[]; // and then the source
+                end if;
+                Append(~edges[dM][target][source],label);
+//                Append(~edges[dM],label);
+            end for;
+        end for;
+    end for;
+    // now we have all minimal edges. we compose
+    for n in Exclude(Divisors(N),1) do
+        if not IsDefined(edges,n) then
+            edges[n]:=AssociativeArray();
+        end if;
+        // we loop over all minimal edges E2 of degree d2
+        for d2->E_min_d2 in edges_min do
+            if d2 lt n and n mod d2 eq 0 then
+                d1:=n div d2;
+                for E2 in E_min_d2 do
+                    if not IsDefined(edges[n],E2[4]) then
+                        edges[n][E2[4]]:=AssociativeArray();
+                    end if;
+                    // now, we loop over all already computed edges E1 of degree d1=n/d2 such
+                    // that target(E1) = source(E2) = E2[3], since we want to construct the composition E2*E1
+                    // (first apply the isogeny E1 then the isogeny E2)
+                    for E1_t->E1s in edges[d1][E2[3]] do
+                        for E1 in E1s do
+                            if not IsDefined(edges[n][E2[4]],E1[3]) then
+                                edges[n][E2[4]][E1[3]]:=[];
+                            end if;
+                            Ecomp:=<E1[1],E2[2],E1[3],E2[4],E1[5]*E2[5]>;
+                            if not exists{E:E in edges[n][E2[4]][E1[3]]|
+                                AreIsogeniesEquivalent(Ecomp[5],E[5],E[3],E[4])} then
+                                Append(~edges[n][Ecomp[4]][Ecomp[3]],Ecomp);
+                            end if;
+                        end for;
+                    end for;
+                end for;
+            end if;
+        end for;
+    end for;
+
+    // this last step is just to be consistent with the other two algoritms
+    edges_output:=[];
+    for d->edges_d in edges do
+        for t->edges_d_t in edges[d] do
+            for s->edges_d_t_s in edges[d][t] do
+                edges_output cat:=edges_d_t_s;
+            end for;
+        end for;
+    end for;
+    return classes,edges_output;
+end intrinsic;
+
 /* TESTS
    
-    AttachSpec("~/AlgEt/spec");
+    //AttachSpec("~/AlgEt/spec");
     Attach("~/AbVarFq_Isogenies_Private/magma/IsogenyGraphBuilders.m");
 
     _<x>:=PolynomialRing(Integers());
     f:=x^4-2*x^2+121;
-    N:=4;
-    //    f:=x^8+16;
+    q:=Round(ConstantCoefficient(f)^(2/Degree(f)));
+    Ns:=[2,4,8,16,32,2*3,2*3*5,4*9];
+
+    for N in Ns do
+        K:=EtaleAlgebra(f);
+        F:=PrimitiveElement(K);
+        V:=q/F;
+        R:=Order([F,V]);
+        time vert3,edges3:=IsogenyGraphBuilder_ModuloPicUsingMinimalEdges(R,N);
+    end for;
+    
+    for N in Ns do
+        times:=[];
+
+        K:=EtaleAlgebra(f);
+        F:=PrimitiveElement(K);
+        V:=q/F;
+        R:=Order([F,V]);
+        t0:=Cputime();
+        vert,edges:=IsogenyGraphBuilder_ModuloNothing(R,N);
+        Append(~times,Cputime(t0));
+
+
+        //SetDebugOnError(true);
+        K:=EtaleAlgebra(f);
+        F:=PrimitiveElement(K);
+        V:=q/F;
+        R:=Order([F,V]);
+        t0:=Cputime();
+        vert2,edges2:=IsogenyGraphBuilder_ModuloPic(R,N);
+        Append(~times,Cputime(t0));
+        assert #vert2 eq #vert;
+        assert #edges2 eq #edges;
+
+        //SetDebugOnError(true);
+        K:=EtaleAlgebra(f);
+        F:=PrimitiveElement(K);
+        V:=q/F;
+        R:=Order([F,V]);
+        t0:=Cputime();
+        vert3,edges3:=IsogenyGraphBuilder_ModuloPicUsingMinimalEdges(R,N);
+        Append(~times,Cputime(t0));
+        assert #vert3 eq #vert;
+        assert #edges3 eq #edges;
+
+        printf "N=%3o, times=%o\n",N,times;
+    end for;
+    
+    Attach("~/AbVarFq_Isogenies_Private/magma/IsogenyGraphBuilders.m");
+    _<x>:=PolynomialRing(Integers());
+    f:=x^4-2*x^2+121;
     q:=Round(ConstantCoefficient(f)^(2/Degree(f)));
     K:=EtaleAlgebra(f);
     F:=PrimitiveElement(K);
     V:=q/F;
     R:=Order([F,V]);
-    time vert,edges:=IsogenyGraphBuilder_ModuloNothing(R,N);
-    #vert,#edges;
-
-
-    //SetDebugOnError(true);
-    K:=EtaleAlgebra(f);
-    F:=PrimitiveElement(K);
-    V:=q/F;
-    R:=Order([F,V]);
-    time vert2,edges2:=IsogenyGraphBuilder_ModuloPic(R,N);
-    #vert2,#edges2;
-
-    #edges eq #edges2;
-
-    _:=IsogenyGraphBuilder_ModuloNothing(R,4);
-    _:=IsogenyGraphBuilder_ModuloNothing(R,8);
-    _:=IsogenyGraphBuilder_ModuloNothing(R,8*27);
-    
+    SetProfile(true);
+    vert3,edges3:=IsogenyGraphBuilder_ModuloPicUsingMinimalEdges(R,36);
+    SetProfile(false);
+    G:=ProfileGraph();
 
 */
 
