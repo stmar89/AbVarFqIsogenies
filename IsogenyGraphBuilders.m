@@ -16,7 +16,7 @@ intrinsic SubIdealsOfIndexDividing(I::AlgEtQIdl,N:RngIntElt)->SeqEnum[AlgEtQIdl]
         pot_new:={@ K : K in pot_new | N mod Index(I,K) eq 0 @}; // we keep only the ones whose index divides N 
         output join:={@ K : K in pot_new | not K in done @};
         done join:=queue;
-        queue := pot_new diff done;
+        queue:=pot_new diff done;
     end while;
     return output;
 end intrinsic;
@@ -73,7 +73,7 @@ intrinsic AreIsogeniesEquivalent(x1::AlgEtQElt,x2::AlgEtQElt,I::AlgEtQIdl,J::Alg
         return inv in S;
     end if;
     OK:=MaximalOrder(K);
-    if inv notin OK then
+    if elt notin OK or inv notin OK then
         return false;
     end if;
     _,uOK:=UnitGroup(OK);
@@ -229,13 +229,13 @@ intrinsic IsogenyGraphBuilder_ModuloPicUsingMinimalEdges(R::AlgEtQOrd,N::RngIntE
             eS:=ExtensionHomPicardGroups(R,S);
             aa:=aaS@@eS; // in Pic(R);
             Iaa:=pR(aa);
-            test,x:=IsIsomorphic(M,Ws*Iaa);
+            test,x:=IsIsomorphic(M,Ws*Iaa); // x*Ws*Iaa = M
             assert test; // sanity check
             for bbT in PT do
-                bb:=bbT@@eT;
+                bb:=bbT@@eT; // in Pic(R)
                 Ibb:=pR(bb);
                 aa1S:=eS(aa+bb);
-                aa1:=aa1S@@eS;
+                aa1:=aa1S@@eS; // in Pic(R)
                 Iaa1:=pR(aa1);
                 test,y:=IsIsomorphic(S!!(Iaa*Ibb),S!!Iaa1);
                 assert test;
@@ -250,7 +250,6 @@ intrinsic IsogenyGraphBuilder_ModuloPicUsingMinimalEdges(R::AlgEtQOrd,N::RngIntE
                     edges[dM][target][source]:=[]; // and then the source
                 end if;
                 Append(~edges[dM][target][source],label);
-//                Append(~edges[dM],label);
             end for;
         end for;
     end for;
