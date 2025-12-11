@@ -1,6 +1,8 @@
 // the name of the algorithms are not the definitive ones.
 
-declare attributes AlgEtQOrd: QuotientsUnitsOverorders;
+declare attributes AlgEtQOrd: QuotientsUnitsOverorders, // transversals in K of T^*/(S^* meet T^*)
+                              InclusionOverorders, // whether S < T
+                              JoinUnitsOverorders; // S^*T^* as a subgroup of OK^*
 
 intrinsic SubIdealsOfIndexDividing(I::AlgEtQIdl,N:RngIntElt)->SeqEnum[AlgEtQIdl]
 {Given a fractional R-ideal I and a positive integer N, returns all fractional R-ideals J < I such that [I:J] divides N. They are produced recursively from the maximal ones. I is not part of the output.}
@@ -19,6 +21,32 @@ intrinsic SubIdealsOfIndexDividing(I::AlgEtQIdl,N:RngIntElt)->SeqEnum[AlgEtQIdl]
         queue:=pot_new diff done;
     end while;
     return output;
+end intrinsic;
+
+intrinsic JoinUnitsOverorders(R::AlgEtQOrd,S::AlgEtQOrd,T::AlgEtQOrd)->SeqEnum
+{Given an order R and two overorders S,T of R, returns S^*T^* as a subgroup of OK^*. The output is stored in an associative array attribute of R, which is populated on demand.}
+    if not assigned R`JoinUnitsOverorders then
+       R`JoinUnitsOverorders:=AssociativeArray();
+    end if;
+    set:={S,T};
+    if not IsDefined(R`JoinUnitsOverorders,set) then
+        R`JoinUnitsOverorders[set]:=UnitGroup(S)+UnitGroup(T);
+    end if;
+    return R`JoinUnitsOverorders[set];
+end intrinsic;
+
+intrinsic InclusionOverorders(R::AlgEtQOrd,S::AlgEtQOrd,T::AlgEtQOrd)->SeqEnum
+{Given an order R and two overorders S,T of R, returns whether S < T. The output is stored in an associative array attribute of R, which is populated on demand.}
+    if not assigned R`InclusionOverorders then
+       R`InclusionOverorders:=AssociativeArray();
+    end if;
+    if not IsDefined(R`InclusionOverorders,S) then
+        R`InclusionOverorders[S]:=AssociativeArray();
+    end if;
+    if not IsDefined(R`InclusionOverorders[S],T) then
+        R`InclusionOverorders[S][T]:=S subset T;
+    end if;
+    return R`InclusionOverorders[S][T];
 end intrinsic;
 
 intrinsic AreIsogeniesEquivalent(x1::AlgEtQElt,I1::AlgEtQIdl,J1::AlgEtQIdl,x2::AlgEtQElt,I2::AlgEtQIdl,J2::AlgEtQIdl)->BoolElt
@@ -45,9 +73,10 @@ intrinsic AreIsogeniesEquivalent(x1::AlgEtQElt,I1::AlgEtQIdl,J1::AlgEtQIdl,x2::A
     inv:=1/elt;
     S:=MultiplicatorRing(I1);
     T:=MultiplicatorRing(J1);
-    if S subset T then
+    R:=Order(I1);
+    if InclusionOverorders(R,S,T) then
         return inv in T;
-    elif T subset S then
+    elif InclusionOverorders(R,T,S) then
         return inv in S;
     end if;
     OK:=MaximalOrder(K);
@@ -55,7 +84,7 @@ intrinsic AreIsogeniesEquivalent(x1::AlgEtQElt,I1::AlgEtQIdl,J1::AlgEtQIdl,x2::A
         return false;
     end if;
     _,uOK:=UnitGroup(OK);
-    U:=UnitGroup(S)+UnitGroup(T); // as a subgroup of OK^*
+    U:=JoinUnitsOverorders(R,S,T); // U = S^*T^* as a subgroup of OK^*
     return (elt@@uOK) in U;
 end intrinsic;
 
@@ -67,9 +96,10 @@ intrinsic AreIsogeniesEquivalent(x1::AlgEtQElt,x2::AlgEtQElt,I::AlgEtQIdl,J::Alg
     inv:=1/elt;
     S:=MultiplicatorRing(I);
     T:=MultiplicatorRing(J);
-    if S subset T then
+    R:=Order(I);
+    if InclusionOverorders(R,S,T) then
         return inv in T;
-    elif T subset S then
+    elif InclusionOverorders(R,T,S) then
         return inv in S;
     end if;
     OK:=MaximalOrder(K);
@@ -77,7 +107,7 @@ intrinsic AreIsogeniesEquivalent(x1::AlgEtQElt,x2::AlgEtQElt,I::AlgEtQIdl,J::Alg
         return false;
     end if;
     _,uOK:=UnitGroup(OK);
-    U:=UnitGroup(S)+UnitGroup(T); // as a subgroup of OK^*
+    U:=JoinUnitsOverorders(R,S,T); // U = S^*T^* as a subgroup of OK^*
     return (elt@@uOK) in U;
 end intrinsic;
 
@@ -134,7 +164,7 @@ intrinsic IsogenyGraphBuilder_ModuloNothing(R::AlgEtQOrd,N::RngIntElt) -> .
 {Given the Frobenius order R of a squarefree ordinary isogeny class and a positive integer N, returns the N-isogeny graph.}
     icm,icm_map:=IdealClassMonoidAbstract(R);
     classes:=Classes(icm);
-    edges:=[];
+    edges:=AssociativeArray();
     for target in classes do 
         IV:=icm_map(target); //IV is a representative of each vertex, chosen once and for all
         // Ms:=[M:M in IntermediateIdeals(IV,N*IV)|ind ne 1 and N mod ind eq 0 where ind:=Index(IV,M)]; //sub-frac.R-ideals M<IV s.t. [IV:M]|N
@@ -142,12 +172,15 @@ intrinsic IsogenyGraphBuilder_ModuloNothing(R::AlgEtQOrd,N::RngIntElt) -> .
         T:=MultiplicatorRing(IV);
         Ms:=compute_orbits_UT_on_Ms(T,Ms,R);
         for M in Ms do
+            d:=Index(IV,M);
+            if not IsDefined(edges,d) then
+                edges[d]:=[];
+            end if;
             source:=icm!M;
             IV1:=icm_map(source); //this is chosen once and for all
             test,x:=IsIsomorphic(M,IV1); //x*IV1 = M 
             assert test; // sanity check
-//            assert x*IV1 eq M; //TODO to make sure that the order is correct... I often get confused. remove later
-            Append(~edges,<[* WEClass(source),PicClass(source) *],[* WEClass(target),PicClass(target) *],IV1,IV,x>);
+            Append(~edges[d],<[* WEClass(source),PicClass(source) *],[* WEClass(target),PicClass(target) *],IV1,IV,x>);
         end for;
     end for;
     return [[* WEClass(target),PicClass(target) *]:target in classes],edges;
@@ -160,7 +193,7 @@ intrinsic IsogenyGraphBuilder_ModuloPic(R::AlgEtQOrd,N::RngIntElt) -> .
     PR,pR:=PicardGroup(R);
 
     classes:=[ ];
-    edges:=[];
+    edges:=AssociativeArray();
     for t in Classes(we) do 
         T:=MultiplicatorRing(t);
         eT:=ExtensionHomPicardGroups(R,T);
@@ -174,6 +207,10 @@ intrinsic IsogenyGraphBuilder_ModuloPic(R::AlgEtQOrd,N::RngIntElt) -> .
         assert not Wt in Ms;
         Ms:=compute_orbits_UT_on_Ms(T,Ms,R);
         for M in Ms do
+            d:=Index(Wt,M);
+            if not IsDefined(edges,d) then
+                edges[d]:=[];
+            end if;
             source_M:=M@@icm_map;
             s:=WEClass(source_M);
             aaS:=PicClass(source_M);
@@ -187,7 +224,7 @@ intrinsic IsogenyGraphBuilder_ModuloPic(R::AlgEtQOrd,N::RngIntElt) -> .
             for bbT in PT do
                 bb:=bbT@@eT;
                 Ibb:=pR(bb);
-                Append(~edges,<[* s,aaS *],[* t,bbT *],Ws*Iaa*Ibb,Wt*Ibb,x>);
+                Append(~edges[d],<[* s,aaS *],[* t,bbT *],Ws*Iaa*Ibb,Wt*Ibb,x>);
             end for;
         end for;
     end for;
@@ -287,13 +324,15 @@ intrinsic IsogenyGraphBuilder_ModuloPicUsingMinimalEdges(R::AlgEtQOrd,N::RngIntE
     end for;
 
     // this last step is just to be consistent with the other two algoritms
-    edges_output:=[];
+    edges_output:=AssociativeArray();
     for d->edges_d in edges do
+        edges_output_d:=[];
         for t->edges_d_t in edges[d] do
             for s->edges_d_t_s in edges[d][t] do
-                edges_output cat:=edges_d_t_s;
+                edges_output_d cat:=edges_d_t_s;
             end for;
         end for;
+        edges_output[d]:=edges_output_d;
     end for;
     return classes,edges_output;
 end intrinsic;
@@ -308,14 +347,6 @@ end intrinsic;
     q:=Round(ConstantCoefficient(f)^(2/Degree(f)));
     Ns:=[2,4,8,16,32,2*3,2*3*5,4*9];
 
-    for N in Ns do
-        K:=EtaleAlgebra(f);
-        F:=PrimitiveElement(K);
-        V:=q/F;
-        R:=Order([F,V]);
-        time vert3,edges3:=IsogenyGraphBuilder_ModuloPicUsingMinimalEdges(R,N);
-    end for;
-    
     for N in Ns do
         times:=[];
 
@@ -337,7 +368,8 @@ end intrinsic;
         vert2,edges2:=IsogenyGraphBuilder_ModuloPic(R,N);
         Append(~times,Cputime(t0));
         assert #vert2 eq #vert;
-        assert #edges2 eq #edges;
+        assert Keys(edges) eq Keys(edges2);
+        assert forall{d:d in Keys(edges) | #edges[d] eq #edges2[d]};
 
         //SetDebugOnError(true);
         K:=EtaleAlgebra(f);
@@ -348,7 +380,8 @@ end intrinsic;
         vert3,edges3:=IsogenyGraphBuilder_ModuloPicUsingMinimalEdges(R,N);
         Append(~times,Cputime(t0));
         assert #vert3 eq #vert;
-        assert #edges3 eq #edges;
+        assert Keys(edges) eq Keys(edges3);
+        assert forall{d:d in Keys(edges) | #edges[d] eq #edges3[d]};
 
         printf "N=%3o, times=%o\n",N,times;
     end for;
