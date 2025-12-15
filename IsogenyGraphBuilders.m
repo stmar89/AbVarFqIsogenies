@@ -164,7 +164,9 @@ intrinsic IsogenyGraphBuilder_ModuloNothing(R::AlgEtQOrd,N::RngIntElt) -> .
 {Given the Frobenius order R of a squarefree ordinary isogeny class and a positive integer N, returns the N-isogeny graph.}
     icm,icm_map:=IdealClassMonoidAbstract(R);
     classes:=Classes(icm);
-    edges:=AssociativeArray();
+    edges:=AssociativeArray(:Default:=[]);
+    // edges is a 1-dimensional array
+    // edges[d] contains the sequence of labels of isogenies of degree d.
     for target in classes do 
         IV:=icm_map(target); //IV is a representative of each vertex, chosen once and for all
         // Ms:=[M:M in IntermediateIdeals(IV,N*IV)|ind ne 1 and N mod ind eq 0 where ind:=Index(IV,M)]; //sub-frac.R-ideals M<IV s.t. [IV:M]|N
@@ -173,9 +175,6 @@ intrinsic IsogenyGraphBuilder_ModuloNothing(R::AlgEtQOrd,N::RngIntElt) -> .
         Ms:=compute_orbits_UT_on_Ms(T,Ms,R);
         for M in Ms do
             d:=Index(IV,M);
-            if not IsDefined(edges,d) then
-                edges[d]:=[];
-            end if;
             source:=icm!M;
             IV1:=icm_map(source); //this is chosen once and for all
             test,x:=IsIsomorphic(M,IV1); //x*IV1 = M 
@@ -193,7 +192,9 @@ intrinsic IsogenyGraphBuilder_ModuloPic(R::AlgEtQOrd,N::RngIntElt) -> .
     PR,pR:=PicardGroup(R);
 
     classes:=[ ];
-    edges:=AssociativeArray();
+    edges:=AssociativeArray(:Default:=[]);
+    // edges is a 1-dimensional array
+    // edges[d] contains the sequence of labels of isogenies of degree d.
     for t in Classes(we) do 
         T:=MultiplicatorRing(t);
         eT:=ExtensionHomPicardGroups(R,T);
@@ -202,15 +203,11 @@ intrinsic IsogenyGraphBuilder_ModuloPic(R::AlgEtQOrd,N::RngIntElt) -> .
             Append(~classes,[* t,bbT *]);
         end for;
         Wt:=we_map(t);
-        // Ms:=[M:M in IntermediateIdeals(Wt,N*Wt)|ind ne 1 and N mod ind eq 0 where ind:=Index(Wt,M)]; //sub-frac.R-ideals M<Wt s.t. [Wt:M]|N
         Ms:=SubIdealsOfIndexDividing(Wt,N); //sub-frac.R-ideals M<Wt s.t. [Wt:M]|N
         assert not Wt in Ms;
         Ms:=compute_orbits_UT_on_Ms(T,Ms,R);
         for M in Ms do
             d:=Index(Wt,M);
-            if not IsDefined(edges,d) then
-                edges[d]:=[];
-            end if;
             source_M:=M@@icm_map;
             s:=WEClass(source_M);
             aaS:=PicClass(source_M);
@@ -238,8 +235,16 @@ intrinsic IsogenyGraphBuilder_ModuloPicUsingMinimalEdges(R::AlgEtQOrd,N::RngIntE
     PR,pR:=PicardGroup(R);
 
     classes:=[ ];
-    edges:=AssociativeArray(); // indexed by degree
-    edges_min:=AssociativeArray(); //indexed by degree
+    edges:=AssociativeArray();
+    // THIS IS WHAT I WOULD LIKE. BUT IT SEEMS BROKEN
+    // edges:=AssociativeArray(:Default:=AssociativeArray(:Default:=AssociativeArray(:Default:=[])));
+    // a 3 dimensional array: edges[d][T][S] where
+    // - d is a positive integer (dividing N)
+    // - T,S are distinguished ideals representing an ideal classes
+    // is the sequence of labels of isogenies of degree d from S to T
+    edges_min:=AssociativeArray(:Default:=[]);
+    // a 1-dimensional array
+    // edges_min[dM] is the sequence of minimal isogenies of degree dM
     for t in Classes(we) do 
         T:=MultiplicatorRing(t);
         eT:=ExtensionHomPicardGroups(R,T);
@@ -252,12 +257,8 @@ intrinsic IsogenyGraphBuilder_ModuloPicUsingMinimalEdges(R::AlgEtQOrd,N::RngIntE
         Ms:=compute_orbits_UT_on_Ms(T,Ms,R);
         for M in Ms do
             dM:=Index(Wt,M);
-            if not IsDefined(edges_min,dM) then
-                edges_min[dM]:=[];
-            end if;
-            if not IsDefined(edges,dM) then
-                edges[dM]:=AssociativeArray();
-            end if;
+            // REMOVE THE NEXT ONE?
+                if not IsDefined(edges,dM) then edges[dM]:=AssociativeArray(); end if;
             source_M:=M@@icm_map;
             s:=WEClass(source_M);
             aaS:=PicClass(source_M);
@@ -280,12 +281,13 @@ intrinsic IsogenyGraphBuilder_ModuloPicUsingMinimalEdges(R::AlgEtQOrd,N::RngIntE
                 target:=label[4];
                 source:=label[3];
                 Append(~edges_min[dM],label);
-                if not IsDefined(edges[dM],target) then
-                    edges[dM][target]:=AssociativeArray(); // indexed by the target
-                end if;
-                if not IsDefined(edges[dM][target],source) then
-                    edges[dM][target][source]:=[]; // and then the source
-                end if;
+                // REMOVE THE NEXT TWO IF?
+                    if not IsDefined(edges[dM],target) then
+                        edges[dM][target]:=AssociativeArray(); // indexed by the target
+                    end if;
+                    if not IsDefined(edges[dM][target],source) then
+                        edges[dM][target][source]:=[]; // and then the source
+                    end if;
                 Append(~edges[dM][target][source],label);
             end for;
         end for;
@@ -300,17 +302,15 @@ intrinsic IsogenyGraphBuilder_ModuloPicUsingMinimalEdges(R::AlgEtQOrd,N::RngIntE
             if d2 lt n and n mod d2 eq 0 then
                 d1:=n div d2;
                 for E2 in E_min_d2 do
-                    if not IsDefined(edges[n],E2[4]) then
-                        edges[n][E2[4]]:=AssociativeArray();
-                    end if;
+                    // REMOVE?
+                        if not IsDefined(edges[n],E2[4]) then edges[n][E2[4]]:=AssociativeArray(); end if;
                     // now, we loop over all already computed edges E1 of degree d1=n/d2 such
                     // that target(E1) = source(E2) = E2[3], since we want to construct the composition E2*E1
                     // (first apply the isogeny E1 then the isogeny E2)
                     for E1_t->E1s in edges[d1][E2[3]] do
                         for E1 in E1s do
-                            if not IsDefined(edges[n][E2[4]],E1[3]) then
-                                edges[n][E2[4]][E1[3]]:=[];
-                            end if;
+                            //REMOVE?
+                                if not IsDefined(edges[n][E2[4]],E1[3]) then edges[n][E2[4]][E1[3]]:=[]; end if;
                             Ecomp:=<E1[1],E2[2],E1[3],E2[4],E1[5]*E2[5]>;
                             if not exists{E:E in edges[n][E2[4]][E1[3]]|
                                 AreIsogeniesEquivalent(Ecomp[5],E[5],E[3],E[4])} then
@@ -347,6 +347,7 @@ end intrinsic;
     q:=Round(ConstantCoefficient(f)^(2/Degree(f)));
     Ns:=[2,4,8,16,32,2*3,2*3*5,4*9];
 
+    // Comparing timings 3 algorithms
     for N in Ns do
         times:=[];
 
@@ -385,7 +386,25 @@ end intrinsic;
 
         printf "N=%3o, times=%o\n",N,times;
     end for;
+
+    // timings only 3rd algorithm
+    //AttachSpec("~/AlgEt/spec");
+    Attach("~/AbVarFq_Isogenies_Private/magma/IsogenyGraphBuilders.m");
+    _<x>:=PolynomialRing(Integers());
+    f:=x^4-2*x^2+121;
+    q:=Round(ConstantCoefficient(f)^(2/Degree(f)));
+    Ns:=[2,4,8,16,32,2*3,2*3*5,4*9];
+    for N in Ns do
+        K:=EtaleAlgebra(f);
+        F:=PrimitiveElement(K);
+        V:=q/F;
+        R:=Order([F,V]);
+        t0:=Cputime();
+        vert3,edges3:=IsogenyGraphBuilder_ModuloPicUsingMinimalEdges(R,N);
+        printf "N=%3o, times=%o\n",N,Cputime(t0);
+    end for;
     
+    // 3rd Algorithm, with Profiler.
     Attach("~/AbVarFq_Isogenies_Private/magma/IsogenyGraphBuilders.m");
     _<x>:=PolynomialRing(Integers());
     f:=x^4-2*x^2+121;
@@ -398,6 +417,7 @@ end intrinsic;
     vert3,edges3:=IsogenyGraphBuilder_ModuloPicUsingMinimalEdges(R,36);
     SetProfile(false);
     G:=ProfileGraph();
+    Print
 
 */
 
