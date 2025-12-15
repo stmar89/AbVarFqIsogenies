@@ -387,13 +387,25 @@ end intrinsic;
         printf "N=%3o, times=%o\n",N,times;
     end for;
 
-    // timings only 3rd algorithm
+// timings only 3rd algorithm
     //AttachSpec("~/AlgEt/spec");
     Attach("~/AbVarFq_Isogenies_Private/magma/IsogenyGraphBuilders.m");
+    construct_multidigraph:=function(vert,edges)
+    // construct a MultiDigraph isomorphigm to the N-isogeny graph returned by any of the algorithms above
+        n:=#vert;
+        G:=MultiDigraph< n | >;
+        EE:=[ ]; 
+        for d->edges_d in edges do
+            EE_d:=[ [Index(vert,E[1]),Index(vert,E[2])] : E in edges_d ];
+            EE cat:=EE_d;
+        end for;
+        AddEdges(~G,EE);
+        return G;
+    end function;
     _<x>:=PolynomialRing(Integers());
     f:=x^4-2*x^2+121;
     q:=Round(ConstantCoefficient(f)^(2/Degree(f)));
-    Ns:=[2,4,8,16,32,2*3,2*3*5,4*9];
+    Ns:=[2,4,8,16,32,2*3,2*3*5,4*9,2*5,3*5];
     for N in Ns do
         K:=EtaleAlgebra(f);
         F:=PrimitiveElement(K);
@@ -401,7 +413,10 @@ end intrinsic;
         R:=Order([F,V]);
         t0:=Cputime();
         vert3,edges3:=IsogenyGraphBuilder_ModuloPicUsingMinimalEdges(R,N);
-        printf "N=%3o, times=%o\n",N,Cputime(t0);
+        t1:=Cputime(t0);
+        G3:=construct_multidigraph(vert3,edges3);
+        is_conn:=IsConnected(UnderlyingGraph(G3));
+        printf "N=%3o, t=%o, connected? %o\n",N,t1,is_conn;
     end for;
     
     // 3rd Algorithm, with Profiler.
@@ -417,7 +432,9 @@ end intrinsic;
     vert3,edges3:=IsogenyGraphBuilder_ModuloPicUsingMinimalEdges(R,36);
     SetProfile(false);
     G:=ProfileGraph();
-    Print
+
+
+
 
 */
 
