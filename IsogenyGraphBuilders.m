@@ -2,7 +2,28 @@
 
 declare attributes AlgEtQOrd: QuotientsUnitsOverorders, // transversals in K of T^*/(S^* meet T^*)
                               InclusionOverorders, // whether S < T
-                              JoinUnitsOverorders; // S^*T^* as a subgroup of OK^*
+                              JoinUnitsOverorders, // S^*T^* as a subgroup of OK^*
+                              DistinguishedRepsICM;
+
+intrinsic DistinguishedRepsICM(w::AlgEtQWECMElt,aa::GrpAbElt)->AlgEtQIdl
+{Given w a weak equivalenc class of some order R, with multiplicator ring T, and an element aa of the abstract group Pic(T), returns W*I,I,aaR , where W=Ideal(w) and I=pR(aaR) with aaR=aa@eT, where _,pR:=PicardGroup(R) and eT:=ExtensionHomPicardGroups(R,T). In particular, W*I is canonically associated to the pair (w,aa). The output is stored in the attribute DistinguishedRepsICM of R, and populated on demand.}
+    R:=Order(Parent(w));
+    if not assigned R`DistinguishedRepsICM then
+        R`DistinguishedRepsICM:=AssociativeArray();
+    end if;
+    if not IsDefined(R`DistinguishedRepsICM,w) then
+        R`DistinguishedRepsICM[w]:=AssociativeArray();
+    end if;
+    if not IsDefined(R`DistinguishedRepsICM[w],aa) then
+        T:=MultiplicatorRing(w);
+        eT:=ExtensionHomPicardGroups(R,T);
+        _,pR:=PicardGroup(R);
+        aaR:=aa@@eT;
+        IaaR:=pR(aaR);
+        R`DistinguishedRepsICM[w][aa]:=<Ideal(w)*IaaR,IaaR,aaR>;
+    end if;
+    return Explode(R`DistinguishedRepsICM[w][aa]);
+end intrinsic;
 
 intrinsic SubIdealsOfIndexDividing(I::AlgEtQIdl,N:RngIntElt)->SeqEnum[AlgEtQIdl]
 {Given a fractional R-ideal I and a positive integer N, returns all fractional R-ideals J < I such that [I:J] divides N. They are produced recursively from the maximal ones. I is not part of the output.}
@@ -233,6 +254,7 @@ intrinsic IsogenyGraphBuilder_LessNaive(R::AlgEtQOrd,N::RngIntElt) -> .
             assert test; // sanity check
             for bbT in PT do
                 bb:=bbT@@eT;
+                //TODO Ibb, Wt*Ibb, Ws*Iaa*Ibb are computed over an over... this is not smart.
                 Ibb:=pR(bb);
                 Append(~edges[d],<[* s,aaS *],[* t,bbT *],Ws*Iaa*Ibb,Wt*Ibb,x>);
             end for;
@@ -283,21 +305,17 @@ intrinsic IsogenyGraphBuilder(R::AlgEtQOrd,N::RngIntElt) -> .
             s:=WEClass(source_M);
             aaS:=PicClass(source_M);
             S:=MultiplicatorRing(s);
-            Ws:=we_map(s);
             eS:=ExtensionHomPicardGroups(R,S);
-            aa:=aaS@@eS; // in Pic(R);
-            Iaa:=pR(aa);
-            test,x:=IsIsomorphic(M,Ws*Iaa); // x*Ws*Iaa = M
+            WsIaa,Iaa,aa:=DistinguishedRepsICM(s,aaS);
+            test,x:=IsIsomorphic(M,WsIaa); // x*Ws*Iaa = M
             assert test; // sanity check
             for bbT in PT do
-                bb:=bbT@@eT; // in Pic(R)
-                Ibb:=pR(bb);
+                WtIbb,Ibb,bb:=DistinguishedRepsICM(t,bbT);
                 aa1S:=eS(aa+bb);
-                aa1:=aa1S@@eS; // in Pic(R)
-                Iaa1:=pR(aa1);
+                WsIaa1,Iaa1,aa1:=DistinguishedRepsICM(s,aa1S);
                 test,y:=IsIsomorphic(S!!(Iaa*Ibb),S!!Iaa1);
                 assert test;
-                label:=<[* s,aa1S *],[* t,bbT *],Ws*Iaa1,Wt*Ibb,x*y>;
+                label:=<[* s,aa1S *],[* t,bbT *],WsIaa1,WtIbb,x*y>;
                 target:=label[4];
                 source:=label[3];
                 Append(~edges_min[dM],label);
@@ -439,6 +457,30 @@ end intrinsic;
         is_conn:=IsConnected(UnderlyingGraph(G3));
         printf "N=%3o, t=%o, connected? %o\n",N,t1,is_conn;
     end for;
+//before DistinguishedRepsICM
+//N=  2, t=2.260, connected? false
+//N=  4, t=3.050, connected? false
+//N=  8, t=3.690, connected? false
+//N= 16, t=5.180, connected? false
+//N= 32, t=7.200, connected? false
+//N=  6, t=4.800, connected? true
+//N= 30, t=10.520, connected? true
+//N= 36, t=11.790, connected? true
+//N= 10, t=5.070, connected? true
+//N= 15, t=4.420, connected? false
+//
+//after DistinguishedRepsICM
+//N=  2, t=2.620, connected? false
+//N=  4, t=3.160, connected? false
+//N=  8, t=3.880, connected? false
+//N= 16, t=5.250, connected? false
+//N= 32, t=7.270, connected? false
+//N=  6, t=4.280, connected? true
+//N= 30, t=9.340, connected? true
+//N= 36, t=11.450, connected? true
+//N= 10, t=5.400, connected? true
+//N= 15, t=4.880, connected? false
+
     
     // 3rd Algorithm, with Profiler.
     Attach("~/AbVarFq_Isogenies_Private/magma/IsogenyGraphBuilders.m");
