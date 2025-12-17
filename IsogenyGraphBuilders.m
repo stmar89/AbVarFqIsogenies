@@ -159,9 +159,15 @@ compute_orbits_UT_on_Ms:=function(T,Ms,R)
 end function;
 
 
-//TODO details about output
-intrinsic IsogenyGraphBuilder_ModuloNothing(R::AlgEtQOrd,N::RngIntElt) -> .
-{Given the Frobenius order R of a squarefree ordinary isogeny class and a positive integer N, returns the N-isogeny graph.}
+//intrinsic IsogenyGraphBuilder_ModuloNothing(R::AlgEtQOrd,N::RngIntElt) -> .
+intrinsic IsogenyGraphBuilder_Naive(R::AlgEtQOrd,N::RngIntElt) -> .
+{Given the Frobenius order R of a squarefree ordinary isogeny class and a positive integer N, returns the N-isogeny graph, given as a pair classes,edges:
+- classes is a sequence of lists [*W,L*] where W is a weak equivalence class (type AlgEtQWECMElt), and L is an element of an abstract group representing Pic(T) where T is the multiplicator ring of W. They represent the vertices of the N-isogeny graph.
+- edges is an associative array, indexed by positive integers d. 
+  edges[d] is a sequence of tuples <[*Ws,Ls*],[*Wt,Lt*],Is,It,x> each one representing an equivalence classes of isogenies of degree d in the following way:
+  -- [*Ws,Ls*] and [*Wt,Lt*] are the elements in classes representing source and target, respectively.
+  -- Is and It are fractional Z[F,V]-ideals representing the ideal classes of the source and target.
+  -- x is an element of Q[F] giving an inclusion x*Is < It such that [It:x*Is]=d.}
     icm,icm_map:=IdealClassMonoidAbstract(R);
     classes:=Classes(icm);
     edges:=AssociativeArray(:Default:=[]);
@@ -185,8 +191,15 @@ intrinsic IsogenyGraphBuilder_ModuloNothing(R::AlgEtQOrd,N::RngIntElt) -> .
     return [[* WEClass(target),PicClass(target) *]:target in classes],edges;
 end intrinsic;
 
-intrinsic IsogenyGraphBuilder_ModuloPic(R::AlgEtQOrd,N::RngIntElt) -> .
-{Given the Frobenius order R of a squarefree ordinary isogeny class and a positive integer N, returns the N-isogeny graph.}
+//intrinsic IsogenyGraphBuilder_ModuloPic(R::AlgEtQOrd,N::RngIntElt) -> .
+intrinsic IsogenyGraphBuilder_LessNaive(R::AlgEtQOrd,N::RngIntElt) -> .
+{Given the Frobenius order R of a squarefree ordinary isogeny class and a positive integer N, returns the N-isogeny graph, given as a pair classes,edges:
+- classes is a sequence of lists [*W,L*] where W is a weak equivalence class (type AlgEtQWECMElt), and L is an element of an abstract group representing Pic(T) where T is the multiplicator ring of W. They represent the vertices of the N-isogeny graph.
+- edges is an associative array, indexed by positive integers d. 
+  edges[d] is a sequence of tuples <[*Ws,Ls*],[*Wt,Lt*],Is,It,x> each one representing an equivalence classes of isogenies of degree d in the following way:
+  -- [*Ws,Ls*] and [*Wt,Lt*] are the elements in classes representing source and target, respectively.
+  -- Is and It are fractional Z[F,V]-ideals representing the ideal classes of the source and target.
+  -- x is an element of Q[F] giving an inclusion x*Is < It such that [It:x*Is]=d.}
     we,we_map:=WeakEquivalenceClassMonoidAbstract(R);
     icm,icm_map:=IdealClassMonoidAbstract(R);
     PR,pR:=PicardGroup(R);
@@ -228,8 +241,15 @@ intrinsic IsogenyGraphBuilder_ModuloPic(R::AlgEtQOrd,N::RngIntElt) -> .
     return classes,edges;
 end intrinsic;
 
-intrinsic IsogenyGraphBuilder_ModuloPicUsingMinimalEdges(R::AlgEtQOrd,N::RngIntElt) -> .
-{Given the Frobenius order R of a squarefree ordinary isogeny class and a positive integer N, returns the N-isogeny graph.}
+//intrinsic IsogenyGraphBuilder_ModuloPicUsingMinimalEdges(R::AlgEtQOrd,N::RngIntElt) -> .
+intrinsic IsogenyGraphBuilder(R::AlgEtQOrd,N::RngIntElt) -> .
+{Given the Frobenius order R of a squarefree ordinary isogeny class and a positive integer N, returns the N-isogeny graph, given as a pair classes,edges:
+- classes is a sequence of lists [*W,L*] where W is a weak equivalence class (type AlgEtQWECMElt), and L is an element of an abstract group representing Pic(T) where T is the multiplicator ring of W. They represent the vertices of the N-isogeny graph.
+- edges is an associative array, indexed by positive integers d. 
+  edges[d] is a sequence of tuples <[*Ws,Ls*],[*Wt,Lt*],Is,It,x> each one representing an equivalence classes of isogenies of degree d in the following way:
+  -- [*Ws,Ls*] and [*Wt,Lt*] are the elements in classes representing source and target, respectively.
+  -- Is and It are fractional Z[F,V]-ideals representing the ideal classes of the source and target.
+  -- x is an element of Q[F] giving an inclusion x*Is < It such that [It:x*Is]=d.}
     we,we_map:=WeakEquivalenceClassMonoidAbstract(R);
     icm,icm_map:=IdealClassMonoidAbstract(R);
     PR,pR:=PicardGroup(R);
@@ -337,6 +357,19 @@ intrinsic IsogenyGraphBuilder_ModuloPicUsingMinimalEdges(R::AlgEtQOrd,N::RngIntE
     return classes,edges_output;
 end intrinsic;
 
+intrinsic ConstructStandardGrphMultDir(vert::SeqEnum,edges::Assoc) -> GrphMultDir
+{Given the output vert,edges produced by IsogenyGraphBuilders (or IsogenyGraphBuilder_Naive, or IsogenyGraphBuilder_LessNaive) returns the corresponding directed multi graph. The verteces of the output are labelled using integers 1,...,#vert. The i-th vertex conesponds to the ideal class vert[i].}
+    n:=#vert;
+    G:=MultiDigraph< n | >;
+    EE:=[ ]; 
+    for d->edges_d in edges do
+        EE_d:=[ [Index(vert,E[1]),Index(vert,E[2])] : E in edges_d ];
+        EE cat:=EE_d;
+    end for;
+    AddEdges(~G,EE);
+    return G;
+end intrinsic;
+
 /* TESTS
    
     //AttachSpec("~/AlgEt/spec");
@@ -356,7 +389,7 @@ end intrinsic;
         V:=q/F;
         R:=Order([F,V]);
         t0:=Cputime();
-        vert,edges:=IsogenyGraphBuilder_ModuloNothing(R,N);
+        vert,edges:=IsogenyGraphBuilder_Naive(R,N);
         Append(~times,Cputime(t0));
 
 
@@ -366,7 +399,7 @@ end intrinsic;
         V:=q/F;
         R:=Order([F,V]);
         t0:=Cputime();
-        vert2,edges2:=IsogenyGraphBuilder_ModuloPic(R,N);
+        vert2,edges2:=IsogenyGraphBuilder_LessNaive(R,N);
         Append(~times,Cputime(t0));
         assert #vert2 eq #vert;
         assert Keys(edges) eq Keys(edges2);
@@ -378,7 +411,7 @@ end intrinsic;
         V:=q/F;
         R:=Order([F,V]);
         t0:=Cputime();
-        vert3,edges3:=IsogenyGraphBuilder_ModuloPicUsingMinimalEdges(R,N);
+        vert3,edges3:=IsogenyGraphBuilder(R,N);
         Append(~times,Cputime(t0));
         assert #vert3 eq #vert;
         assert Keys(edges) eq Keys(edges3);
@@ -390,18 +423,6 @@ end intrinsic;
 // timings only 3rd algorithm
     //AttachSpec("~/AlgEt/spec");
     Attach("~/AbVarFq_Isogenies_Private/magma/IsogenyGraphBuilders.m");
-    construct_multidigraph:=function(vert,edges)
-    // construct a MultiDigraph isomorphigm to the N-isogeny graph returned by any of the algorithms above
-        n:=#vert;
-        G:=MultiDigraph< n | >;
-        EE:=[ ]; 
-        for d->edges_d in edges do
-            EE_d:=[ [Index(vert,E[1]),Index(vert,E[2])] : E in edges_d ];
-            EE cat:=EE_d;
-        end for;
-        AddEdges(~G,EE);
-        return G;
-    end function;
     _<x>:=PolynomialRing(Integers());
     f:=x^4-2*x^2+121;
     q:=Round(ConstantCoefficient(f)^(2/Degree(f)));
@@ -412,9 +433,9 @@ end intrinsic;
         V:=q/F;
         R:=Order([F,V]);
         t0:=Cputime();
-        vert3,edges3:=IsogenyGraphBuilder_ModuloPicUsingMinimalEdges(R,N);
+        vert3,edges3:=IsogenyGraphBuilder(R,N);
         t1:=Cputime(t0);
-        G3:=construct_multidigraph(vert3,edges3);
+        G3:=ConstructStandardGrphMultDir(vert3,edges3);
         is_conn:=IsConnected(UnderlyingGraph(G3));
         printf "N=%3o, t=%o, connected? %o\n",N,t1,is_conn;
     end for;
@@ -429,7 +450,7 @@ end intrinsic;
     V:=q/F;
     R:=Order([F,V]);
     SetProfile(true);
-    vert3,edges3:=IsogenyGraphBuilder_ModuloPicUsingMinimalEdges(R,36);
+    vert3,edges3:=IsogenyGraphBuilder(R,36);
     SetProfile(false);
     G:=ProfileGraph();
 
