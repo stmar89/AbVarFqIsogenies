@@ -16,7 +16,13 @@ intrinsic GSTAct(g::GrpAbElt, phi::Tup)->Tup
 
     gS := (g@eS)+hS;
     gT := (g@eT)+hT;
-    G := g@icm_map;
+
+// SM: the next 3 lines should trigger an error: icm_map takes elements of icm which have type AlgEtICMElt (or something like that...)
+// The issue is that the element g does `not know' that is an ideal class.
+// My guess is that you want G := g@pR; where _,pR:=PicardGroup(R);
+// similar comments apply to gI and gJ
+// I noticed the same problem in the following intrinsics as well.
+    G := g@icm_map; 
     gI := gS@icm_map;
     gJ := gT@icm_map;
 
