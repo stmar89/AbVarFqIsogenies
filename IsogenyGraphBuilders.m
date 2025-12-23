@@ -44,7 +44,7 @@ intrinsic SubIdealsOfIndexDividing(I::AlgEtQIdl,N:RngIntElt)->SeqEnum[AlgEtQIdl]
     return output;
 end intrinsic;
 
-intrinsic JoinUnitsOverorders(R::AlgEtQOrd,S::AlgEtQOrd,T::AlgEtQOrd)->SeqEnum
+intrinsic JoinUnitsOverorders(R::AlgEtQOrd, S::AlgEtQOrd, T::AlgEtQOrd)->SeqEnum
 {Given an order R and two overorders S,T of R, returns S^*T^* as a subgroup of OK^*. The output is stored in an associative array attribute of R, which is populated on demand.}
     if not assigned R`JoinUnitsOverorders then
        R`JoinUnitsOverorders:=AssociativeArray();
@@ -56,7 +56,7 @@ intrinsic JoinUnitsOverorders(R::AlgEtQOrd,S::AlgEtQOrd,T::AlgEtQOrd)->SeqEnum
     return R`JoinUnitsOverorders[set];
 end intrinsic;
 
-intrinsic InclusionOverorders(R::AlgEtQOrd,S::AlgEtQOrd,T::AlgEtQOrd)->SeqEnum
+intrinsic InclusionOverorders(R::AlgEtQOrd, S::AlgEtQOrd, T::AlgEtQOrd)->SeqEnum
 {Given an order R and two overorders S,T of R, returns whether S < T. The output is stored in an associative array attribute of R, which is populated on demand.}
     if not assigned R`InclusionOverorders then
        R`InclusionOverorders:=AssociativeArray();
@@ -70,7 +70,7 @@ intrinsic InclusionOverorders(R::AlgEtQOrd,S::AlgEtQOrd,T::AlgEtQOrd)->SeqEnum
     return R`InclusionOverorders[S][T];
 end intrinsic;
 
-intrinsic AreIsogeniesEquivalent(x1::AlgEtQElt,I1::AlgEtQIdl,J1::AlgEtQIdl,x2::AlgEtQElt,I2::AlgEtQIdl,J2::AlgEtQIdl)->BoolElt
+intrinsic AreIsogeniesEquivalent(x1::AlgEtQElt, I1::AlgEtQIdl, J1::AlgEtQIdl, x2::AlgEtQElt, I2::AlgEtQIdl, J2::AlgEtQIdl) -> BoolElt
 {Given inclusions x1*I1<J1 and x2*I2<J2 of fractional ideals of the Frobenius order representing isogenies, return whether they are equivalent.}
     K:=Algebra(I1);
     one:=One(K);
@@ -109,7 +109,7 @@ intrinsic AreIsogeniesEquivalent(x1::AlgEtQElt,I1::AlgEtQIdl,J1::AlgEtQIdl,x2::A
     return (elt@@uOK) in U;
 end intrinsic;
 
-intrinsic AreIsogeniesEquivalent(x1::AlgEtQElt,x2::AlgEtQElt,I::AlgEtQIdl,J::AlgEtQIdl)->BoolElt
+intrinsic AreIsogeniesEquivalent(x1::AlgEtQElt, x2::AlgEtQElt, I::AlgEtQIdl, J::AlgEtQIdl)->BoolElt
 {Given inclusions x1*I<J and x2*I<J of fractional ideals of the Frobenius order representing isogenies, return whether they are equivalent.}
     K:=Algebra(I);
     one:=One(K);
