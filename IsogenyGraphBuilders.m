@@ -6,7 +6,7 @@ declare attributes AlgEtQOrd: QuotientsUnitsOverorders, // transversals in K of 
                               DistinguishedRepsICM;
 
 intrinsic DistinguishedRepsICM(w::AlgEtQWECMElt,aa::GrpAbElt)->AlgEtQIdl
-{Given w a weak equivalenc class of some order R, with multiplicator ring T, and an element aa of the abstract group Pic(T), returns W*I,I,aaR , where W=Ideal(w) and I=pR(aaR) with aaR=aa@eT, where _,pR:=PicardGroup(R) and eT:=ExtensionHomPicardGroups(R,T). In particular, W*I is canonically associated to the pair (w,aa). The output is stored in the attribute DistinguishedRepsICM of R, and populated on demand.}
+{Given w a weak equivalence class of some order R, with multiplicator ring T, and an element aa of the abstract group Pic(T), returns W*I,I,aaR , where W=Ideal(w) and I=pR(aaR) with aaR=aa@@eT, where _,pR:=PicardGroup(R) and eT:=ExtensionHomPicardGroups(R,T). In particular, W*I is canonically associated to the pair (w,aa). The output is stored in the attribute DistinguishedRepsICM of R, and populated on demand.}
     R:=Order(Parent(w));
     if not assigned R`DistinguishedRepsICM then
         R`DistinguishedRepsICM:=AssociativeArray();
