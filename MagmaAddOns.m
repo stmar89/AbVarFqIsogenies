@@ -64,7 +64,6 @@ Given an order R returns the graph G of minimal inclusions of the overorders of 
 end intrinsic;
 
 
-
 ////////////////////
 // Weil Polynomial Intrinsics
 ////////////////////
