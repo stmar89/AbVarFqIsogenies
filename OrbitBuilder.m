@@ -8,23 +8,21 @@ intrinsic GSTAct(g::GrpAbElt, phi::Tup)->Tup
     J := phi[4];
     x := phi[5];
     R := Order(I);
+    PR,pR:=PicardGroup(R);
+    we,we_map:=WeakEquivalenceClassMonoidAbstract(R);
+    Ws:=we_map(s);
+    Wt:=we_map(t);
     S := MultiplicatorRing(s);
     T := MultiplicatorRing(t);
     eS := ExtensionHomPicardGroup(R,S);
     eT := ExtensionHomPicardGroup(R,T);
-    icm,icm_map:=IdealClassMonoidAbstract(R);
 
     gS := (g@eS)+hS;
     gT := (g@eT)+hT;
 
-// SM: the next 3 lines should trigger an error: icm_map takes elements of icm which have type AlgEtICMElt (or something like that...)
-// The issue is that the element g does `not know' that is an ideal class.
-// My guess is that you want G := g@pR; where _,pR:=PicardGroup(R);
-// similar comments apply to gI and gJ
-// I noticed the same problem in the following intrinsics as well.
-    G := g@icm_map; 
-    gI := gS@icm_map;
-    gJ := gT@icm_map;
+    G := g@pR;
+    gI := Ws*((gS@@eS)@pR); // TODO: need this to be canonical, but there can be multiple pullbacks along eS.  Maybe should just map using pS?
+    gJ := Wt*((gT@@eT)@pR);
 
     test,y := IsIsomorphic(gI, G*I);
     assert test;
@@ -42,13 +40,15 @@ intrinsic GSTOrbit(phi::Tup)->SeqEnum
     J := phi[4];
     x := phi[5];
     R := Order(I);
+    PR,pR := PicardGroup(R);
+    we,we_map:=WeakEquivalenceClassMonoidAbstract(R);
+    Ws := we_map(s);
+    Wt := we_map(t);
     S := MultiplicatorRing(s);
     T := MultiplicatorRing(t);
     eS := ExtensionHomPicardGroup(R,S);
     eT := ExtensionHomPicardGroup(R,T);
-    icm,icm_map:=IdealClassMonoidAbstract(R);
 
-    PR,pR := PicardGroup(R);
     // TODO: Should cache these kernels and their intersections
     K := Kernel(eS) meet Kernel(eT);
     orb := [];
@@ -56,9 +56,9 @@ intrinsic GSTOrbit(phi::Tup)->SeqEnum
         // TODO: It would be nice to reuse some of the work here...
         gS := (g@eS)+hS;
         gT := (g@eT)+hT;
-        G := g@icm_map;
-        gI := gS@icm_map;
-        gJ := gT@icm_map;
+        G := g@pR;
+        gI := Ws*((gS@@eS)@pR);
+        gJ := Wt*((gT@@eT)@pR);
 
         test,y := IsIsomorphic(gI, G*I);
         assert test;
@@ -79,14 +79,14 @@ intrinsic AreIsogeniesGSTEquivalent(x1::AlgEtQElt,I1::AlgEtQIdl,J1::AlgEtQIdl,x2
     source1 := I1@@icm_map;
     source2 := I2@@icm_map;
     s := WEClass(source1);
-    if s != WEClass(source2) then
+    if s ne WEClass(source2) then
         return false;
     end if;
     S := MultiplicatorRing(source1);
     target1 := J1@@icm_map;
     target2 := J2@@icm_map;
     t := WEClass(target1);
-    if t != WEClass(target2) then
+    if t ne WEClass(target2) then
         return false;
     end if;
     T := MultiplicatorRing(target1);
@@ -112,23 +112,56 @@ intrinsic AreIsogeniesGSTEquivalent(x1::AlgEtQElt,I1::AlgEtQIdl,J1::AlgEtQIdl,x2
 end intrinsic;
 
 intrinsic GSTCompose(phi::Tup, psi::Tup)->SeqEnum
-{Given two isogenies where the weak equivalence class of the domain of psi is the same as the weak equivalence class of the codomain of phi, return all possible compositions (up to equivalence)}
-    s1, hS1 := Explode(phi[1]);
-    t1, hT1 := Explode(phi[2]);
-    I1 := phi[3];
-    J1 := phi[4];
-    x1 := phi[5];
-
+{Given two isogenies where the weak equivalence class of the domain of psi is the same as the weak equivalence class of the codomain of phi, and that map between canonical representatives, return all possible compositions (up to equivalence)}
     t2, hT2 := Explode(psi[1]);
     u2, hU2 := Explode(psi[2]);
     J2 := psi[3];
     K2 := psi[4];
     x2 := psi[5];
 
+    R := Order(J2);
+    if Order(K2) ne R then
+        error "isogenies must be in the same isogeny class";
+    end if;
+    T := MultiplicatorRing(t2);
+    eT := ExtensionHomPicardGroups(R,T);
+    U := MultiplicatorRing(u2);
+    eU := ExtensionHomPicardGroups(R,U);
+
+    t1, hT1 := Explode(phi[2]);
     if t1 ne t2 then
         error "Domain of second isogeny not weakly equivalent to codomain of first isogeny";
     end if;
 
+    // Act so that the domain of psi matches the codomain of phi
+    phi := GSTAct((hT2 - hT2)@@eT, phi);
+
+    s1, hS1 := Explode(phi[1]);
+    I1 := phi[3];
+    J1 := phi[4];
+    x1 := phi[5];
+    assert J1 eq J2;
+
+    if Order(I1) ne R then
+        error "isogenies must be in the same isogeny class";
+    end if;
+
+    S := MultiplicatorRing(s1);
+    eS := ExtensionHomPicardGroups(R,S);
+
+    kS := Kernel(eS);
+    kT := Kernel(eT);
+    kU := Kernel(eU);
+    kST := kS meet kT;
+    //for g1 in Transversal(kT, kST) do
+    
+    // Since we can act to change the codomain to anything in u2, we leave it the same ([* u2, hU2 *] = K2)
+    // We then need to iterate over g2 in ker(eU) / (ker(eU) meet ker(eT))
+    // and g1 in ker(eT) / (ker(eT) meet ker(eS)), acting on psi by g2 and on phi by g1+g2.
+    // We can quotient the result by ker(eU) / (ker(eU) meet ker(eS)),
+    // since this gives the action of G_{S,U} fixing the overall codomain.
+    // The result is that we need to loop over pairs g1, g2 so that g1+g2 in ker(eS) and check which compositions are equivalent to each other
+    // We can also apply another kind of transformation: composing with an element of OT^x / (OS^x * OU^x).  
     // TODO: Finish
 
 end intrinsic;
