@@ -61,5 +61,35 @@
     end for;
 
 
-
+    Attach("~/AbVarFq_Isogenies_Private/magma/IsogenyGraphBuilders.m");
+    _<x>:=PolynomialRing(Integers());
+    f:=x^4-2*x^2+121;
+    q:=Round(ConstantCoefficient(f)^(2/Degree(f)));
+    K:=EtaleAlgebra(f);
+    F:=PrimitiveElement(K);
+    V:=q/F;
+    R:=Order([F,V]);
+    wk:=WeakEquivalenceClassMonoid(R);
+    OK:=MaximalOrder(K);
+    Index(OK,R);
+    P:=PrimesAbove(2*R)[1];
+    for W in wk do
+        OW:=MultiplicatorRing(W);
+        MM:=SubIdealsOfIndexDividing(W,2);
+        for M in MM do
+            assert M ne W; // M c W
+            OM:=MultiplicatorRing(M);
+            is_wk:=IsWeakEquivalent(W,M);
+            assert P*W subset M;
+            if OM eq OW then
+                is_wk,"horizontal";
+            elif OM subset OW then
+                is_wk,"ascending",Index(OW,OM);
+            elif OW subset OM then
+                is_wk,"descending",Index(OM,OW);
+            else
+                is_wk,"not contained";
+            end if;
+        end for;
+    end for;
 
