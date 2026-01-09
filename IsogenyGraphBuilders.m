@@ -1,6 +1,7 @@
 // the name of the algorithms are not the definitive ones.
 
 declare attributes AlgEtQOrd: QuotientsUnitsOverorders, // transversals in K of T^*/(S^* meet T^*)
+                              QuotientOfJoinUnitsOverOrders, // transversals in K of O2^*/(O1^*O3^* meet O2^*)
                               InclusionOverorders, // whether S < T
                               JoinUnitsOverorders, // S^*T^* as a subgroup of OK^*
                               DistinguishedRepsICM;
@@ -42,6 +43,21 @@ intrinsic SubIdealsOfIndexDividing(I::AlgEtQIdl,N:RngIntElt)->SeqEnum[AlgEtQIdl]
         queue:=pot_new diff done;
     end while;
     return output;
+end intrinsic;
+
+intrinsic QuotientOfJoinUnitsOverOrders(R::AlgEtQOrd, O1::AlgEtQOrd, O2::AlgEtQOrd, O3::AlgEtQOrd)->SeqEnum[AlgEtQElt]
+{Let O1,O2,O3 be overorders of R. It returns a transversal of O2^*/(O1^*O3^* meet O2^*). The output is stored in an associative array attribute of R, populated on demand.}
+    if not assigned R`QuotientOfJoinUnitsOverOrders then
+       R`QuotientOfJoinUnitsOverOrders:=AssociativeArray();
+    end if;
+    o13:={O1,O3};
+    key:=<O2,o13>;
+    if not IsDefined(R`QuotientOfJoinUnitsOverOrders,key) then
+        U2,u2:=UnitGroup(O2);
+        den:=JoinUnitsOverorders(R,O1,O3) meet U2;
+        R`QuotientOfJoinUnitsOverOrders[key]:=[u2(t): t in Transversal(U2,den)];
+    end if;
+    return R`QuotientOfJoinUnitsOverOrders[key];
 end intrinsic;
 
 intrinsic JoinUnitsOverorders(R::AlgEtQOrd, S::AlgEtQOrd, T::AlgEtQOrd)->SeqEnum
@@ -138,7 +154,7 @@ intrinsic QuotientsUnitsOverorders(R::AlgEtQOrd,T::AlgEtQOrd,S::AlgEtQOrd)->SeqE
        R`QuotientsUnitsOverorders:=AssociativeArray();
     end if;
     if not IsDefined(R`QuotientsUnitsOverorders,<T,S>) then
-        if T subset S then
+        if InclusionOverorders(R,T,S) then
             // if T < S then T^* < S^*, so the quotient is trivial
             R`QuotientsUnitsOverorders[<T,S>]:=[One(Algebra(R))];
         else
@@ -345,17 +361,26 @@ intrinsic IsogenyGraphBuilder(R::AlgEtQOrd,N::RngIntElt) -> .
                     // now, we loop over all already computed edges E1 of degree d1=n/d2 such
                     // that target(E1) = source(E2) = E2[3], since we want to construct the composition E2*E1
                     // (first apply the isogeny E1 then the isogeny E2)
-                    for E1_t->E1s in edges[d1][E2[3]] do
-                        for E1 in E1s do
-                            //REMOVE?
-                                if not IsDefined(edges[n][E2[4]],E1[3]) then edges[n][E2[4]][E1[3]]:=[]; end if;
-                            Ecomp:=<E1[1],E2[2],E1[3],E2[4],E1[5]*E2[5]>;
-                            if not exists{E:E in edges[n][E2[4]][E1[3]]|
-                                AreIsogeniesEquivalent(Ecomp[5],E[5],E[3],E[4])} then
-                                Append(~edges[n][Ecomp[4]][Ecomp[3]],Ecomp);
-                            end if;
+                    //printf "n,d2,d1=%o,%o,%o,\n",n,d2,d1;
+                    if IsDefined(edges,d1) and IsDefined(edges[d1],E2[3]) then
+                        for E1_t->E1s in edges[d1][E2[3]] do
+                            for E1 in E1s do
+                                //REMOVE?
+                                    if not IsDefined(edges[n][E2[4]],E1[3]) then edges[n][E2[4]][E1[3]]:=[]; end if;
+                                O1:=MultiplicatorRing(E1[3]); // mult ring of source(E1)
+                                O2:=MultiplicatorRing(E1[4]); // mult ring of target(E1)=source(E2)
+                                O3:=MultiplicatorRing(E2[4]); // mult ring of target(E2)
+                                U:=QuotientOfJoinUnitsOverOrders(R,O1,O2,O3);
+                                for u in U do
+                                    Ecomp:=<E1[1],E2[2],E1[3],E2[4],E1[5]*u*E2[5]>;
+                                    if not exists{E:E in edges[n][E2[4]][E1[3]]|
+                                        AreIsogeniesEquivalent(Ecomp[5],E[5],E[3],E[4])} then
+                                        Append(~edges[n][Ecomp[4]][Ecomp[3]],Ecomp);
+                                    end if;
+                                end for;
+                            end for;
                         end for;
-                    end for;
+                    end if;
                 end for;
             end if;
         end for;
@@ -370,7 +395,9 @@ intrinsic IsogenyGraphBuilder(R::AlgEtQOrd,N::RngIntElt) -> .
                 edges_output_d cat:=edges_d_t_s;
             end for;
         end for;
-        edges_output[d]:=edges_output_d;
+        if #edges_output_d gt 0 then
+            edges_output[d]:=edges_output_d;
+        end if;
     end for;
     return classes,edges_output;
 end intrinsic;
@@ -395,6 +422,7 @@ end intrinsic;
 
     _<x>:=PolynomialRing(Integers());
     f:=x^4-2*x^2+121;
+    //f:=x^2 - 2*x + 5;
     q:=Round(ConstantCoefficient(f)^(2/Degree(f)));
     Ns:=[2,4,8,16,32,2*3,2*3*5,4*9];
 
