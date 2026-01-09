@@ -7,13 +7,13 @@
     Attach("~/AbVarFq_Isogenies_Private/magma/IsogenyGraphBuilders.m");
     PP<x>:=PolynomialRing(Integers());
     h:=PP!eval(c);
-    h;
     K:=EtaleAlgebra(h);
     F:=PrimitiveElement(K);
     q:=Round(ConstantCoefficient(h)^(2/Degree(h)));
     V:=q/F;
     R:=Order([F,V]);
     Ns:=[2,4,8,16,32,2*3,2*3*5,4*9];
+    tests:=[];
     for N in Ns do
         vert,edges:=IsogenyGraphBuilder_Naive(R,N);
         vert2,edges2:=IsogenyGraphBuilder_LessNaive(R,N);
@@ -25,9 +25,16 @@
             #vert3 eq #vert and
             Keys(edges) eq Keys(edges3) and
             forall{d:d in Keys(edges) | #edges[d] eq #edges3[d]};
+        Append(~tests,good);
         if not good then
             fprintf issue_file,"%o\n",c;
         end if;
     end for;
+    if &and(tests) then
+        printf "all good for %o\n",h;
+    else
+        printf "ISSUE found for %o\n",h;
+    end if;
+
 
 // issue for x^2 - 2*x + 5 - solved after introducing O2^*/(O1^*O3^* meet O2^*)
