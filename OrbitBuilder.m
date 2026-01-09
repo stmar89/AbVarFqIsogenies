@@ -14,8 +14,8 @@ intrinsic GSTAct(g::GrpAbElt, phi::Tup)->Tup
     Wt:=we_map(t);
     S := MultiplicatorRing(s);
     T := MultiplicatorRing(t);
-    eS := ExtensionHomPicardGroup(R,S);
-    eT := ExtensionHomPicardGroup(R,T);
+    eS := ExtensionHomPicardGroups(R,S);
+    eT := ExtensionHomPicardGroups(R,T);
 
     gS := (g@eS)+hS;
     gT := (g@eT)+hT;
@@ -33,7 +33,7 @@ intrinsic GSTAct(g::GrpAbElt, phi::Tup)->Tup
 end intrinsic;
 
 intrinsic GSTOrbit(phi::Tup)->SeqEnum
-{Given an isogeny phi from I to J represented by a tuple, returns the orbit G_{S,T}*phi}
+{Given an isogeny phi from I to J represented by a tuple, returns the orbit G_(S,T)*phi}
     s, hS := Explode(phi[1]);
     t, hT := Explode(phi[2]);
     I := phi[3];
@@ -46,14 +46,11 @@ intrinsic GSTOrbit(phi::Tup)->SeqEnum
     Wt := we_map(t);
     S := MultiplicatorRing(s);
     T := MultiplicatorRing(t);
-    eS := ExtensionHomPicardGroup(R,S);
-    eT := ExtensionHomPicardGroup(R,T);
+    eS := ExtensionHomPicardGroups(R,S);
+    eT := ExtensionHomPicardGroups(R,T);
 
-    // TODO: Should cache these kernels and their intersections
-    K := Kernel(eS) meet Kernel(eT);
     orb := [];
-    for g in RightTransversal(PR, K) do
-        // TODO: It would be nice to reuse some of the work here...
+    for g in DoubleKernelQuotient(R, S, T) do
         gS := (g@eS)+hS;
         gT := (g@eT)+hT;
         G := g@pR;
@@ -115,66 +112,79 @@ intrinsic GSTCompose(phi::Tup, psi::Tup)->SeqEnum
 {Given two isogenies where the weak equivalence class of the domain of psi is the same as the weak equivalence class of the codomain of phi, and that map between canonical representatives, return all possible compositions (up to equivalence)}
     t2, hT2 := Explode(psi[1]);
     u2, hU2 := Explode(psi[2]);
-    J2 := psi[3];
-    K2 := psi[4];
     x2 := psi[5];
 
-    R := Order(J2);
-    if Order(K2) ne R then
+    R := Order(psi[3]);
+    if Order(psi[4]) ne R then
         error "isogenies must be in the same isogeny class";
     end if;
     T := MultiplicatorRing(t2);
-    eT := ExtensionHomPicardGroups(R,T);
+    eT := ExtensionHomPicardGroups(R, T);
     U := MultiplicatorRing(u2);
-    eU := ExtensionHomPicardGroups(R,U);
 
+    s1, hS1 := Explode(phi[1]);
     t1, hT1 := Explode(phi[2]);
     if t1 ne t2 then
         error "Domain of second isogeny not weakly equivalent to codomain of first isogeny";
     end if;
 
     // Act so that the domain of psi matches the codomain of phi
-    phi := GSTAct((hT2 - hT2)@@eT, phi);
+    phi := GSTAct((hT2 - hT1)@@eT, phi);
+    assert phi[4] eq psi[3];
 
-    s1, hS1 := Explode(phi[1]);
-    I1 := phi[3];
-    J1 := phi[4];
-    x1 := phi[5];
-    assert J1 eq J2;
-
-    if Order(I1) ne R then
+    if Order(phi[3]) ne R then
         error "isogenies must be in the same isogeny class";
     end if;
 
     S := MultiplicatorRing(s1);
-    eS := ExtensionHomPicardGroups(R,S);
 
-    kS := Kernel(eS);
-    kT := Kernel(eT);
-    kU := Kernel(eU);
-    kST := kS meet kT;
-    //for g1 in Transversal(kT, kST) do
-    
-    // Since we can act to change the codomain to anything in u2, we leave it the same ([* u2, hU2 *] = K2)
-    // We then need to iterate over g2 in ker(eU) / (ker(eU) meet ker(eT))
-    // and g1 in ker(eT) / (ker(eT) meet ker(eS)), acting on psi by g2 and on phi by g1+g2.
-    // We can quotient the result by ker(eU) / (ker(eU) meet ker(eS)),
-    // since this gives the action of G_{S,U} fixing the overall codomain.
-    // The result is that we need to loop over pairs g1, g2 so that g1+g2 in ker(eS) and check which compositions are equivalent to each other
-    // We can also apply another kind of transformation: composing with an element of OT^x / (OS^x * OU^x).  
-    // TODO: Finish
-
+    ans := [];
+    for g1 in TripleKernelQuotient(R, S, T, U) do
+        g1phi := GSTAct(g1, phi);
+        assert g1phi[4] eq psi[3];
+        x1 := g1phi[5];
+        for z in QuotientOfJoinUnitsOverOrders(R, S, T, U) do
+            Append(~ans, <g1phi[1], psi[2], g1phi[3], psi[4], x1 * z * x2>);
+        end for;
+    end for;
+    return ans;
 end intrinsic;
 
-function compute_orbits_GSUT_on_Ms(T,Ms,R)
+function compute_orbits_GSUT_on_Ms(T, Ms, R, Wt)
     // Analogue of compute_orbits_UT_on_Ms from IsogenyGraphBuilders.m
     // But also taking representatives for the orbit of G_{S,T} (in order to stay among the ideals in Ms, only have an action of ker(eT) / (ker(eT) meet ker(eS)))
-
-    // TODO: Finish
+    if #Ms eq 0 then
+        return 0;
+    end if;
+    remaining := {@ M:M in Ms @};
+    orbits := [];
+    icm, icm_map := IdealClassMonoidAbstract(R);
+    PR, pR := PicardGroup(R);
+    repeat
+        M1 := remaining[1];
+        Append(~orbits, M1);
+        // We compute the orbit of M1:
+        // If S is the multiplicator ring of M1, then S^* acts trivially on M1.
+        // So, the orbit of M1 by the action of T^* can be computed using the finite quotient T^*/(S^* meet T^*)
+        // Reps in K of this quotient are stored in the associative array R`QuotientsUnitsOverorders[<T,S>], 
+        // which is populated on demand by the corresponding intrinsc, to avoid useless recomputation.
+        S := MultiplicatorRing(M1);
+        UST := QuotientsUnitsOverorders(R, S, T);
+        for g in DoubleKernelQuotient(R, S, T) do
+            I := g @ pR;
+            test,y := IsIsomorphic(I * Wt, Wt);
+            assert test;
+            gM1 := y * I * M1;
+            assert gM1 subset Wt;
+            orbit_gM1 := {@ v * gM1 : v in UST @};
+            remaining diff:= orbit_gM1;
+        end for;
+    until #remaining eq 0;
+    return orbits;
 end function;
 
 intrinsic IsogenyOrbitBuilder(R::AlgEtQOrd,N::RngIntElt) -> .
-{Given the Frobenius order R of a squarefree ordinary isogeny class and a positive integer N, returns an associative array whose value at each integer d dividing N is a sequence of isogenies of degree d so that the set of all isogenies of degree d is obtained by taking orbits for the action of G_{s,t} on each representative}
+{Given the Frobenius order R of a squarefree ordinary isogeny class and a positive integer N, returns an associative array whose value at each integer d dividing N is a sequence of isogenies of degree d so that the set of all isogenies of degree d is obtained by taking orbits for the action of G_(s,t) on each representative}
     we,we_map:=WeakEquivalenceClassMonoidAbstract(R);
     icm,icm_map:=IdealClassMonoidAbstract(R);
     PR,pR:=PicardGroup(R);
@@ -187,7 +197,7 @@ intrinsic IsogenyOrbitBuilder(R::AlgEtQOrd,N::RngIntElt) -> .
         T := MultiplicatorRing(t);
         Wt := we_map(t);
         Ms := [M : M in IntermediateIdeals(Wt, N*Wt : Maximal:=true) | N mod Index(Wt, M) eq 0]; //sub-frac.R-ideals M<Wt s.t. [Wt:M]|N
-        Ms:=compute_orbits_GSUT_on_Ms(T,Ms,R);
+        Ms:=compute_orbits_GSUT_on_Ms(T, Ms, R, Wt);
         for M in Ms do
             dM := Index(Wt,M);
             // REMOVE THE NEXT ONE?
@@ -286,7 +296,7 @@ intrinsic IsogenyGraphBuilder_FromOrbit(R::AlgEtQOrd,N::RngIntElt,A::Assoc) -> .
     return classes, edges_output;
 end intrinsic;
 
-intrinsic IsogenyGraphChecker(R::AlgEtQOrd, N::RngIntElt)
+intrinsic IsogenyGraphChecker(R::AlgEtQOrd, N::RngIntElt) -> SeqEnum, Assoc, Assoc
 {Checks that the number of isogenies between each pair of weak equivalence classes predicted by IsogenyGraphBuilder and IsogenyOrbitBuilder agrees}
     PR,pR:=PicardGroup(R);
     reps := IsogenyOrbitBuilder(R, N);
