@@ -18,15 +18,15 @@
         vert,edges:=IsogenyGraphBuilder_Naive(R,N);
         vert2,edges2:=IsogenyGraphBuilder_LessNaive(R,N);
         vert3,edges3:=IsogenyGraphBuilder(R,N);
-        test:=
+        good:=
             #vert2 eq #vert and
             Keys(edges) eq Keys(edges2) and
             forall{d:d in Keys(edges) | #edges[d] eq #edges2[d]} and
             #vert3 eq #vert and
             Keys(edges) eq Keys(edges3) and
             forall{d:d in Keys(edges) | #edges[d] eq #edges3[d]};
-        if not test then
-            fprintf issue_file,c;
+        if not good then
+            fprintf issue_file,"%o\n",c;
         end if;
     end for;
 
