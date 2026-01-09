@@ -93,3 +93,39 @@
         end for;
     end for;
 
+    Attach("~/AbVarFq_Isogenies_Private/magma/IsogenyGraphBuilders.m");
+    PP<x>:=PolynomialRing(Integers());
+    h:=1+2*x-x^2-5*x^3-8*x^4-15*x^5-9*x^6+54*x^7+81*x^8;
+    h:=PP!Reverse(Coefficients(h));
+    K:=EtaleAlgebra(h);
+    F:=PrimitiveElement(K);
+    q:=Round(ConstantCoefficient(h)^(2/Degree(h)));
+    _,p:=IsPrimePower(q);
+    V:=q/F;
+    R:=Order([F,V]);
+    [ Index(R,P) : P in SingularPrimes(R) ]; // [2,5,5]
+    [ IsInvertible(P): P in PrimesAbove(2*R) ]; // [f,t] 
+    wk:=WeakEquivalenceClassMonoid(R);
+    P:=SingularPrimes(R)[2]; // above 2
+    for W in wk do
+        OW:=MultiplicatorRing(W);
+        d:=Index(R,P);
+        MM:=SubIdealsOfIndexDividing(W,d);
+        for M in MM do
+            assert M ne W; // M c W
+            OM:=MultiplicatorRing(M);
+            is_wk:=IsWeakEquivalent(W,M);
+            if P*W subset M then // iff M c W is a minimal P-isogeny
+                if OM eq OW then
+                    is_wk,"horizontal";
+                elif OM subset OW then
+                    is_wk,"ascending",Index(OW,OM);
+                elif OW subset OM then
+                    is_wk,"descending",Index(OM,OW);
+                else
+                    is_wk,"not contained";
+                end if;
+            end if;
+        end for;
+    end for;
+
