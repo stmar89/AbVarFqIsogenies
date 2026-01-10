@@ -4,6 +4,7 @@ declare attributes AlgEtQOrd: QuotientsUnitsOverorders, // transversals in K of 
                               QuotientOfJoinUnitsOverOrders, // transversals in K of O2^*/(O1^*O3^* meet O2^*)
                               InclusionOverorders, // whether S < T
                               JoinUnitsOverorders, // S^*T^* as a subgroup of OK^*
+                              KernelsExtensionHoms, // ker(e_S)
                               KernelIntersections, // ker(e_S) meet ker(e_T) as a subgroup of Pic(R)
                               GSTQuotients, // Pic(R) / ker(e_S) meet ker(e_T)
                               DoubleKernelQuotients, // ker(e_T) / ker(e_S) meet ker(e_T)
@@ -90,6 +91,18 @@ intrinsic InclusionOverorders(R::AlgEtQOrd, S::AlgEtQOrd, T::AlgEtQOrd)->BoolElt
     return R`InclusionOverorders[S][T];
 end intrinsic;
 
+intrinsic KernelsExtensionHom(R::AlgEtQOrd, S::AlgEtQOrd)->GrpAb
+{}
+    if not assigned R`KernelsExtensionHoms then
+        R`KernelsExtensionHoms := AssociativeArray();
+    end if;
+    if not IsDefined(R`KernelsExtensionHoms, S) then
+        eS := ExtensionHomPicardGroups(R,S);
+        R`KernelsExtensionHoms[S] := Kernel(eS);
+    end if;
+    return R`KernelsExtensionHoms[S];
+end intrinsic;
+
 intrinsic KernelIntersections(R::AlgEtQOrd, S::AlgEtQOrd, T::AlgEtQOrd)->.
 {Given an order R and two overorders S,T of R, returns ker(e_S) meet ker(e_T) as a subgroup of Pic(R).  The output is stored in an associative array attribute of R, which is populated on demand.}
     if not assigned R`KernelIntersections then
@@ -97,10 +110,7 @@ intrinsic KernelIntersections(R::AlgEtQOrd, S::AlgEtQOrd, T::AlgEtQOrd)->.
     end if;
     key := {S,T};
     if not IsDefined(R`KernelIntersections, key) then
-        PR := PicardGroup(R);
-        eS := ExtensionHomPicardGroups(R,S);
-        eT := ExtensionHomPicardGroups(R,T);
-        R`KernelIntersections[key] := Kernel(eS) meet Kernel(eT);
+        R`KernelIntersections[key] := KernelsExtensionHom(R,S) meet KernelsExtensionHom(R,T);
     end if;
     return R`KernelIntersections[key];
 end intrinsic;
@@ -125,7 +135,7 @@ intrinsic DoubleKernelQuotient(R::AlgEtQOrd, S::AlgEtQOrd, T::AlgEtQOrd)->.
     key := <S,T>;
     if not IsDefined(R`DoubleKernelQuotients,key) then
         eT := ExtensionHomPicardGroups(R,T);
-        R`DoubleKernelQuotients[key] := Transversal(Kernel(eT), KernelIntersections(R, S, T));
+        R`DoubleKernelQuotients[key] := Transversal(KernelsExtensionHom(R,T), KernelIntersections(R, S, T));
     end if;
     return R`DoubleKernelQuotients[key];
 end intrinsic;
@@ -137,8 +147,7 @@ intrinsic TripleKernelQuotient(R::AlgEtQOrd, S::AlgEtQOrd, T::AlgEtQOrd, U::AlgE
     end if;
     key := <T,{S,U}>;
     if not IsDefined(R`TripleKernelQuotients, key) then
-        eT := ExtensionHomPicardGroups(R,T);
-        kT := Kernel(eT);
+        kT := KernelsExtensionHom(R,T);
         R`TripleKernelQuotients[key] := Transversal(kT, KernelIntersections(R, S, T) + KernelIntersections(R, T, U));
     end if;
     return R`TripleKernelQuotients[key];

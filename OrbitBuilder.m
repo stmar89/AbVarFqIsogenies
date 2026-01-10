@@ -195,6 +195,7 @@ intrinsic IsogenyOrbitBuilder(R::AlgEtQOrd,N::RngIntElt) -> .
     // reps_min[dM] is the sequence of minimal isogenies of degree dM
     for t in Classes(we) do
         T := MultiplicatorRing(t);
+        eT := ExtensionHomPicardGroups(R, T);
         Wt := we_map(t);
         Ms := [M : M in IntermediateIdeals(Wt, N*Wt : Maximal:=true) | N mod Index(Wt, M) eq 0]; //sub-frac.R-ideals M<Wt s.t. [Wt:M]|N
         Ms:=compute_orbits_GSUT_on_Ms(T, Ms, R, Wt);
@@ -208,7 +209,10 @@ intrinsic IsogenyOrbitBuilder(R::AlgEtQOrd,N::RngIntElt) -> .
             WsIaa, Iaa, aa := DistinguishedRepsICM(s, aaS);
             test, x := IsIsomorphic(M, WsIaa); // x*Ws*Iaa = M
             assert test; // sanity check
-            label := <[* s,aaS *],[* t,Identity(T) *], WsIaa, Wt, x>;
+            label := <[* s,aaS *],[* t, PR.0@eT *], WsIaa, Wt, x>;
+            for olabel in reps_min[dM] do
+                assert not AreIsogeniesEquivalent(label[5], label[3], label[4], olabel[5], olabel[3], olabel[4]);
+            end for;
             Append(~reps_min[dM], label);
             // REMOVE THE NEXT TWO IF?
                 if not IsDefined(reps[dM],t) then
@@ -220,6 +224,20 @@ intrinsic IsogenyOrbitBuilder(R::AlgEtQOrd,N::RngIntElt) -> .
             Append(~reps[dM][t][s], label);
         end for;
     end for;
+
+    // FIXME - remove this block once done debugging
+    for d->reps_d in reps do
+        for t->reps_d_t in reps[d] do
+            for s->reps_d_t_s in reps[d][t] do
+                if #reps_d_t_s eq 2 then
+                    phi, psi := Explode(reps_d_t_s);
+                    assert not AreIsogeniesEquivalent(phi[5],phi[3],phi[4],psi[5],psi[3],psi[4]);
+                end if;
+            end for;
+        end for;
+    end for;
+    // FIXME - remove this block once done debugging
+
     // now we have all minimal reps. we compose
     for n in Exclude(Divisors(N), 1) do
         if not IsDefined(reps, n) then
@@ -240,8 +258,13 @@ intrinsic IsogenyOrbitBuilder(R::AlgEtQOrd,N::RngIntElt) -> .
                             //REMOVE?
                                 if not IsDefined(reps[n][E2[2][1]],E1[1][1]) then reps[n][E2[2][1]][E1[1][1]]:=[]; end if;
                             for Ecomp in GSTCompose(E1, E2) do
-                                if not exists{E:E in reps[n][E2[2][1]][E1[1][1]]|
+                                //if not exists{E:E in reps[n][E2[2][1]][E1[1][1]]|
+                                if not exists{E:E in reps[n][Ecomp[2][1]][Ecomp[1][1]]|
                                     AreIsogeniesGSTEquivalent(Ecomp[5],Ecomp[3],Ecomp[4],E[5],E[3],E[4])} then
+                                    if #reps[n][Ecomp[2][1]][Ecomp[1][1]] eq 1 then
+                                        EE := reps[n][Ecomp[2][1]][Ecomp[1][1]][1];
+                                        assert not AreIsogeniesEquivalent(Ecomp[5],Ecomp[3],Ecomp[4],EE[5],EE[3],EE[4]);
+                                    end if;
                                     Append(~reps[n][Ecomp[2][1]][Ecomp[1][1]], Ecomp);
                                 end if;
                             end for;
@@ -258,6 +281,10 @@ intrinsic IsogenyOrbitBuilder(R::AlgEtQOrd,N::RngIntElt) -> .
         reps_output_d:=[];
         for t->reps_d_t in reps[d] do
             for s->reps_d_t_s in reps[d][t] do
+                if #reps_d_t_s eq 2 then
+                    phi, psi := Explode(reps_d_t_s);
+                    assert not AreIsogeniesEquivalent(phi[5],phi[3],phi[4],psi[5],psi[3],psi[4]);
+                end if;
                 reps_output_d cat:=reps_d_t_s;
             end for;
         end for;
@@ -298,7 +325,6 @@ end intrinsic;
 
 intrinsic IsogenyGraphChecker(R::AlgEtQOrd, N::RngIntElt) -> SeqEnum, Assoc, Assoc
 {Checks that the number of isogenies between each pair of weak equivalence classes predicted by IsogenyGraphBuilder and IsogenyOrbitBuilder agrees}
-    PR,pR:=PicardGroup(R);
     reps := IsogenyOrbitBuilder(R, N);
     by_orb := AssociativeArray(:Default:=0);
     for d->reps_d in reps do
@@ -307,13 +333,7 @@ intrinsic IsogenyGraphChecker(R::AlgEtQOrd, N::RngIntElt) -> SeqEnum, Assoc, Ass
             t := phi[2][1];
             S := MultiplicatorRing(s);
             T := MultiplicatorRing(t);
-            eS := ExtensionHomPicardGroups(R, S);
-            eT := ExtensionHomPicardGroups(R, T);
-            KS := Kernel(eS);
-            KT := Kernel(eT);
-            K := KS meet KT;
-            // TODO: as noted above, we should cache these kernels, maps, intersection, etc
-            by_orb[<d,s,t>] +:= #PR / #K;
+            by_orb[<d,s,t>] +:= #GSTQuotient(R, S, T);
         end for;
     end for;
 
@@ -329,5 +349,5 @@ intrinsic IsogenyGraphChecker(R::AlgEtQOrd, N::RngIntElt) -> SeqEnum, Assoc, Ass
 
     mismatches := [<key, by_orb[key], by_edge[key]> : key in Keys(by_orb) join Keys(by_edge) | by_orb[key] ne by_edge[key]];
 
-    return mismatches, reps, edges;
+    return mismatches, reps, edges, by_orb, by_edge;
 end intrinsic;
