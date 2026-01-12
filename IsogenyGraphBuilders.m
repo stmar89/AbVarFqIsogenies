@@ -98,7 +98,7 @@ intrinsic KernelsExtensionHom(R::AlgEtQOrd, S::AlgEtQOrd)->GrpAb
     if not assigned R`KernelsExtensionHoms then
         R`KernelsExtensionHoms := AssociativeArray();
     end if;
-    if not IsDefined(R`KernelsExtensionHoms, S) then
+    if not IsDefined(R`KernelsExtensionHoms, myHash(S)) then
         eS := ExtensionHomPicardGroups(R,S);
         R`KernelsExtensionHoms[myHash(S)] := Kernel(eS);
     end if;
@@ -624,7 +624,7 @@ N= 15, t=4.140, connected? false
     V:=q/F;
     R:=Order([F,V]);
     SetProfile(true);
-    vert3,edges3:=IsogenyGraphBuilder(R,36);
+    vert3,edges3:=IsogenyGraphBuilder(R,30);
     SetProfile(false);
     G:=ProfileGraph();
     ProfilePrintByTotalTime(G:Max:=10);
