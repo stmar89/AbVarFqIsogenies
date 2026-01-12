@@ -438,13 +438,15 @@ intrinsic IsogenyGraphBuilder(R::AlgEtQOrd,N::RngIntElt) -> .
                                 O2:=MultiplicatorRing(E1[4]); // mult ring of target(E1)=source(E2)
                                 O3:=MultiplicatorRing(E2[4]); // mult ring of target(E2)
                                 U:=QuotientOfJoinUnitsOverOrders(R,O1,O2,O3);
+                                LU:=[];
                                 for u in U do
                                     Ecomp:=<E1[1],E2[2],E1[3],E2[4],E1[5]*u*E2[5]>;
                                     if not exists{E:E in edges[n][E2[4]][E1[3]]|
                                         AreIsogeniesEquivalent(Ecomp[5],E[5],E[3],E[4])} then
-                                        Append(~edges[n][Ecomp[4]][Ecomp[3]],Ecomp);
+                                        Append(~LU,Ecomp);
                                     end if;
                                 end for;
+                                edges[n][Ecomp[4]][Ecomp[3]] cat:=LU;
                             end for;
                         end for;
                     end if;
