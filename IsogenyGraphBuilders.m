@@ -179,9 +179,9 @@ intrinsic AreIsogeniesEquivalent(x1::AlgEtQElt, I1::AlgEtQIdl, J1::AlgEtQIdl, x2
     T:=MultiplicatorRing(J1);
     R:=Order(I1);
     if InclusionOverorders(R,S,T) then
-        return inv in T;
+        return elt in T and inv in T;
     elif InclusionOverorders(R,T,S) then
-        return inv in S;
+        return elt in S and inv in S;
     end if;
     OK:=MaximalOrder(K);
     if inv notin OK then
@@ -202,9 +202,9 @@ intrinsic AreIsogeniesEquivalent(x1::AlgEtQElt, x2::AlgEtQElt, I::AlgEtQIdl, J::
     T:=MultiplicatorRing(J);
     R:=Order(I);
     if InclusionOverorders(R,S,T) then
-        return inv in T;
+        return elt in T and inv in T;
     elif InclusionOverorders(R,T,S) then
-        return inv in S;
+        return elt in S and inv in S;
     end if;
     OK:=MaximalOrder(K);
     if elt notin OK or inv notin OK then

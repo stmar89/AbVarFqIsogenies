@@ -68,7 +68,8 @@ intrinsic GSTOrbit(phi::Tup)->SeqEnum
 end intrinsic;
 
 intrinsic AreIsogeniesGSTEquivalent(x1::AlgEtQElt,I1::AlgEtQIdl,J1::AlgEtQIdl,x2::AlgEtQElt,I2::AlgEtQIdl,J2::AlgEtQIdl)->BoolElt
-{}
+{//TODO
+}
     R := Order(I1);
     PR,pR := PicardGroup(R);
     assert R eq Order(I2) and R eq Order(J1) and R eq Order(J2);
@@ -229,7 +230,7 @@ intrinsic IsogenyOrbitBuilder(R::AlgEtQOrd,N::RngIntElt) -> .
     for d->reps_d in reps do
         for t->reps_d_t in reps[d] do
             for s->reps_d_t_s in reps[d][t] do
-                if #reps_d_t_s eq 2 then
+                if #reps_d_t_s eq 2 then //FIXME Stefano: why testing only for eq 2 and not ge 2?
                     phi, psi := Explode(reps_d_t_s);
                     assert not AreIsogeniesEquivalent(phi[5],phi[3],phi[4],psi[5],psi[3],psi[4]);
                 end if;
@@ -261,6 +262,9 @@ intrinsic IsogenyOrbitBuilder(R::AlgEtQOrd,N::RngIntElt) -> .
                                 //if not exists{E:E in reps[n][E2[2][1]][E1[1][1]]|
                                 if not exists{E:E in reps[n][Ecomp[2][1]][Ecomp[1][1]]|
                                     AreIsogeniesGSTEquivalent(Ecomp[5],Ecomp[3],Ecomp[4],E[5],E[3],E[4])} then
+                                    // FIXME Stefano: added next assert
+                                    assert not exists{E:E in reps[n][Ecomp[2][1]][Ecomp[1][1]]|AreIsogeniesEquivalent(Ecomp[5],Ecomp[3],Ecomp[4],E[5],E[3],E[4])};
+                                    // FIXME Stefano: I don't understand the logic behind the next assert. Ask David
                                     if #reps[n][Ecomp[2][1]][Ecomp[1][1]] eq 1 then
                                         EE := reps[n][Ecomp[2][1]][Ecomp[1][1]][1];
                                         assert not AreIsogeniesEquivalent(Ecomp[5],Ecomp[3],Ecomp[4],EE[5],EE[3],EE[4]);
@@ -281,7 +285,7 @@ intrinsic IsogenyOrbitBuilder(R::AlgEtQOrd,N::RngIntElt) -> .
         reps_output_d:=[];
         for t->reps_d_t in reps[d] do
             for s->reps_d_t_s in reps[d][t] do
-                if #reps_d_t_s eq 2 then
+                if #reps_d_t_s eq 2 then //FIXME Stefano: why testing only for eq 2 and not ge 2?
                     phi, psi := Explode(reps_d_t_s);
                     assert not AreIsogeniesEquivalent(phi[5],phi[3],phi[4],psi[5],psi[3],psi[4]);
                 end if;
