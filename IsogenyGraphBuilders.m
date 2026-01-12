@@ -386,7 +386,7 @@ intrinsic IsogenyGraphBuilder(R::AlgEtQOrd,N::RngIntElt) -> .
         for M in Ms do
             dM:=Index(Wt,M);
             // REMOVE THE NEXT ONE?
-                if not IsDefined(edges,dM) then edges[dM]:=AssociativeArray(); end if;
+            if not IsDefined(edges,dM) then edges[dM]:=AssociativeArray(); end if;
             source_M:=M@@icm_map;
             s:=WEClass(source_M);
             aaS:=PicClass(source_M);
@@ -402,8 +402,6 @@ intrinsic IsogenyGraphBuilder(R::AlgEtQOrd,N::RngIntElt) -> .
                 test,y:=IsIsomorphic(S!!(Iaa*Ibb),S!!Iaa1);
                 assert test;
                 label:=<[* s,aa1S *],[* t,bbT *],WsIaa1,WtIbb,x*y>;
-//                target:=label[4];
-//                source:=label[3];
                 target:=myHash(label[4]);
                 source:=myHash(label[3]);
                 Append(~edges_min[dM],label);
@@ -438,8 +436,8 @@ intrinsic IsogenyGraphBuilder(R::AlgEtQOrd,N::RngIntElt) -> .
                     if IsDefined(edges,d1) and IsDefined(edges[d1],source_E2) then
                         for E1_t->E1s in edges[d1][source_E2] do
                             for E1 in E1s do
-                                //REMOVE?
                                 source_E1:=myHash(E1[3]);
+                                //REMOVE?
                                 if not IsDefined(edges[n][target_E2],source_E1) then edges[n][target_E2][source_E1]:=[]; end if;
                                 O1:=MultiplicatorRing(E1[3]); // mult ring of source(E1)
                                 O2:=MultiplicatorRing(E1[4]); // mult ring of target(E1)=source(E2)
