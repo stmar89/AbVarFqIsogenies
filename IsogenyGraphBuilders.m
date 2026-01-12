@@ -55,8 +55,8 @@ intrinsic QuotientOfJoinUnitsOverOrders(R::AlgEtQOrd, O1::AlgEtQOrd, O2::AlgEtQO
     if not assigned R`QuotientOfJoinUnitsOverOrders then
        R`QuotientOfJoinUnitsOverOrders:=AssociativeArray();
     end if;
-    o13:={O1,O3};
-    key:=<O2,o13>;
+    o13:={myHash(O1),myHash(O3)};
+    key:=<myHash(O2),o13>;
     if not IsDefined(R`QuotientOfJoinUnitsOverOrders,key) then
         U2,u2:=UnitGroup(O2);
         den:=JoinUnitsOverorders(R,O1,O3) meet U2;
@@ -70,7 +70,7 @@ intrinsic JoinUnitsOverorders(R::AlgEtQOrd, S::AlgEtQOrd, T::AlgEtQOrd)->GrpAb
     if not assigned R`JoinUnitsOverorders then
        R`JoinUnitsOverorders:=AssociativeArray();
     end if;
-    set:={S,T};
+    set:={myHash(S),myHash(T)};
     if not IsDefined(R`JoinUnitsOverorders,set) then
         R`JoinUnitsOverorders[set]:=UnitGroup(S)+UnitGroup(T);
     end if;
@@ -82,25 +82,27 @@ intrinsic InclusionOverorders(R::AlgEtQOrd, S::AlgEtQOrd, T::AlgEtQOrd)->BoolElt
     if not assigned R`InclusionOverorders then
        R`InclusionOverorders:=AssociativeArray();
     end if;
-    if not IsDefined(R`InclusionOverorders,S) then
-        R`InclusionOverorders[S]:=AssociativeArray();
+    S_hash:=myHash(S);
+    T_hash:=myHash(T);
+    if not IsDefined(R`InclusionOverorders,S_hash) then
+        R`InclusionOverorders[S_hash]:=AssociativeArray();
     end if;
-    if not IsDefined(R`InclusionOverorders[S],T) then
-        R`InclusionOverorders[S][T]:=S subset T;
+    if not IsDefined(R`InclusionOverorders[S_hash],T_hash) then
+        R`InclusionOverorders[S_hash][T_hash]:=S subset T;
     end if;
-    return R`InclusionOverorders[S][T];
+    return R`InclusionOverorders[S_hash][T_hash];
 end intrinsic;
 
 intrinsic KernelsExtensionHom(R::AlgEtQOrd, S::AlgEtQOrd)->GrpAb
-{}
+{Return the kernel of the group homorphism Pic(R)->Pic(S) induced by the extension map I->IS. The output is stored in an AssociativeArray in an attribute of R, which is populated on demand.}
     if not assigned R`KernelsExtensionHoms then
         R`KernelsExtensionHoms := AssociativeArray();
     end if;
     if not IsDefined(R`KernelsExtensionHoms, S) then
         eS := ExtensionHomPicardGroups(R,S);
-        R`KernelsExtensionHoms[S] := Kernel(eS);
+        R`KernelsExtensionHoms[myHash(S)] := Kernel(eS);
     end if;
-    return R`KernelsExtensionHoms[S];
+    return R`KernelsExtensionHoms[myHash(S)];
 end intrinsic;
 
 intrinsic KernelIntersections(R::AlgEtQOrd, S::AlgEtQOrd, T::AlgEtQOrd)->.
@@ -108,7 +110,7 @@ intrinsic KernelIntersections(R::AlgEtQOrd, S::AlgEtQOrd, T::AlgEtQOrd)->.
     if not assigned R`KernelIntersections then
         R`KernelIntersections := AssociativeArray();
     end if;
-    key := {S,T};
+    key := {myHash(S),myHash(T)};
     if not IsDefined(R`KernelIntersections, key) then
         R`KernelIntersections[key] := KernelsExtensionHom(R,S) meet KernelsExtensionHom(R,T);
     end if;
@@ -120,7 +122,7 @@ intrinsic GSTQuotient(R::AlgEtQOrd, S::AlgEtQOrd, T::AlgEtQOrd)->.
     if not assigned R`GSTQuotients then
         R`GSTQuotients := AssociativeArray();
     end if;
-    key := {S,T};
+    key := {myHash(S),myHash(T)};
     if not IsDefined(R`GSTQuotients,key) then
         R`GSTQuotients[key] := Transversal(PicardGroup(R), KernelIntersections(R, S, T));
     end if;
@@ -132,7 +134,7 @@ intrinsic DoubleKernelQuotient(R::AlgEtQOrd, S::AlgEtQOrd, T::AlgEtQOrd)->.
     if not assigned R`DoubleKernelQuotients then
         R`DoubleKernelQuotients := AssociativeArray();
     end if;
-    key := <S,T>;
+    key := <myHash(S),myHash(T)>;
     if not IsDefined(R`DoubleKernelQuotients,key) then
         eT := ExtensionHomPicardGroups(R,T);
         R`DoubleKernelQuotients[key] := Transversal(KernelsExtensionHom(R,T), KernelIntersections(R, S, T));
@@ -145,12 +147,36 @@ intrinsic TripleKernelQuotient(R::AlgEtQOrd, S::AlgEtQOrd, T::AlgEtQOrd, U::AlgE
     if not assigned R`TripleKernelQuotients then
         R`TripleKernelQuotients := AssociativeArray();
     end if;
-    key := <T,{S,U}>;
+    key := <myHash(T),{myHash(S),myHash(U)}>;
     if not IsDefined(R`TripleKernelQuotients, key) then
         kT := KernelsExtensionHom(R,T);
         R`TripleKernelQuotients[key] := Transversal(kT, KernelIntersections(R, S, T) + KernelIntersections(R, T, U));
     end if;
     return R`TripleKernelQuotients[key];
+end intrinsic;
+
+intrinsic QuotientsUnitsOverorders(R::AlgEtQOrd,T::AlgEtQOrd,S::AlgEtQOrd)->SeqEnum
+{Given an order R and two overorders T,S of R, returns a sequence of representatives in K of T^*/(S^* meet T^*). The output for each ordered pair <T,S> is stored in an associative array attribute of R, which is populated on demand.}
+    if not assigned R`QuotientsUnitsOverorders then
+       R`QuotientsUnitsOverorders:=AssociativeArray();
+    end if;
+    key:=<myHash(T),myHash(S)>;
+    if not IsDefined(R`QuotientsUnitsOverorders,key) then
+        if InclusionOverorders(R,T,S) then
+            // if T < S then T^* < S^*, so the quotient is trivial
+            R`QuotientsUnitsOverorders[key]:=[One(Algebra(R))];
+        else
+            UT,UTmap:=UnitGroup(T);
+            US,USmap:=UnitGroup(S);
+            if UT subset US then
+                // this choice of transversal might make things faster later
+                R`QuotientsUnitsOverorders[key]:=[One(Algebra(R))];
+            else
+                R`QuotientsUnitsOverorders[key]:=[UTmap(v):v in Transversal(UT,UT meet US)];
+            end if;
+        end if;
+    end if;
+    return R`QuotientsUnitsOverorders[key];
 end intrinsic;
 
 intrinsic AreIsogeniesEquivalent(x1::AlgEtQElt, I1::AlgEtQIdl, J1::AlgEtQIdl, x2::AlgEtQElt, I2::AlgEtQIdl, J2::AlgEtQIdl) -> BoolElt
@@ -213,29 +239,6 @@ intrinsic AreIsogeniesEquivalent(x1::AlgEtQElt, x2::AlgEtQElt, I::AlgEtQIdl, J::
     _,uOK:=UnitGroup(OK);
     U:=JoinUnitsOverorders(R,S,T); // U = S^*T^* as a subgroup of OK^*
     return (elt@@uOK) in U;
-end intrinsic;
-
-intrinsic QuotientsUnitsOverorders(R::AlgEtQOrd,T::AlgEtQOrd,S::AlgEtQOrd)->SeqEnum
-{Given an order R and two overorders T,S of R, returns a sequence of representatives in K of T^*/(S^* meet T^*). The output for each ordered pair <T,S> is stored in an associative array attribute of R, which is populated on demand.}
-    if not assigned R`QuotientsUnitsOverorders then
-       R`QuotientsUnitsOverorders:=AssociativeArray();
-    end if;
-    if not IsDefined(R`QuotientsUnitsOverorders,<T,S>) then
-        if InclusionOverorders(R,T,S) then
-            // if T < S then T^* < S^*, so the quotient is trivial
-            R`QuotientsUnitsOverorders[<T,S>]:=[One(Algebra(R))];
-        else
-            UT,UTmap:=UnitGroup(T);
-            US,USmap:=UnitGroup(S);
-            if UT subset US then
-                // this choice of transversal might make things faster later
-                R`QuotientsUnitsOverorders[<T,S>]:=[One(Algebra(R))];
-            else
-                R`QuotientsUnitsOverorders[<T,S>]:=[UTmap(v):v in Transversal(UT,UT meet US)];
-            end if;
-        end if;
-    end if;
-    return R`QuotientsUnitsOverorders[<T,S>];
 end intrinsic;
 
 compute_orbits_UT_on_Ms:=function(T,Ms,R)
@@ -399,8 +402,10 @@ intrinsic IsogenyGraphBuilder(R::AlgEtQOrd,N::RngIntElt) -> .
                 test,y:=IsIsomorphic(S!!(Iaa*Ibb),S!!Iaa1);
                 assert test;
                 label:=<[* s,aa1S *],[* t,bbT *],WsIaa1,WtIbb,x*y>;
-                target:=label[4];
-                source:=label[3];
+//                target:=label[4];
+//                source:=label[3];
+                target:=myHash(label[4]);
+                source:=myHash(label[3]);
                 Append(~edges_min[dM],label);
                 // REMOVE THE NEXT TWO IF?
                     if not IsDefined(edges[dM],target) then
@@ -423,17 +428,19 @@ intrinsic IsogenyGraphBuilder(R::AlgEtQOrd,N::RngIntElt) -> .
             if d2 lt n and n mod d2 eq 0 then
                 d1:=n div d2;
                 for E2 in E_min_d2 do
+                    target_E2:=myHash(E2[4]);
                     // REMOVE?
-                        if not IsDefined(edges[n],E2[4]) then edges[n][E2[4]]:=AssociativeArray(); end if;
+                    if not IsDefined(edges[n],target_E2) then edges[n][target_E2]:=AssociativeArray(); end if;
                     // now, we loop over all already computed edges E1 of degree d1=n/d2 such
                     // that target(E1) = source(E2) = E2[3], since we want to construct the composition E2*E1
                     // (first apply the isogeny E1 then the isogeny E2)
-                    //printf "n,d2,d1=%o,%o,%o,\n",n,d2,d1;
-                    if IsDefined(edges,d1) and IsDefined(edges[d1],E2[3]) then
-                        for E1_t->E1s in edges[d1][E2[3]] do
+                    source_E2:=myHash(E2[3]);
+                    if IsDefined(edges,d1) and IsDefined(edges[d1],source_E2) then
+                        for E1_t->E1s in edges[d1][source_E2] do
                             for E1 in E1s do
                                 //REMOVE?
-                                    if not IsDefined(edges[n][E2[4]],E1[3]) then edges[n][E2[4]][E1[3]]:=[]; end if;
+                                source_E1:=myHash(E1[3]);
+                                if not IsDefined(edges[n][target_E2],source_E1) then edges[n][target_E2][source_E1]:=[]; end if;
                                 O1:=MultiplicatorRing(E1[3]); // mult ring of source(E1)
                                 O2:=MultiplicatorRing(E1[4]); // mult ring of target(E1)=source(E2)
                                 O3:=MultiplicatorRing(E2[4]); // mult ring of target(E2)
@@ -441,12 +448,12 @@ intrinsic IsogenyGraphBuilder(R::AlgEtQOrd,N::RngIntElt) -> .
                                 LU:=[];
                                 for u in U do
                                     Ecomp:=<E1[1],E2[2],E1[3],E2[4],E1[5]*u*E2[5]>;
-                                    if not exists{E:E in edges[n][E2[4]][E1[3]]|
+                                    if not exists{E:E in edges[n][target_E2][source_E1]|
                                         AreIsogeniesEquivalent(Ecomp[5],E[5],E[3],E[4])} then
                                         Append(~LU,Ecomp);
                                     end if;
                                 end for;
-                                edges[n][Ecomp[4]][Ecomp[3]] cat:=LU;
+                                edges[n][target_E2][source_E1] cat:=LU;
                             end for;
                         end for;
                     end if;
@@ -499,7 +506,7 @@ end intrinsic;
     q:=Round(ConstantCoefficient(f)^(2/Degree(f)));
     Ns:=[2,4,8,16,32,2*3,2*3*5,4*9];
 
-    SetAssertions(2);
+    //SetAssertions(2);
 
     // Comparing timings 3 algorithms
     for N in Ns do
@@ -583,7 +590,31 @@ end intrinsic;
 //N= 36, t=11.450, connected? true
 //N= 10, t=5.400, connected? true
 //N= 15, t=4.880, connected? false
-
+//
+//after bug fixes
+//N=  2, t=2.630, connected? false
+//N=  4, t=3.090, connected? false
+//N=  8, t=4.170, connected? false
+//N= 16, t=6.300, connected? false
+//N= 32, t=8.630, connected? false
+//N=  6, t=5.380, connected? true
+//N= 30, t=10.450, connected? true
+//N= 36, t=13.310, connected? true
+//N= 10, t=5.760, connected? true
+//N= 15, t=4.650, connected? false
+//
+// after using myHash for keys in Assoc
+N=  2, t=2.460, connected? false
+N=  4, t=2.690, connected? false
+N=  8, t=2.830, connected? false
+N= 16, t=2.890, connected? false
+N= 32, t=3.430, connected? false
+N=  6, t=3.700, connected? true
+N= 30, t=6.730, connected? true
+N= 36, t=5.240, connected? true
+N= 10, t=5.260, connected? true
+N= 15, t=4.520, connected? false
+N= 15, t=4.140, connected? false
     
     // 3rd Algorithm, with Profiler.
     Attach("~/AbVarFq_Isogenies_Private/magma/IsogenyGraphBuilders.m");
@@ -598,7 +629,7 @@ end intrinsic;
     vert3,edges3:=IsogenyGraphBuilder(R,36);
     SetProfile(false);
     G:=ProfileGraph();
-
+    ProfilePrintByTotalTime(G:Max:=10);
 
 
 
