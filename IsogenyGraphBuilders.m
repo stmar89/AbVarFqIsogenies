@@ -459,6 +459,10 @@ intrinsic IsogenyGraphBuilder(R::AlgEtQOrd,N::RngIntElt) -> .
         edges_output_d:=[];
         for t->edges_d_t in edges[d] do
             for s->edges_d_t_s in edges[d][t] do
+                // the following assert is very time consuming
+                assert2 forall{i:i in [1..#edges_d_t_s]|not exists{j:j in [1..i-1]|
+                               AreIsogeniesEquivalent(Ei[5],Ei[3],Ei[4],Ej[5],Ej[3],Ej[4]) 
+                               where Ei:=edges_d_t_s[i] where Ej:=edges_d_t_s[j]}};
                 edges_output_d cat:=edges_d_t_s;
             end for;
         end for;
@@ -492,6 +496,8 @@ end intrinsic;
     //f:=x^2 - 2*x + 5;
     q:=Round(ConstantCoefficient(f)^(2/Degree(f)));
     Ns:=[2,4,8,16,32,2*3,2*3*5,4*9];
+
+    SetAssertions(2);
 
     // Comparing timings 3 algorithms
     for N in Ns do
