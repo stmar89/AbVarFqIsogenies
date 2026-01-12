@@ -24,9 +24,9 @@ intrinsic GSTAct(g::GrpAbElt, phi::Tup)->Tup
     gI := Ws*((gS@@eS)@pR); // TODO: need this to be canonical, but there can be multiple pullbacks along eS.  Maybe should just map using pS?
     gJ := Wt*((gT@@eT)@pR);
 
-    test,y := IsIsomorphic(gI, G*I);
+    test,y := IsIsomorphic(G*I, gI);
     assert test;
-    test,z := IsIsomorphic(G*J, gJ);
+    test,z := IsIsomorphic(gJ, G*J);
     assert test;
 
     return <[* s,gS *], [* t,gT *], gI, gJ, y*x*z>;
@@ -57,9 +57,9 @@ intrinsic GSTOrbit(phi::Tup)->SeqEnum
         gI := Ws*((gS@@eS)@pR);
         gJ := Wt*((gT@@eT)@pR);
 
-        test,y := IsIsomorphic(gI, G*I);
+        test,y := IsIsomorphic(G*I, gI);
         assert test;
-        test,z := IsIsomorphic(G*J, gJ);
+        test,z := IsIsomorphic(gJ, G*J);
         assert test;
 
         Append(~orb, <[* s,gS *], [* t,gT *], gI, gJ, y*x*z>);
@@ -130,10 +130,10 @@ intrinsic GSTCompose(phi::Tup, psi::Tup)->SeqEnum
     end if;
 
     // Act so that the domain of psi matches the codomain of phi
-    phi := GSTAct((hT2 - hT1)@@eT, phi);
-    assert phi[4] eq psi[3];
+    phi1 := GSTAct((hT2 - hT1)@@eT, phi);
+    assert phi1[4] eq psi[3];
 
-    if Order(phi[3]) ne R then
+    if Order(phi1[3]) ne R then
         error "isogenies must be in the same isogeny class";
     end if;
 
@@ -141,10 +141,14 @@ intrinsic GSTCompose(phi::Tup, psi::Tup)->SeqEnum
 
     ans := [];
     for g1 in TripleKernelQuotient(R, S, T, U) do
-        g1phi := GSTAct(g1, phi);
+        g1phi := GSTAct(g1, phi1);
         assert g1phi[4] eq psi[3];
         x1 := g1phi[5];
         for z in QuotientOfJoinUnitsOverOrders(R, S, T, U) do
+            zz := x1 * z * x2;
+            I := g1phi[3];
+            J := psi[4];
+            assert zz * I subset J;
             Append(~ans, <g1phi[1], psi[2], g1phi[3], psi[4], x1 * z * x2>);
         end for;
     end for;
@@ -173,7 +177,7 @@ function compute_orbits_GSUT_on_Ms(T, Ms, R, Wt)
         UST := QuotientsUnitsOverorders(R, S, T);
         for g in DoubleKernelQuotient(R, S, T) do
             I := g @ pR;
-            test,y := IsIsomorphic(I * Wt, Wt);
+            test,y := IsIsomorphic(Wt, I * Wt); // TODO: Check that reversing this was right
             assert test;
             gM1 := y * I * M1;
             assert gM1 subset Wt;
