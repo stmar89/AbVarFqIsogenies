@@ -98,6 +98,10 @@
     S:=oo[2];
     J:=TraceDualIdeal(S);
     assert not IsInvertible(J);
+    MM:=SubIdealsOfIndexDividing(J,2);
+    AreIsogeniesEquivalent(K!1,MM[1],J,K!1,MM[2],J);
+    AreIsogeniesEquivalent(K!1,MM[2],J,K!1,MM[3],J);
+    AreIsogeniesEquivalent(K!1,MM[1],J,K!1,MM[3],J);
 
 
 
