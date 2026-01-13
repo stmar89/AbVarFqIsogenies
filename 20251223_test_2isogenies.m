@@ -75,6 +75,7 @@
     P:=PrimesAbove(2*R)[1];
     for W in wk do
         OW:=MultiplicatorRing(W);
+        W_inv:=IsWeakEquivalent(OW,W);
         MM:=SubIdealsOfIndexDividing(W,2);
         for M in MM do
             assert M ne W; // M c W
@@ -82,16 +83,23 @@
             is_wk:=IsWeakEquivalent(W,M);
             assert P*W subset M;
             if OM eq OW then
-                is_wk,"horizontal";
+                Index(OK,OW),W_inv,is_wk,"horizontal";
             elif OM subset OW then
-                is_wk,"ascending",Index(OW,OM);
+                Index(OK,OW),W_inv,is_wk,"ascending",Index(OW,OM);
             elif OW subset OM then
-                is_wk,"descending",Index(OM,OW);
+                Index(OK,OW),W_inv,is_wk,"descending",Index(OM,OW);
             else
-                is_wk,"not contained";
+                Index(OK,OW),W_inv,is_wk,"not contained";
             end if;
         end for;
     end for;
+    oo:=OverOrders(R);
+    [ Index(OK,S):S in oo ];
+    S:=oo[2];
+    J:=TraceDualIdeal(S);
+    assert not IsInvertible(J);
+
+
 
     Attach("~/AbVarFq_Isogenies_Private/magma/IsogenyGraphBuilders.m");
     PP<x>:=PolynomialRing(Integers());
