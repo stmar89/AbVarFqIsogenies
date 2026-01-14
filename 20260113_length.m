@@ -58,6 +58,7 @@
 
     PP<x>:=PolynomialRing(Integers());
     h:=x^4 - 2*x^2 + 9;
+    h:=x^4 + 6*x^2 + 25; // max length = 3 > g=2; an inclusion S<T is not minimal
     K:=EtaleAlgebra(h);
     F:=PrimitiveElement(K);
     q:=Round(ConstantCoefficient(h)^(2/Degree(h)));
