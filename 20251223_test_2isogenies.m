@@ -21,7 +21,8 @@
     for i in [1..30] do 
         Ri:=Order([F^i,V^i]); 
         Append(~Ris,Ri);
-        printf "i=%o\tnorms_Ps_above 2=%o\t[R1:Ri]=%o\n",i, [ Index(Ri,P) : P in PrimesAbove(2*Ri) ],pretty_fac_Z(Index(Ris[1],Ri)); 
+        icm:=#IdealClassMonoidAbstract(Ri);
+        printf "i=%o\t#ICM(Ri)=%o\tnorms_Ps_above 2=%o\t[R1:Ri]=%o\n",i,icm,[ Index(Ri,P) : P in PrimesAbove(2*Ri) ],pretty_fac_Z(Index(Ris[1],Ri)); 
     end for;
 
     SetColumns(0);
