@@ -174,7 +174,6 @@ end intrinsic;
 
 /* TESTS
    
-    //AttachSpec("~/AlgEt/spec");
     Attach("~/AbVarFq_Isogenies_Private/magma/IsogenyGraphBuilders.m");
 
     _<x>:=PolynomialRing(Integers());
