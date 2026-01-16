@@ -4,7 +4,7 @@
 // parallel -j 20 --resume --timeout 600 --joblog ~/AbVarFq_Isogenies_Private/magma/20260109_bug_testing_parallel/joblog -a ~/AbVarFq_Isogenies_Private/magma/weil_poly_sqfree_ord.txt magma -b c:={} ~/AbVarFq_Isogenies_Private/magma/20260109_bug_testing_parallel/parallel_script.m
 
     issue_file:="~/AbVarFq_Isogenies_Private/magma/20260109_bug_testing_parallel/issues.txt";
-    Attach("~/AbVarFq_Isogenies_Private/magma/IsogenyGraphBuilders.m");
+    AttachSpec("~/AbVarFq_Isogenies_Private/magma/spec");
     PP<x>:=PolynomialRing(Integers());
     h:=PP!eval(c);
     K:=EtaleAlgebra(h);
