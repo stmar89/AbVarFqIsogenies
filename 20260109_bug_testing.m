@@ -46,7 +46,8 @@ WWW := [w : w in WW | ComplexConjugate(we_map(w)) @@ we_map ne w];
 #WWW;
 
 
-    Attach("~/AbVarFq_Isogenies_Private/magma/IsogenyGraphBuilders.m");
+function find_example(N)
+    Attach("IsogenyGraphBuilders.m");
     all:=Split(Read("weil_poly_sqfree_ord.txt"));
     PP<x>:=PolynomialRing(Integers());
     for c in all do
@@ -58,13 +59,46 @@ WWW := [w : w in WW | ComplexConjugate(we_map(w)) @@ we_map ne w];
             _,p:=IsPrimePower(q);
             V:=q/F;
             R:=Order([F,V]);
-            if exists(S){S:S in OverOrders(R)|not IsConjugateStable(S)} then
-                Sb:=ComplexConjugate(S);
-                eS:=ExtensionHomPicardGroups(R,S);
-                eSb:=ExtensionHomPicardGroups(R,Sb);
-                if Kernel(eS) ne Kernel(eSb) then
-                    h;
-                end if;
+            Ss := {{S, ComplexConjugate(S)} : S in OverOrders(R)};
+            Ss := {Representative(pair) : pair in Ss | #pair eq 2};
+            if #Ss gt 0 then
+                print "Checking", h;
+                we,we_map:=WeakEquivalenceClassMonoidAbstract(R);
+                icm,icm_map:=IdealClassMonoidAbstract(R);
+                WW := Classes(we);
+                PR,pR := PicardGroup(R);
+                for s in WW do
+                    S := MultiplicatorRing(s);
+                    if S in Ss then
+                        t := ComplexConjugate(we_map(s))@@we_map;
+                        T := MultiplicatorRing(t);
+                        eS := ExtensionHomPicardGroups(R,S);
+                        eT := ExtensionHomPicardGroups(R,T);
+                        kS := Kernel(eS);
+                        kT := Kernel(eT);
+                        if kS ne kT then
+                            Ws := we_map(s);
+                            Wsdual := TraceDualIdeal(ComplexConjugate(Ws));
+                            Wt := we_map(t);
+                            J := ColonIdeal(Wsdual, Wt);
+                            JJ := PicClass(J @@ icm_map);
+                            Ms := [M : M in IntermediateIdeals(Wt,N*Wt) | M @@ we_map eq s];
+                            for M in Ms do
+                                source_M := M@@icm_map;
+                                assert WEClass(source_M) eq s;
+                                aabarinv := -PicClass(ComplexConjugate(M)@@icm_map);
+                                Jai := JJ + aabarinv;
+                                for b in PR do
+                                    bbar := ComplexConjugate(pR(b))@@pR;
+                                    if eT(b + bbar) eq Jai then
+                                        return <h,s,M,b,t,PR,pR,eS,eT,kS,kT,R,S,T,Ws,Wsdual,Wt,J,JJ,b,bbar,aabarinv,Jai,we,we_map,icm,icm_map>;
+                                    end if;
+                                end for;
+                            end for;
+                        end if;
+                    end if;
+                end for;
             end if;
         end if;
     end for;
+end function;
