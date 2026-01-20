@@ -127,10 +127,3 @@ intrinsic WeilBaseChange(f::RngUPolElt,r::RngIntElt)->RngUPolElt
     return f2;
 end intrinsic;
 
-
-////////////////////
-// Weak Equivalence Class Labeling
-////////////////////
-
-
-
