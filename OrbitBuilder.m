@@ -188,11 +188,12 @@ function compute_orbits_GSUT_on_Ms(T, Ms, R, Wt)
     return orbits;
 end function;
 
-intrinsic IsogenyOrbitBuilder(R::AlgEtQOrd,D::RngIntElt) -> .
-{Given the Frobenius order R of a squarefree ordinary isogeny class and a positive integer D, returns an associative array whose value at each integer d dividing D is a sequence of isogenies of degree d so that the set of all isogenies of degree d is obtained by taking orbits for the action of G_(s,t) on each representative}
+intrinsic IsogenyOrbitBuilder(R::AlgEtQOrd,D::RngIntElt : dual_only:=false) -> .
+{Given the Frobenius order R of a squarefree ordinary isogeny class and a positive integer D, returns an associative array whose value at each integer d dividing D is a sequence of isogenies of degree d so that the set of all isogenies of degree d is obtained by taking orbits for the action of G_(s,t) on each representative.  If the optional parameter dual_only is set, only isogenies mapping from a weak equivalence class to its dual will be included in the output.}
     we,we_map:=WeakEquivalenceClassMonoidAbstract(R);
     icm,icm_map:=IdealClassMonoidAbstract(R);
     PR,pR:=PicardGroup(R);
+    dual_we:= AssociativeArray();
 
     reps:=AssociativeArray();
     reps_min:=AssociativeArray(:Default:=[]);
@@ -202,6 +203,7 @@ intrinsic IsogenyOrbitBuilder(R::AlgEtQOrd,D::RngIntElt) -> .
         T := MultiplicatorRing(t);
         eT := ExtensionHomPicardGroups(R, T);
         Wt := we_map(t);
+        dual_we[t] := TraceDualIdeal(ComplexConjugate(Wt)) @@ we_map;
         Ms := [M : M in IntermediateIdeals(Wt, D*Wt : Maximal:=true) | D mod Index(Wt, M) eq 0]; //sub-frac.R-ideals M<Wt s.t. [Wt:M]|D
         Ms:=compute_orbits_GSUT_on_Ms(T, Ms, R, Wt);
         for M in Ms do
@@ -231,7 +233,7 @@ intrinsic IsogenyOrbitBuilder(R::AlgEtQOrd,D::RngIntElt) -> .
     end for;
 
     // FIXME - remove this block once done debugging
-    for d->reps_d in reps do
+    /*for d->reps_d in reps do
         for t->reps_d_t in reps[d] do
             for s->reps_d_t_s in reps[d][t] do
                 if #reps_d_t_s eq 2 then //FIXME Stefano: why testing only for eq 2 and not ge 2?
@@ -240,7 +242,7 @@ intrinsic IsogenyOrbitBuilder(R::AlgEtQOrd,D::RngIntElt) -> .
                 end if;
             end for;
         end for;
-    end for;
+    end for;*/
     // FIXME - remove this block once done debugging
 
     // now we have all minimal reps. we compose
@@ -253,12 +255,17 @@ intrinsic IsogenyOrbitBuilder(R::AlgEtQOrd,D::RngIntElt) -> .
             if d2 lt n and n mod d2 eq 0 then
                 d1 := n div d2;
                 for E2 in E_min_d2 do
+                    E2_s := E2[1][1];
                     // REMOVE?
                         if not IsDefined(reps[n], E2[2][1]) then reps[n][E2[2][1]] := AssociativeArray(); end if;
                     // now, we loop over all already computed reps E1 of degree d1=n/d2 such
                     // that target(E1) = source(E2) = E2[1][1], since we want to construct the composition E1*E2
                     // (first apply the isogeny E1 then the isogeny E2)
-                    for E1_t->E1s in reps[d1][E2[1][1]] do
+                    for E1_t->E1s in reps[d1][E2_s] do
+                        if n eq D and dual_only and E1_t ne dual_we[E2_s] then
+                            // We don't need degree D isogenies for further composition, so skip if not needed for output.
+                            continue;
+                        end if;
                         for E1 in E1s do
                             //REMOVE?
                                 if not IsDefined(reps[n][E2[2][1]],E1[1][1]) then reps[n][E2[2][1]][E1[1][1]]:=[]; end if;
@@ -266,13 +273,12 @@ intrinsic IsogenyOrbitBuilder(R::AlgEtQOrd,D::RngIntElt) -> .
                                 //if not exists{E:E in reps[n][E2[2][1]][E1[1][1]]|
                                 if not exists{E:E in reps[n][Ecomp[2][1]][Ecomp[1][1]]|
                                     AreIsogeniesGSTEquivalent(Ecomp[5],Ecomp[3],Ecomp[4],E[5],E[3],E[4])} then
-                                    // FIXME Stefano: added next assert
-                                    assert not exists{E:E in reps[n][Ecomp[2][1]][Ecomp[1][1]]|AreIsogeniesEquivalent(Ecomp[5],Ecomp[3],Ecomp[4],E[5],E[3],E[4])};
-                                    // FIXME Stefano: I don't understand the logic behind the next assert. Ask David
-                                    if #reps[n][Ecomp[2][1]][Ecomp[1][1]] eq 1 then
-                                        EE := reps[n][Ecomp[2][1]][Ecomp[1][1]][1];
-                                        assert not AreIsogeniesEquivalent(Ecomp[5],Ecomp[3],Ecomp[4],EE[5],EE[3],EE[4]);
-                                    end if;
+                                    // Asserts for debugging
+                                    //assert not exists{E:E in reps[n][Ecomp[2][1]][Ecomp[1][1]]|AreIsogeniesEquivalent(Ecomp[5],Ecomp[3],Ecomp[4],E[5],E[3],E[4])};
+                                    //if #reps[n][Ecomp[2][1]][Ecomp[1][1]] eq 1 then
+                                    //    EE := reps[n][Ecomp[2][1]][Ecomp[1][1]][1];
+                                    //    assert not AreIsogeniesEquivalent(Ecomp[5],Ecomp[3],Ecomp[4],EE[5],EE[3],EE[4]);
+                                    //end if;
                                     Append(~reps[n][Ecomp[2][1]][Ecomp[1][1]], Ecomp);
                                 end if;
                             end for;
@@ -289,10 +295,14 @@ intrinsic IsogenyOrbitBuilder(R::AlgEtQOrd,D::RngIntElt) -> .
         reps_output_d:=[];
         for t->reps_d_t in reps[d] do
             for s->reps_d_t_s in reps[d][t] do
-                if #reps_d_t_s eq 2 then //FIXME Stefano: why testing only for eq 2 and not ge 2?
-                    phi, psi := Explode(reps_d_t_s);
-                    assert not AreIsogeniesEquivalent(phi[5],phi[3],phi[4],psi[5],psi[3],psi[4]);
+                if dual_only and t ne dual_we[s] then
+                    continue;
                 end if;
+                // For debugging
+                //if #reps_d_t_s eq 2 then
+                //    phi, psi := Explode(reps_d_t_s);
+                //    assert not AreIsogeniesEquivalent(phi[5],phi[3],phi[4],psi[5],psi[3],psi[4]);
+                //end if;
                 reps_output_d cat:=reps_d_t_s;
             end for;
         end for;
@@ -330,6 +340,8 @@ intrinsic IsogenyGraphBuilder_FromOrbit(R::AlgEtQOrd,D::RngIntElt,A::Assoc) -> .
     end for;
     return classes, edges_output;
 end intrinsic;
+
+intrinsic 
 
 intrinsic IsogenyGraphChecker(R::AlgEtQOrd, D::RngIntElt) -> SeqEnum, Assoc, Assoc
 {Checks that the number of isogenies between each pair of weak equivalence classes predicted by IsogenyGraphBuilder and IsogenyOrbitBuilder agrees}
