@@ -80,20 +80,31 @@ function find_example(N)
                             Ws := we_map(s);
                             Wsdual := TraceDualIdeal(ComplexConjugate(Ws));
                             Wt := we_map(t);
-                            J := ColonIdeal(Wsdual, Wt);
+                            Wtdual := TraceDualIdeal(ComplexConjugate(Wt));
+                            //J := ColonIdeal(Wsdual, Wt);
+                            J := ColonIdeal(Wtdual, Ws);
                             JJ := PicClass(J @@ icm_map);
+                            JJbar := PicClass(ComplexConjugate(J) @@ icm_map);
                             Ms := [M : M in IntermediateIdeals(Wt,N*Wt) | M @@ we_map eq s];
                             for M in Ms do
                                 source_M := M@@icm_map;
                                 assert WEClass(source_M) eq s;
-                                aabarinv := -PicClass(ComplexConjugate(M)@@icm_map);
-                                Jai := JJ + aabarinv;
+                                //aabarinv := -PicClass(ComplexConjugate(M)@@icm_map);
+                                aabar := PicClass(ComplexConjugate(M)@@icm_map);
+                                aainv := -PicClass(M@@icm_map);
+                                Jai := JJ + aainv;
+                                Jab := JJbar + aabar;
                                 for b in PR do
+                                    if eS(b) eq Jai and eT(b) ne Jab then
+                                        return <h,s,M,b,t,PR,pR,eS,eT,kS,kT,R,S,T,Ws,Wsdual,Wt,J,JJ,b,bbar,aabarinv,Jai,Jab,we,we_map,icm,icm_map>;
+                                    end if;
+                                end for;
+                                /*for b in PR do
                                     bbar := ComplexConjugate(pR(b))@@pR;
                                     if eT(b + bbar) eq Jai then
                                         return <h,s,M,b,t,PR,pR,eS,eT,kS,kT,R,S,T,Ws,Wsdual,Wt,J,JJ,b,bbar,aabarinv,Jai,we,we_map,icm,icm_map>;
                                     end if;
-                                end for;
+                                end for;*/
                             end for;
                         end if;
                     end if;
