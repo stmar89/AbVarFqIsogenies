@@ -63,10 +63,10 @@ function is_polarizaton(mu,PHI)
     end if;
 end function;
 
-intrinsic NonPrincipalPolarizationsOfDegreeDividing(R::AlgEtQOrd,PHI::AlgEtQCMType,N::RngIntElt)->SeqEnum
-{Given the Frobenius order R of an isogeny class of ordinary squarefree abelian varieties over a finite field, a p-adic positive CM-type PHI, and an integer N>1, it returns an associative array pols, indexed by divisors d>1 of N where pols[d] is an associative array indexed by fractional R-ideals I, representing the ideal class monoid of R, and pols[d][I] is a sequence of elements x in Q[F] each one representing a polarization of I of degree d (necesarily a sqare) up to polarized isomorphism. If no such polarization is found, an empty sequence is stored.
+intrinsic NonPrincipalPolarizationsOfDegreeDividing(R::AlgEtQOrd,PHI::AlgEtQCMType,D::RngIntElt)->SeqEnum
+{Given the Frobenius order R of an isogeny class of ordinary squarefree abelian varieties over a finite field, a p-adic positive CM-type PHI, and an integer D>1, it returns an associative array pols, indexed by divisors d>1 of D where pols[d] is an associative array indexed by fractional R-ideals I, representing the ideal class monoid of R, and pols[d][I] is a sequence of elements x in Q[F] each one representing a polarization of I of degree d (necesarily a sqare) up to polarized isomorphism. If no such polarization is found, an empty sequence is stored.
 The intrinsic calls internally IsogenyGraphBuilder.}
-    classes,edges:=IsogenyGraphBuilder(R,N);
+    classes,edges:=IsogenyGraphBuilder(R,D);
     pols:=AssociativeArray();
     for vertex in classes do
         w,aa:=Explode(vertex);
@@ -125,10 +125,10 @@ end intrinsic;
     If:=IsogenyClass(f);
     PHI:=pAdicPosCMType(If);
     R:=ZFVOrder(If);
-    Ns:=[2,4,9,25,4*9,9*25,4*9*25];
-    for N in Ns do
+    Ds:=[2,4,9,25,4*9,9*25,4*9*25];
+    for D in Ds do
         t0:=Cputime();
-        pols:=NonPrincipalPolarizationsOfDegreeDividing(R,PHI,N);
+        pols:=NonPrincipalPolarizationsOfDegreeDividing(R,PHI,D);
         t1:=Cputime(t0);
         counts:=[];
         for d->pols_d in pols do
@@ -138,7 +138,7 @@ end intrinsic;
             end for;
             Append(~counts,<d,counts_d>);
         end for;
-        printf "N=%o,\ttime=%o,\tnum. pols. of deg.=%o\n",N,t1,counts;
+        printf "D=%o,\ttime=%o,\tnum. pols. of deg.=%o\n",D,t1,counts;
     end for;
 
 */

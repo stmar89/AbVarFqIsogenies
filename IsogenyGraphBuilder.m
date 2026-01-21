@@ -1,8 +1,8 @@
 /*
-    This file contains the main algorithms to compute the N-isogeny graph.
+    This file contains the main algorithms to compute the D-isogeny graph.
     The first MinimalIsogenyGraphBuilder computes only the minimal edges.
     The second one, IsogenyGraphBuilder, uses the first and then constructs
-    all compositions of degree dividing N.
+    all compositions of degree dividing D.
 */
 
 compute_orbits_UT_on_Ms:=function(T,Ms,R)
@@ -29,9 +29,9 @@ compute_orbits_UT_on_Ms:=function(T,Ms,R)
     return orbits;
 end function;
 
-intrinsic MinimalIsogenyGraphBuilder(R::AlgEtQOrd,N::RngIntElt) -> SeqEnum,Assoc
-{Given the Frobenius order R of a squarefree ordinary isogeny class and a positive integer N, returns the minimal N-isogeny graph, given as a pair classes,edges_min:
-- classes is a sequence of lists [*W,L*] where W is a weak equivalence class (type AlgEtQWECMElt), and L is an element of an abstract group representing Pic(T) where T is the multiplicator ring of W. They represent the vertices of the N-isogeny graph.
+intrinsic MinimalIsogenyGraphBuilder(R::AlgEtQOrd,D::RngIntElt) -> SeqEnum,Assoc
+{Given the Frobenius order R of a squarefree ordinary isogeny class and a positive integer D, returns the minimal D-isogeny graph, given as a pair classes,edges_min:
+- classes is a sequence of lists [*W,L*] where W is a weak equivalence class (type AlgEtQWECMElt), and L is an element of an abstract group representing Pic(T) where T is the multiplicator ring of W. They represent the vertices of the D-isogeny graph.
 - edges is a 3-dimensional associative array:
   edges[d][myHash(It)][myHash(Is)] is a sequence of tuples <[*Ws,Ls*],[*Wt,Lt*],Is,It,x> each one representing an equivalence classes of minimal isogenies of degree d from Is to It as follows:
   -- [*Ws,Ls*] and [*Wt,Lt*] are the elements in classes representing source and target, respectively.
@@ -45,7 +45,7 @@ intrinsic MinimalIsogenyGraphBuilder(R::AlgEtQOrd,N::RngIntElt) -> SeqEnum,Assoc
     classes:=[ ];
     edges:=AssociativeArray();
     // a 3 dimensional array: edges[d][T][S] where
-    // - d is a positive integer (dividing N)
+    // - d is a positive integer (dividing D)
     // - T,S are distinguished ideals representing an ideal classes
     // is the sequence of labels of isogenies of degree d from S to T
 
@@ -60,7 +60,7 @@ intrinsic MinimalIsogenyGraphBuilder(R::AlgEtQOrd,N::RngIntElt) -> SeqEnum,Assoc
             Append(~classes,[* t,bbT *]);
         end for;
         Wt:=we_map(t);
-        Ms:=[M:M in IntermediateIdeals(Wt,N*Wt:Maximal:=true)|N mod Index(Wt,M) eq 0]; //sub-frac.R-ideals M<Wt s.t. [Wt:M]|N
+        Ms:=[M:M in IntermediateIdeals(Wt,D*Wt:Maximal:=true)|D mod Index(Wt,M) eq 0]; //sub-frac.R-ideals M<Wt s.t. [Wt:M]|D
         Ms:=compute_orbits_UT_on_Ms(T,Ms,R);
         for M in Ms do
             dM:=Index(Wt,M);
@@ -95,16 +95,16 @@ intrinsic MinimalIsogenyGraphBuilder(R::AlgEtQOrd,N::RngIntElt) -> SeqEnum,Assoc
     return classes,edges;
 end intrinsic;
 
-intrinsic IsogenyGraphBuilder(R::AlgEtQOrd,N::RngIntElt) -> SeqEnum,Assoc
-{Given the Frobenius order R of a squarefree ordinary isogeny class and a positive integer N, returns the N-isogeny graph, given as a pair classes,edges:
-- classes is a sequence of lists [*W,L*] where W is a weak equivalence class (type AlgEtQWECMElt), and L is an element of an abstract group representing Pic(T) where T is the multiplicator ring of W. They represent the vertices of the N-isogeny graph.
-- edges is an associative array, indexed by positive integers d dividing N. 
+intrinsic IsogenyGraphBuilder(R::AlgEtQOrd,D::RngIntElt) -> SeqEnum,Assoc
+{Given the Frobenius order R of a squarefree ordinary isogeny class and a positive integer D, returns the D-isogeny graph, given as a pair classes,edges:
+- classes is a sequence of lists [*W,L*] where W is a weak equivalence class (type AlgEtQWECMElt), and L is an element of an abstract group representing Pic(T) where T is the multiplicator ring of W. They represent the vertices of the D-isogeny graph.
+- edges is an associative array, indexed by positive integers d dividing D. 
   edges[d] is a sequence of tuples <[*Ws,Ls*],[*Wt,Lt*],Is,It,x> each one representing an equivalence classes of isogenies of degree d in the following way:
   -- [*Ws,Ls*] and [*Wt,Lt*] are the elements in classes representing source and target, respectively.
   -- Is and It are fractional Z[F,V]-ideals representing the ideal classes of the source and target.
   -- x is an element of Q[F] giving an inclusion x*Is < It such that [It:x*Is]=d.}
 
-    classes,edges:=MinimalIsogenyGraphBuilder(R,N);
+    classes,edges:=MinimalIsogenyGraphBuilder(R,D);
     edges_min:=AssociativeArray(:Default:=[]);
     // We collapse the 3-dimensional array edges into a 1-dimensional array to simplify
     // the nested loops below. So: edges_min[d] is the sequence of minimal isogenies of degree d
@@ -125,9 +125,9 @@ intrinsic IsogenyGraphBuilder(R::AlgEtQOrd,N::RngIntElt) -> SeqEnum,Assoc
     end for;
 
     // The 3-dimensional array edges contains only minimal edges so far, which are also copied in the 
-    // 1-dimensional array edges_min. We create all possible compositions of degree dividing N and 
+    // 1-dimensional array edges_min. We create all possible compositions of degree dividing D and 
     // add them to the array edges.
-    for n in Exclude(Divisors(N),1) do
+    for n in Exclude(Divisors(D),1) do
         if not IsDefined(edges,n) then
             edges[n]:=AssociativeArray();
         end if;
@@ -170,7 +170,7 @@ intrinsic IsogenyGraphBuilder(R::AlgEtQOrd,N::RngIntElt) -> SeqEnum,Assoc
 
     // We transforms the output from the 3-dimensional array edges (with keys described as in
     // the intrinsic MinimalIsogenyGraphBuilder) to a 1-dimensioanl array edges_output index 
-    // only by degrees d dividing the input N.
+    // only by degrees d dividing the input D.
     edges_output:=AssociativeArray();
     for d->edges_d in edges do
         edges_output_d:=[];

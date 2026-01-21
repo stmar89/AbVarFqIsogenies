@@ -1,6 +1,6 @@
 /*
     The intrinsic belows are preliminary versions of the algorithm
-    to compute the N-isogeny graph. They are slower but less 
+    to compute the D-isogeny graph. They are slower but less 
     sophisticated than the version contained in IsogenyGraphBuilder.m
     and presented in the paper. They are kept for testing purposes.
 
@@ -14,9 +14,9 @@
 
 import "IsogenyGraphBuilder.m" : compute_orbits_UT_on_Ms;
 
-intrinsic IsogenyGraphBuilder_Naive(R::AlgEtQOrd,N::RngIntElt) -> .
-{Given the Frobenius order R of a squarefree ordinary isogeny class and a positive integer N, returns the N-isogeny graph, given as a pair classes,edges:
-- classes is a sequence of lists [*W,L*] where W is a weak equivalence class (type AlgEtQWECMElt), and L is an element of an abstract group representing Pic(T) where T is the multiplicator ring of W. They represent the vertices of the N-isogeny graph.
+intrinsic IsogenyGraphBuilder_Naive(R::AlgEtQOrd,D::RngIntElt) -> .
+{Given the Frobenius order R of a squarefree ordinary isogeny class and a positive integer D, returns the D-isogeny graph, given as a pair classes,edges:
+- classes is a sequence of lists [*W,L*] where W is a weak equivalence class (type AlgEtQWECMElt), and L is an element of an abstract group representing Pic(T) where T is the multiplicator ring of W. They represent the vertices of the D-isogeny graph.
 - edges is an associative array, indexed by positive integers d. 
   edges[d] is a sequence of tuples <[*Ws,Ls*],[*Wt,Lt*],Is,It,x> each one representing an equivalence classes of isogenies of degree d in the following way:
   -- [*Ws,Ls*] and [*Wt,Lt*] are the elements in classes representing source and target, respectively.
@@ -29,8 +29,8 @@ intrinsic IsogenyGraphBuilder_Naive(R::AlgEtQOrd,N::RngIntElt) -> .
     // edges[d] contains the sequence of labels of isogenies of degree d.
     for target in classes do 
         IV:=icm_map(target); //IV is a representative of each vertex, chosen once and for all
-        // Ms:=[M:M in IntermediateIdeals(IV,N*IV)|ind ne 1 and N mod ind eq 0 where ind:=Index(IV,M)]; //sub-frac.R-ideals M<IV s.t. [IV:M]|N
-        Ms:=SubIdealsOfIndexDividing(IV,N); //sub-frac.R-ideals M<IV s.t. [IV:M]|N
+        // Ms:=[M:M in IntermediateIdeals(IV,D*IV)|ind ne 1 and D mod ind eq 0 where ind:=Index(IV,M)]; //sub-frac.R-ideals M<IV s.t. [IV:M]|D
+        Ms:=SubIdealsOfIndexDividing(IV,D); //sub-frac.R-ideals M<IV s.t. [IV:M]|D
         T:=MultiplicatorRing(IV);
         Ms:=compute_orbits_UT_on_Ms(T,Ms,R);
         for M in Ms do
@@ -45,9 +45,9 @@ intrinsic IsogenyGraphBuilder_Naive(R::AlgEtQOrd,N::RngIntElt) -> .
     return [[* WEClass(target),PicClass(target) *]:target in classes],edges;
 end intrinsic;
 
-intrinsic IsogenyGraphBuilder_LessNaive(R::AlgEtQOrd,N::RngIntElt) -> .
-{Given the Frobenius order R of a squarefree ordinary isogeny class and a positive integer N, returns the N-isogeny graph, given as a pair classes,edges:
-- classes is a sequence of lists [*W,L*] where W is a weak equivalence class (type AlgEtQWECMElt), and L is an element of an abstract group representing Pic(T) where T is the multiplicator ring of W. They represent the vertices of the N-isogeny graph.
+intrinsic IsogenyGraphBuilder_LessNaive(R::AlgEtQOrd,D::RngIntElt) -> .
+{Given the Frobenius order R of a squarefree ordinary isogeny class and a positive integer D, returns the D-isogeny graph, given as a pair classes,edges:
+- classes is a sequence of lists [*W,L*] where W is a weak equivalence class (type AlgEtQWECMElt), and L is an element of an abstract group representing Pic(T) where T is the multiplicator ring of W. They represent the vertices of the D-isogeny graph.
 - edges is an associative array, indexed by positive integers d. 
   edges[d] is a sequence of tuples <[*Ws,Ls*],[*Wt,Lt*],Is,It,x> each one representing an equivalence classes of isogenies of degree d in the following way:
   -- [*Ws,Ls*] and [*Wt,Lt*] are the elements in classes representing source and target, respectively.
@@ -69,7 +69,7 @@ intrinsic IsogenyGraphBuilder_LessNaive(R::AlgEtQOrd,N::RngIntElt) -> .
             Append(~classes,[* t,bbT *]);
         end for;
         Wt:=we_map(t);
-        Ms:=SubIdealsOfIndexDividing(Wt,N); //sub-frac.R-ideals M<Wt s.t. [Wt:M]|N
+        Ms:=SubIdealsOfIndexDividing(Wt,D); //sub-frac.R-ideals M<Wt s.t. [Wt:M]|D
         assert not Wt in Ms;
         Ms:=compute_orbits_UT_on_Ms(T,Ms,R);
         for M in Ms do

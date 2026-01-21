@@ -37,18 +37,18 @@ intrinsic DistinguishedRepsICM(w::AlgEtQWECMElt,aa::GrpAbElt)->AlgEtQIdl,AlgEtQI
     return Explode(R`DistinguishedRepsICM[w][aa]);
 end intrinsic;
 
-intrinsic SubIdealsOfIndexDividing(I::AlgEtQIdl,N:RngIntElt)->SetIndx[AlgEtQIdl]
-{Given a fractional R-ideal I and a positive integer N, returns all fractional R-ideals J < I such that [I:J] divides N. They are produced recursively from the maximal ones. I is not part of the output.}
-    if N eq 1 then
+intrinsic SubIdealsOfIndexDividing(I::AlgEtQIdl,D:RngIntElt)->SetIndx[AlgEtQIdl]
+{Given a fractional R-ideal I and a positive integer D, returns all fractional R-ideals J < I such that [I:J] divides D. They are produced recursively from the maximal ones. I is not part of the output.}
+    if D eq 1 then
         return {@ I @};
     end if;
-    J:=N*I;
+    J:=D*I;
     queue:={@ I @};
     output:={@ @};
     done:={@ @};
     while #queue gt 0 do
         pot_new:=&join[_MaximalIntermediateIdeals(elt,J) : elt in queue ];
-        pot_new:={@ K : K in pot_new | N mod Index(I,K) eq 0 @}; // we keep only the ones whose index divides N 
+        pot_new:={@ K : K in pot_new | D mod Index(I,K) eq 0 @}; // we keep only the ones whose index divides D 
         output join:={@ K : K in pot_new | not K in done @};
         done join:=queue;
         queue:=pot_new diff done;

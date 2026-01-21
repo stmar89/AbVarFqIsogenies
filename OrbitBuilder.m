@@ -188,8 +188,8 @@ function compute_orbits_GSUT_on_Ms(T, Ms, R, Wt)
     return orbits;
 end function;
 
-intrinsic IsogenyOrbitBuilder(R::AlgEtQOrd,N::RngIntElt) -> .
-{Given the Frobenius order R of a squarefree ordinary isogeny class and a positive integer N, returns an associative array whose value at each integer d dividing N is a sequence of isogenies of degree d so that the set of all isogenies of degree d is obtained by taking orbits for the action of G_(s,t) on each representative}
+intrinsic IsogenyOrbitBuilder(R::AlgEtQOrd,D::RngIntElt) -> .
+{Given the Frobenius order R of a squarefree ordinary isogeny class and a positive integer D, returns an associative array whose value at each integer d dividing D is a sequence of isogenies of degree d so that the set of all isogenies of degree d is obtained by taking orbits for the action of G_(s,t) on each representative}
     we,we_map:=WeakEquivalenceClassMonoidAbstract(R);
     icm,icm_map:=IdealClassMonoidAbstract(R);
     PR,pR:=PicardGroup(R);
@@ -202,7 +202,7 @@ intrinsic IsogenyOrbitBuilder(R::AlgEtQOrd,N::RngIntElt) -> .
         T := MultiplicatorRing(t);
         eT := ExtensionHomPicardGroups(R, T);
         Wt := we_map(t);
-        Ms := [M : M in IntermediateIdeals(Wt, N*Wt : Maximal:=true) | N mod Index(Wt, M) eq 0]; //sub-frac.R-ideals M<Wt s.t. [Wt:M]|N
+        Ms := [M : M in IntermediateIdeals(Wt, D*Wt : Maximal:=true) | D mod Index(Wt, M) eq 0]; //sub-frac.R-ideals M<Wt s.t. [Wt:M]|D
         Ms:=compute_orbits_GSUT_on_Ms(T, Ms, R, Wt);
         for M in Ms do
             dM := Index(Wt,M);
@@ -244,7 +244,7 @@ intrinsic IsogenyOrbitBuilder(R::AlgEtQOrd,N::RngIntElt) -> .
     // FIXME - remove this block once done debugging
 
     // now we have all minimal reps. we compose
-    for n in Exclude(Divisors(N), 1) do
+    for n in Exclude(Divisors(D), 1) do
         if not IsDefined(reps, n) then
             reps[n]:=AssociativeArray();
         end if;
@@ -301,7 +301,7 @@ intrinsic IsogenyOrbitBuilder(R::AlgEtQOrd,N::RngIntElt) -> .
     return reps_output;
 end intrinsic;
 
-intrinsic IsogenyGraphBuilder_FromOrbit(R::AlgEtQOrd,N::RngIntElt,A::Assoc) -> .
+intrinsic IsogenyGraphBuilder_FromOrbit(R::AlgEtQOrd,D::RngIntElt,A::Assoc) -> .
 {Converts the output of IsogenyOrbitBuilder into the same format as the output of IsogenyGraphBuilder for comparison}
     we,we_map:=WeakEquivalenceClassMonoidAbstract(R);
     icm,icm_map:=IdealClassMonoidAbstract(R);
@@ -331,9 +331,9 @@ intrinsic IsogenyGraphBuilder_FromOrbit(R::AlgEtQOrd,N::RngIntElt,A::Assoc) -> .
     return classes, edges_output;
 end intrinsic;
 
-intrinsic IsogenyGraphChecker(R::AlgEtQOrd, N::RngIntElt) -> SeqEnum, Assoc, Assoc
+intrinsic IsogenyGraphChecker(R::AlgEtQOrd, D::RngIntElt) -> SeqEnum, Assoc, Assoc
 {Checks that the number of isogenies between each pair of weak equivalence classes predicted by IsogenyGraphBuilder and IsogenyOrbitBuilder agrees}
-    reps := IsogenyOrbitBuilder(R, N);
+    reps := IsogenyOrbitBuilder(R, D);
     by_orb := AssociativeArray(:Default:=0);
     for d->reps_d in reps do
         for phi in reps_d do
@@ -345,7 +345,7 @@ intrinsic IsogenyGraphChecker(R::AlgEtQOrd, N::RngIntElt) -> SeqEnum, Assoc, Ass
         end for;
     end for;
 
-    classes, edges := IsogenyGraphBuilder(R, N);
+    classes, edges := IsogenyGraphBuilder(R, D);
     by_edge := AssociativeArray(:Default:=0);
     for d->edges_d in edges do
         for phi in edges_d do
