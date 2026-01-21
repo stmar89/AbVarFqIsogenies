@@ -135,3 +135,45 @@
     G:=ProfileGraph();
     ProfilePrintByTotalTime(G:Max:=10);
 
+//
+    issues:=[
+    [ 729, 54, -11, 2, 1 ],
+    [ 625, -25, 2, -1, 1 ],
+    [ 4096, -192, 101, -3, 1 ],
+    [ 4096, 320, 133, 5, 1 ],
+    [ 4096, 768, 97, 12, 1 ],
+    [ 1681, 410, 67, 10, 1 ]
+    ];
+    AttachSpec("~/AbVarFq_Isogenies_Private/magma/spec");
+    PP<x>:=PolynomialRing(Integers());
+
+    for c in issues do
+        h:=PP!c;
+        K:=EtaleAlgebra(h);
+        F:=PrimitiveElement(K);
+        q:=Round(ConstantCoefficient(h)^(2/Degree(h)));
+        V:=q/F;
+        R:=Order([F,V]);
+        Ns:=[2,4,8,16,32,2*3,2*3*5,4*9];
+        tests:=[];
+        for N in Ns do
+            printf ".";
+            vert,edges:=IsogenyGraphBuilder_Naive(R,N);
+            vert2,edges2:=IsogenyGraphBuilder_LessNaive(R,N);
+            vert3,edges3:=IsogenyGraphBuilder(R,N);
+            good:=
+                #vert2 eq #vert and
+                Keys(edges) eq Keys(edges2) and
+                forall{d:d in Keys(edges) | #edges[d] eq #edges2[d]} and
+                #vert3 eq #vert and
+                Keys(edges) eq Keys(edges3) and
+                forall{d:d in Keys(edges) | #edges[d] eq #edges3[d]};
+            Append(~tests,good);
+        end for;
+        if &and(tests) then
+            printf "\nall good for %o\n",h;
+        else
+            printf "\nISSUE found for %o\t%o\n",h,tests;
+        end if;
+    end for;
+
