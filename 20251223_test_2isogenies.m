@@ -62,7 +62,7 @@
     end for;
 
 
-    Attach("~/AbVarFq_Isogenies_Private/magma/IsogenyGraphBuilders.m");
+    AttachSpec("~/AbVarFq_Isogenies_Private/magma/spec");
     _<x>:=PolynomialRing(Integers());
     f:=x^4-2*x^2+121;
     q:=Round(ConstantCoefficient(f)^(2/Degree(f)));
@@ -106,9 +106,9 @@
 
 
 
-    Attach("~/AbVarFq_Isogenies_Private/magma/IsogenyGraphBuilders.m");
+    AttachSpec("~/AbVarFq_Isogenies_Private/magma/spec");
     PP<x>:=PolynomialRing(Integers());
-    h:=1+2*x-x^2-5*x^3-8*x^4-15*x^5-9*x^6+54*x^7+81*x^8;
+    h:=1+2*x-x^2-5*x^3-8*x^4-15*x^5-9*x^6+54*x^7+81*x^8; //4.3.c_ab_af_ai
     h:=PP!Reverse(Coefficients(h));
     K:=EtaleAlgebra(h);
     F:=PrimitiveElement(K);
@@ -141,4 +141,15 @@
             end if;
         end for;
     end for;
+    
+    // extend to F9
+    R2:=Order([F^2,V^2]);
+    IsBass(R2);
+    P:=SingularPrimes(R2)[1];
+    assert Index(R2,P) eq 2;
+    ooP:=OverOrdersAtPrime(R2,P);
+    OK:=MaximalOrder(K);
+    [ Index(OK,S):S in ooP ];
+    [ IsPrincipal(S!!P):S in ooP ];
+
 
