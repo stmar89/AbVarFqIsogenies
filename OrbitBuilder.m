@@ -311,6 +311,24 @@ intrinsic IsogenyOrbitBuilder(R::AlgEtQOrd,D::RngIntElt : dual_only:=false) -> .
     return reps_output;
 end intrinsic;
 
+/*
+intrinsic DualIsogenies_FromOrbit(R::AlgEtQOrd,D::RngIntElt)->Assoc
+{Given the Frobenius order R of an isogeny class of ordinary squarefree abelian varieties over a finite field and an integer D>1, it returns an associative array isog, indexed by divisors d>1 of D where isog[d] is a sequence of isogenies from A to the dual of A, representing all equivalence classes of such isogenies.}
+    we,we_map:=WeakEquivalenceClassMonoidAbstract(R);
+    icm,icm_map:=IdealClassMonoidAbstract(R);
+    PR,pR:=PicardGroup(R);
+    reps := IsogenyOrbitBuilder(R, D : dual_only:=true);
+    Js := AssociativeArray();
+    for s in Classes(we) do
+        Ws := we_map(s);
+        t := ComplexConjugate(we_map(s))@@we_map;
+        Wt := we_map(t);
+        Wtdual := TraceDualIdeal(ComplexConjugate(Wt));
+        Js[s] := ColonIdeal(Wtdual, Ws);
+    for d->rep_d in reps do
+        
+*/
+
 intrinsic IsogenyGraphBuilder_FromOrbit(R::AlgEtQOrd,D::RngIntElt,A::Assoc) -> .
 {Converts the output of IsogenyOrbitBuilder into the same format as the output of IsogenyGraphBuilder for comparison}
     we,we_map:=WeakEquivalenceClassMonoidAbstract(R);
@@ -340,8 +358,6 @@ intrinsic IsogenyGraphBuilder_FromOrbit(R::AlgEtQOrd,D::RngIntElt,A::Assoc) -> .
     end for;
     return classes, edges_output;
 end intrinsic;
-
-intrinsic 
 
 intrinsic IsogenyGraphChecker(R::AlgEtQOrd, D::RngIntElt) -> SeqEnum, Assoc, Assoc
 {Checks that the number of isogenies between each pair of weak equivalence classes predicted by IsogenyGraphBuilder and IsogenyOrbitBuilder agrees}
