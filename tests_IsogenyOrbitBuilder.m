@@ -2,7 +2,7 @@
     Tests for IsogenyOrbitBuilder
 */
 
-    AttachSpec("~/AbVarFq_Isogenies_Private/magma/spec");
+    AttachSpec("~/AbVarFqIsogenies/spec");
     _<x>:=PolynomialRing(Integers());
     f:=x^4-2*x^2+121;
     q:=Round(ConstantCoefficient(f)^(2/Degree(f)));
@@ -21,10 +21,19 @@
         end if;
     end for;
 
+    // profiling
+    AttachSpec("~/AbVarFqIsogenies/spec");
+    _<x>:=PolynomialRing(Integers());
+    f:=x^4-2*x^2+121;
+    q:=Round(ConstantCoefficient(f)^(2/Degree(f)));
+    K:=EtaleAlgebra(f);
+    F:=PrimitiveElement(K);
+    V:=q/F;
+    R:=Order([F,V]);
     // with Profiler
     SetProfile(true);
     _:=IsogenyOrbitBuilder(R,6);
     SetProfile(false);
     G:=ProfileGraph();
-    ProfilePrintByTotalTime(G:Max:=10);
+    ProfilePrintByTotalTime(G:Max:=20);
 

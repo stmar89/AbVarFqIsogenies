@@ -7,7 +7,7 @@
     This code is paired with a sage-notebook for the graphical outputs.
 */
 
-    AttachSpec("~/AbVarFq_Isogenies_Private/magma/spec");
+    AttachSpec("~/AbVarFqIsogenies/spec");
     _<x>:=PolynomialRing(Integers());
     h:=x^8 + 2*x^7- x^6 - 5*x^5 - 8*x^4 - 15*x^3 - 9*x^2 + 54*x + 81;
     q:=Round(ConstantCoefficient(h)^(2/Degree(h)));

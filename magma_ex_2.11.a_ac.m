@@ -7,7 +7,7 @@
     This cannot happend for elliptic curves.
 */
 
-    AttachSpec("~/AbVarFq_Isogenies_Private/magma/spec");
+    AttachSpec("~/AbVarFqIsogenies/spec");
     _<x>:=PolynomialRing(Integers());
     h:=x^4-2*x^2+121;
     q:=Round(ConstantCoefficient(h)^(2/Degree(h)));

@@ -119,7 +119,7 @@ end intrinsic;
 
 /* TESTS
 
-    Attach("~/AbVarFq_Isogenies_Private/magma/NonPrincipalPolarizations.m");
+    AttachSpec("~/AbVarFqIsogenies/spec");
     _<x>:=PolynomialRing(Integers());
     f:=x^8+16; //not ordinary, but it has non-conjugate stable overorders
     q:=Round(ConstantCoefficient(f)^(2/Degree(f)));
@@ -137,8 +137,7 @@ end intrinsic;
   
     SetColumns(0);
     AttachSpec("~/AbVarFq/spec");
-    Attach("~/AbVarFq_Isogenies_Private/magma/IsogenyGraphBuilders.m");
-    Attach("~/AbVarFq_Isogenies_Private/magma/NonPrincipalPolarizations.m");
+    AttachSpec("~/AbVarFqIsogenies/spec");
     _<x>:=PolynomialRing(Integers());
     f:=x^4-2*x^2+121;
     If:=IsogenyClass(f);
