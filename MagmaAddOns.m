@@ -1,3 +1,6 @@
+Z:=Integers();
+Q:=Rationals();
+
 intrinsic GraphOverOrders0(R:AlgEtQOrd)->GrphDir
 {
 This is a replacement for https://magma.maths.usyd.edu.au/magma/handbook/text/455#4979 which is slower. 
