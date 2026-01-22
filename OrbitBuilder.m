@@ -339,9 +339,7 @@ intrinsic IsogenyGraphBuilder_FromOrbit(R::AlgEtQOrd,D::RngIntElt,A::Assoc) -> .
         end for;
     end for;
     return classes, edges_output;
-end intrinsic;
-
-intrinsic 
+end intrinsic; 
 
 intrinsic IsogenyGraphChecker(R::AlgEtQOrd, D::RngIntElt) -> SeqEnum, Assoc, Assoc
 {Checks that the number of isogenies between each pair of weak equivalence classes predicted by IsogenyGraphBuilder and IsogenyOrbitBuilder agrees}
