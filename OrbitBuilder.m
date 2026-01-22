@@ -9,9 +9,9 @@ intrinsic GSTAct(g::GrpAbElt, phi::Tup)->Tup
     x := phi[5];
     R := Order(I);
     PR,pR:=PicardGroup(R);
-    we,we_map:=WeakEquivalenceClassMonoidAbstract(R);
-    Ws:=we_map(s);
-    Wt:=we_map(t);
+    //we,we_map:=WeakEquivalenceClassMonoidAbstract(R);
+    //Ws:=we_map(s);
+    //Wt:=we_map(t);
     S := MultiplicatorRing(s);
     T := MultiplicatorRing(t);
     eS := ExtensionHomPicardGroups(R,S);
@@ -22,8 +22,10 @@ intrinsic GSTAct(g::GrpAbElt, phi::Tup)->Tup
 
     // FIXME: DistinguishedICMRep from Misc.m should help here
     G := g@pR;
-    gI := Ws*((gS@@eS)@pR); // TODO: need this to be canonical, but there can be multiple pullbacks along eS.  Maybe should just map using pS?
-    gJ := Wt*((gT@@eT)@pR);
+    gI := DistinguishedRepsICM(s, gS);
+    gJ := DistinguishedRepsICM(t, gT);
+    //gI := Ws*((gS@@eS)@pR);
+    //gJ := Wt*((gT@@eT)@pR);
 
     test,y := IsIsomorphic(G*I, gI);
     assert test;
@@ -410,11 +412,14 @@ intrinsic IsogenyGraphBuilder_FromOrbit(R::AlgEtQOrd,D::RngIntElt,A::Assoc) -> .
     return classes, edges_output;
 end intrinsic;
 
-intrinsic IsogenyGraphChecker(R::AlgEtQOrd, D::RngIntElt) -> SeqEnum, Assoc, Assoc
+intrinsic IsogenyGraphChecker(R::AlgEtQOrd, D::RngIntElt : reps:=0, classes:=0, edges:=0) -> SeqEnum, Assoc, Assoc
 {Checks that the number of isogenies between each pair of weak equivalence classes predicted by IsogenyGraphBuilder and IsogenyOrbitBuilder agrees}
-    reps := IsogenyOrbitBuilder(R, D);
+    if reps cmpeq 0 then
+        reps := IsogenyOrbitBuilder(R, D);
+    end if;
     by_orb := AssociativeArray(:Default:=0);
     for d->reps_d in reps do
+        print "Orbit", d, #reps_d;
         for phi in reps_d do
             s := phi[1][1];
             t := phi[2][1];
@@ -424,9 +429,12 @@ intrinsic IsogenyGraphChecker(R::AlgEtQOrd, D::RngIntElt) -> SeqEnum, Assoc, Ass
         end for;
     end for;
 
-    classes, edges := IsogenyGraphBuilder(R, D);
+    if classes cmpeq 0 then
+        classes, edges := IsogenyGraphBuilder(R, D);
+    end if;
     by_edge := AssociativeArray(:Default:=0);
     for d->edges_d in edges do
+        print "NoOrbit", d, #edges_d;
         for phi in edges_d do
             s := phi[1][1];
             t := phi[2][1];
