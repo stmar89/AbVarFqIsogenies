@@ -257,7 +257,7 @@ intrinsic IsogenyOrbitBuilder(R::AlgEtQOrd,D::RngIntElt : dual_only:=false) -> .
                 for E2 in E_min_d2 do
                     E2_s := E2[1][1];
                     // REMOVE?
-                        if not IsDefined(reps[n], E2[2][1]) then reps[n][E2[2][1]] := AssociativeArray(); end if;
+                        if not IsDefined(reps[d1], E2_s) then reps[d1][E2_s] := AssociativeArray(); end if;
                     // now, we loop over all already computed reps E1 of degree d1=n/d2 such
                     // that target(E1) = source(E2) = E2[1][1], since we want to construct the composition E1*E2
                     // (first apply the isogeny E1 then the isogeny E2)
@@ -268,9 +268,12 @@ intrinsic IsogenyOrbitBuilder(R::AlgEtQOrd,D::RngIntElt : dual_only:=false) -> .
                         end if;
                         for E1 in E1s do
                             //REMOVE?
+                                if not IsDefined(reps[n], E2[2][1]) then reps[n][E2[2][1]] := AssociativeArray(); end if;
                                 if not IsDefined(reps[n][E2[2][1]],E1[1][1]) then reps[n][E2[2][1]][E1[1][1]]:=[]; end if;
                             for Ecomp in GSTCompose(E1, E2) do
                                 //if not exists{E:E in reps[n][E2[2][1]][E1[1][1]]|
+                                if not IsDefined(reps[n], Ecomp[2][1]) then reps[n][Ecomp[2][1]] := AssociativeArray(); end if;
+                                if not IsDefined(reps[n][Ecomp[2][1]], Ecomp[1][1]) then reps[n][Ecomp[2][1]][Ecomp[1][1]] := []; end if;
                                 if not exists{E:E in reps[n][Ecomp[2][1]][Ecomp[1][1]]|
                                     AreIsogeniesGSTEquivalent(Ecomp[5],Ecomp[3],Ecomp[4],E[5],E[3],E[4])} then
                                     // Asserts for debugging
@@ -311,23 +314,69 @@ intrinsic IsogenyOrbitBuilder(R::AlgEtQOrd,D::RngIntElt : dual_only:=false) -> .
     return reps_output;
 end intrinsic;
 
-/*
 intrinsic DualIsogenies_FromOrbit(R::AlgEtQOrd,D::RngIntElt)->Assoc
 {Given the Frobenius order R of an isogeny class of ordinary squarefree abelian varieties over a finite field and an integer D>1, it returns an associative array isog, indexed by divisors d>1 of D where isog[d] is a sequence of isogenies from A to the dual of A, representing all equivalence classes of such isogenies.}
     we,we_map:=WeakEquivalenceClassMonoidAbstract(R);
     icm,icm_map:=IdealClassMonoidAbstract(R);
     PR,pR:=PicardGroup(R);
+    print "Starting orbit builder";
     reps := IsogenyOrbitBuilder(R, D : dual_only:=true);
+    print "Orbit builder done";
+    duals := AssociativeArray();
     Js := AssociativeArray();
+    homs := AssociativeArray();
     for s in Classes(we) do
         Ws := we_map(s);
         t := ComplexConjugate(we_map(s))@@we_map;
+        duals[s] := t;
         Wt := we_map(t);
         Wtdual := TraceDualIdeal(ComplexConjugate(Wt));
-        Js[s] := ColonIdeal(Wtdual, Ws);
+        Js[s] := PicClass(ColonIdeal(Wtdual, Ws) @@ icm_map);
+
+        S := MultiplicatorRing(s);
+        if not IsDefined(homs, S) then
+            Sbar := ComplexConjugate(S);
+            GSS, proj := GSTQuotient(R, S, Sbar);
+            beta := hom<GSS -> GSS | [<GSS.i, GSS.i + (ComplexConjugate(((GSS.i) @@ proj) @ pR) @@ pR) @ proj> : i in [1..Ngens(GSS)]]>;
+
+            eS := ExtensionHomPicardGroups(R,S);
+            PicS := Codomain(eS);
+            eSb := ExtensionHomPicardGroups(R,Sbar);
+            PicSbar := Codomain(eSb);
+            bar := hom<PicS -> PicSbar | [<PicS.i, ComplexConjugate((PicS.i @@ eS) @ pR) @@ pR @ eS> : i in [1..Ngens(PicS)]]>;
+            X, i1, i2 := DirectSum(PicS, PicSbar);
+            prod_proj := hom<GSS -> X | [<GSS.i, ((GSS.i @@ proj) @ eS) @ i1 + ((GSS.i @@ proj) @ eSb) @ i2> : i in [1..Ngens(GSS)]]>;
+            homs[S] := <beta, proj, prod_proj, i1, i2, bar>;
+        end if;
+    end for;
+    ans := AssociativeArray();
     for d->rep_d in reps do
-        
-*/
+        ans[d] := [];
+        for phi in rep_d do
+            s := phi[1][1];
+            t := phi[2][1];
+            if t ne duals[s] then
+                continue;
+            end if;
+            S := MultiplicatorRing(s);
+            Sbar := ComplexConjugate(S);
+            beta, proj, prod_proj, i1, i2, bar := Explode(homs[S]);
+            aa := phi[1][2];
+            ap1 := Js[s] - aa;
+            ap2 := ap1 @ bar;
+            try
+                b0 := ((ap1 @ i1) + (ap2 @ i2)) @@ prod_proj @@ beta;
+            catch err
+                continue;
+            end try;
+            for c in Kernel(beta) do
+                // TODO: Need to adjust by iota
+                Append(~ans[d], GSTAct((b0 + c) @@ proj, phi));
+            end for;
+        end for;
+    end for;
+    return ans;
+end intrinsic;
 
 intrinsic IsogenyGraphBuilder_FromOrbit(R::AlgEtQOrd,D::RngIntElt,A::Assoc) -> .
 {Converts the output of IsogenyOrbitBuilder into the same format as the output of IsogenyGraphBuilder for comparison}
@@ -369,7 +418,7 @@ intrinsic IsogenyGraphChecker(R::AlgEtQOrd, D::RngIntElt) -> SeqEnum, Assoc, Ass
             t := phi[2][1];
             S := MultiplicatorRing(s);
             T := MultiplicatorRing(t);
-            by_orb[<d,s,t>] +:= #GSTQuotient(R, S, T);
+            by_orb[<d,s,t>] +:= #GSTTransversal(R, S, T);
         end for;
     end for;
 

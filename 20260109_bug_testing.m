@@ -113,3 +113,30 @@ function find_example(N)
         end if;
     end for;
 end function;
+
+SetDebugOnError(true);
+AttachSpec("spec");
+all:=Split(Read("weil_poly_sqfree_ord.txt"));
+PP<x>:=PolynomialRing(Integers());
+for c in all do
+    h:=PP!eval(c);
+    if Degree(h) eq 4 then
+        t0 := Cputime();
+        print h;
+        K:=EtaleAlgebra(h);
+        F:=PrimitiveElement(K);
+        q:=Round(ConstantCoefficient(h)^(2/Degree(h)));
+        _,p:=IsPrimePower(q);
+        V:=q/F;
+        R:=Order([F,V]);
+        B := DualIsogenies_FromIter(R, 36);
+        print Cputime() - t0;
+        Bk := [k : k in Keys(B) | #B[k] gt 0];
+        A := DualIsogenies_FromOrbit(R, 36);
+        print Cputime() - t0;
+        t0 := Cputime();
+        Ak := [k : k in Keys(A) | #A[k] gt 0];
+        assert Ak eq Bk;
+        assert &and[#A[k] eq #B[k] : k in Ak];
+    end if;
+end for;

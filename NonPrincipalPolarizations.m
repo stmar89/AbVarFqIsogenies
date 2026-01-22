@@ -63,7 +63,26 @@ function is_polarizaton(mu,PHI)
     end if;
 end function;
 
-intrinsic NonPrincipalPolarizationsOfDegreeDividing(R::AlgEtQOrd,PHI::AlgEtQCMType,D::RngIntElt)->SeqEnum
+intrinsic DualIsogenies_FromIter(R::AlgEtQOrd, D::RngIntElt)->Assoc
+{Given the Frobenius order R of an isogeny class of ordinary squarefree abelian varieties over a finite field and an integer D>1, it returns an associative array isog, indexed by divisors d>1 of D where isog[d] is a sequence of isogenies from A to the dual of A, representing all equivalence classes of such isogenies.}
+    classes,edges:=IsogenyGraphBuilder(R,D);
+    ans := AssociativeArray();
+    for vertex in classes do
+        w,aa:=Explode(vertex);
+        IV:=DistinguishedRepsICM(w,aa);
+        wt,aat:=dual_vertex(w,aa);
+        IVv:=DistinguishedRepsICM(wt,aat);
+        for d->edges_d in edges do
+            if not IsDefined(ans, d) then
+                ans[d] := [];
+            end if;
+            ans[d] cat:= [E : E in edges_d | E[3] eq IV and E[4] eq IVv];
+        end for;
+    end for;
+    return ans;
+end intrinsic;
+
+intrinsic NonPrincipalPolarizationsOfDegreeDividing(R::AlgEtQOrd,PHI::AlgEtQCMType,D::RngIntElt)->Assoc
 {Given the Frobenius order R of an isogeny class of ordinary squarefree abelian varieties over a finite field, a p-adic positive CM-type PHI, and an integer D>1, it returns an associative array pols, indexed by divisors d>1 of D where pols[d] is an associative array indexed by fractional R-ideals I, representing the ideal class monoid of R, and pols[d][I] is a sequence of elements x in Q[F] each one representing a polarization of I of degree d (necesarily a sqare) up to polarized isomorphism. If no such polarization is found, an empty sequence is stored.
 The intrinsic calls internally IsogenyGraphBuilder.}
     classes,edges:=IsogenyGraphBuilder(R,D);
@@ -91,11 +110,11 @@ The intrinsic calls internally IsogenyGraphBuilder.}
                         pols_d_IV cat:= [mu*vv: vv in cSp];
                     end if;
                 end for;
-                pols[d][IV]:=pols_d_IV;
+                pols[d][IV]:=pols_d_IV; // should we omit this when no polarization exists (for the case of large Pic)
             end if;
         end for;
     end for;
-    return pols; 
+    return pols;
 end intrinsic;
 
 /* TESTS

@@ -12,6 +12,7 @@ declare attributes AlgEtQOrd: QuotientsUnitsOverorders, // transversals in K of 
                               JoinUnitsOverorders, // S^*T^* as a subgroup of OK^*
                               KernelsExtensionHoms, // ker(e_S)
                               KernelIntersections, // ker(e_S) meet ker(e_T) as a subgroup of Pic(R)
+                              GSTTransversals, // Pic(R) / ker(e_S) meet ker(e_T)
                               GSTQuotients, // Pic(R) / ker(e_S) meet ker(e_T)
                               DoubleKernelQuotients, // ker(e_T) / ker(e_S) meet ker(e_T)
                               TripleKernelQuotients, // ker(e_T) / (ker(e_T) meet (ker(e_S) + ker(e_U)))
@@ -123,16 +124,29 @@ intrinsic KernelIntersections(R::AlgEtQOrd, S::AlgEtQOrd, T::AlgEtQOrd)->.
     return R`KernelIntersections[key];
 end intrinsic;
 
-intrinsic GSTQuotient(R::AlgEtQOrd, S::AlgEtQOrd, T::AlgEtQOrd)->.
+intrinsic GSTTransversal(R::AlgEtQOrd, S::AlgEtQOrd, T::AlgEtQOrd)->.
 {Given an order R and two overorders S,T of R, returns a transversal for ker(e_S) meet ker(e_T) within Pic(R).  The output is stored in an associative array attribute of R, which is populated on demand.}
+    if not assigned R`GSTTransversals then
+        R`GSTTransversals := AssociativeArray();
+    end if;
+    key := {myHash(S),myHash(T)};
+    if not IsDefined(R`GSTTransversals,key) then
+        R`GSTTransversals[key] := Transversal(PicardGroup(R), KernelIntersections(R, S, T));
+    end if;
+    return R`GSTTransversals[key];
+end intrinsic;
+
+intrinsic GSTQuotient(R::AlgEtQOrd, S::AlgEtQOrd, T::AlgEtQOrd)->GrpAb, Map
+{Given an order R and two overorders S,T of R, returns the quotient Pic(R) / (ker(e_S) meet ker(e_T)).  The output is stored in an associative array attribute of R, which is populated on demand.}
     if not assigned R`GSTQuotients then
         R`GSTQuotients := AssociativeArray();
     end if;
     key := {myHash(S),myHash(T)};
     if not IsDefined(R`GSTQuotients,key) then
-        R`GSTQuotients[key] := Transversal(PicardGroup(R), KernelIntersections(R, S, T));
+        GST, proj := quo<PicardGroup(R) | KernelIntersections(R, S, T)>;
+        R`GSTQuotients[key] := <GST, proj>;
     end if;
-    return R`GSTQuotients[key];
+    return Explode(R`GSTQuotients[key]);
 end intrinsic;
 
 intrinsic DoubleKernelQuotient(R::AlgEtQOrd, S::AlgEtQOrd, T::AlgEtQOrd)->.
@@ -143,7 +157,12 @@ intrinsic DoubleKernelQuotient(R::AlgEtQOrd, S::AlgEtQOrd, T::AlgEtQOrd)->.
     key := <myHash(S),myHash(T)>;
     if not IsDefined(R`DoubleKernelQuotients,key) then
         eT := ExtensionHomPicardGroups(R,T);
-        R`DoubleKernelQuotients[key] := Transversal(KernelsExtensionHom(R,T), KernelIntersections(R, S, T));
+        K := KernelsExtensionHom(R,T);
+        if #K eq 1 then // Magma bug?
+           R`DoubleKernelQuotients[key] := [K.0];
+        else
+            R`DoubleKernelQuotients[key] := Transversal(K, KernelIntersections(R, S, T));
+        end if;
     end if;
     return R`DoubleKernelQuotients[key];
 end intrinsic;
