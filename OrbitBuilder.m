@@ -20,6 +20,7 @@ intrinsic GSTAct(g::GrpAbElt, phi::Tup)->Tup
     gS := (g@eS)+hS;
     gT := (g@eT)+hT;
 
+    // FIXME: DistinguishedICMRep from Misc.m should help here
     G := g@pR;
     gI := Ws*((gS@@eS)@pR); // TODO: need this to be canonical, but there can be multiple pullbacks along eS.  Maybe should just map using pS?
     gJ := Wt*((gT@@eT)@pR);
@@ -54,6 +55,7 @@ intrinsic GSTOrbit(phi::Tup)->SeqEnum
         gS := (g@eS)+hS;
         gT := (g@eT)+hT;
         G := g@pR;
+        // FIXME: DistinguishedICMRep from Misc.m should help here
         gI := Ws*((gS@@eS)@pR);
         gJ := Wt*((gT@@eT)@pR);
 
@@ -70,6 +72,8 @@ end intrinsic;
 intrinsic AreIsogeniesGSTEquivalent(x1::AlgEtQElt,I1::AlgEtQIdl,J1::AlgEtQIdl,x2::AlgEtQElt,I2::AlgEtQIdl,J2::AlgEtQIdl)->BoolElt
 {//TODO
 }
+    // FIXME: You are starting from the label (inclusion of ideals) and then you look up for the vertices.
+    // This is time consuming. Can be avoided? For example including the whole Tup ?
     R := Order(I1);
     PR,pR := PicardGroup(R);
     assert R eq Order(I2) and R eq Order(J1) and R eq Order(J2);
