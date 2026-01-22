@@ -158,11 +158,7 @@ intrinsic DoubleKernelQuotient(R::AlgEtQOrd, S::AlgEtQOrd, T::AlgEtQOrd)->.
     if not IsDefined(R`DoubleKernelQuotients,key) then
         eT := ExtensionHomPicardGroups(R,T);
         K := KernelsExtensionHom(R,T);
-        if #K eq 1 then // Magma bug?
-           R`DoubleKernelQuotients[key] := [K.0];
-        else
-            R`DoubleKernelQuotients[key] := Transversal(K, KernelIntersections(R, S, T));
-        end if;
+        R`DoubleKernelQuotients[key] := Transversal(K, KernelIntersections(R, S, T));
     end if;
     return R`DoubleKernelQuotients[key];
 end intrinsic;
