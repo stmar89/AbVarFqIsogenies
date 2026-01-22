@@ -16,10 +16,23 @@ declare attributes AlgEtQOrd: QuotientsUnitsOverorders, // transversals in K of 
                               GSTQuotients, // Pic(R) / ker(e_S) meet ker(e_T)
                               DoubleKernelQuotients, // ker(e_T) / ker(e_S) meet ker(e_T)
                               TripleKernelQuotients, // ker(e_T) / (ker(e_T) meet (ker(e_S) + ker(e_U)))
-                              DistinguishedRepsICM;
+                              DistinguishedRepsICM,
+                              ExtensionHomPicardGroups; // not cached in AlgEt, since it is defined all pairs of overorders
+
+intrinsic ExtensionHomPicardGroupsOverOrders(R::AlgEtQOrd,S::AlgEtQOrd)->Map
+{Given R and an overorder S, return the natural surjective group homomorphism Pic(R)->Pic(S). This map is stored in an attribute populated on demand}
+    if not assigned R`ExtensionHomPicardGroups then
+        R`ExtensionHomPicardGroups:=AssociativeArray();
+    end if;
+    key:=myHash(S);
+    if not IsDefined(R`ExtensionHomPicardGroups,key) then
+        R`ExtensionHomPicardGroups[key]:=ExtensionHomPicardGroups(R,S);
+    end if;
+    return R`ExtensionHomPicardGroups[key];
+end intrinsic;
 
 intrinsic DistinguishedRepsICM(w::AlgEtQWECMElt,aa::GrpAbElt)->AlgEtQIdl,AlgEtQIdl,GrpAbElt
-{Given w a weak equivalence class of some order R, with multiplicator ring T, and an element aa of the abstract group Pic(T), returns W*I,I,aaR , where W=Ideal(w) and I=pR(aaR) with aaR=aa@@eT, where _,pR:=PicardGroup(R) and eT:=ExtensionHomPicardGroups(R,T). In particular, W*I is canonically associated to the pair (w,aa). The output is stored in the attribute DistinguishedRepsICM of R, and populated on demand.}
+{Given w a weak equivalence class of some order R, with multiplicator ring T, and an element aa of the abstract group Pic(T), returns W*I,I,aaR , where W=Ideal(w) and I=pR(aaR) with aaR=aa@@eT, where _,pR:=PicardGroup(R) and eT:=ExtensionHomPicardGroupsOverOrders(R,T). In particular, W*I is canonically associated to the pair (w,aa). The output is stored in the attribute DistinguishedRepsICM of R, and populated on demand.}
     R:=Order(Parent(w));
     if not assigned R`DistinguishedRepsICM then
         R`DistinguishedRepsICM:=AssociativeArray();
@@ -29,7 +42,7 @@ intrinsic DistinguishedRepsICM(w::AlgEtQWECMElt,aa::GrpAbElt)->AlgEtQIdl,AlgEtQI
     end if;
     if not IsDefined(R`DistinguishedRepsICM[w],aa) then
         T:=MultiplicatorRing(w);
-        eT:=ExtensionHomPicardGroups(R,T);
+        eT:=ExtensionHomPicardGroupsOverOrders(R,T);
         _,pR:=PicardGroup(R);
         aaR:=aa@@eT;
         IaaR:=pR(aaR);
@@ -106,7 +119,7 @@ intrinsic KernelsExtensionHom(R::AlgEtQOrd, S::AlgEtQOrd)->GrpAb
         R`KernelsExtensionHoms := AssociativeArray();
     end if;
     if not IsDefined(R`KernelsExtensionHoms, myHash(S)) then
-        eS := ExtensionHomPicardGroups(R,S);
+        eS := ExtensionHomPicardGroupsOverOrders(R,S);
         R`KernelsExtensionHoms[myHash(S)] := Kernel(eS);
     end if;
     return R`KernelsExtensionHoms[myHash(S)];
@@ -156,7 +169,7 @@ intrinsic DoubleKernelQuotient(R::AlgEtQOrd, S::AlgEtQOrd, T::AlgEtQOrd)->.
     end if;
     key := <myHash(S),myHash(T)>;
     if not IsDefined(R`DoubleKernelQuotients,key) then
-        eT := ExtensionHomPicardGroups(R,T);
+        eT := ExtensionHomPicardGroupsOverOrders(R,T);
         K := KernelsExtensionHom(R,T);
         R`DoubleKernelQuotients[key] := Transversal(K, sub<K|Generators(KernelIntersections(R, S, T))>);
     end if;

@@ -14,8 +14,8 @@ intrinsic GSTAct(g::GrpAbElt, phi::Tup)->Tup
     //Wt:=we_map(t);
     S := MultiplicatorRing(s);
     T := MultiplicatorRing(t);
-    eS := ExtensionHomPicardGroups(R,S);
-    eT := ExtensionHomPicardGroups(R,T);
+    eS := ExtensionHomPicardGroupsOverOrders(R,S);
+    eT := ExtensionHomPicardGroupsOverOrders(R,T);
 
     gS := (g@eS)+hS;
     gT := (g@eT)+hT;
@@ -49,8 +49,8 @@ intrinsic GSTOrbit(phi::Tup)->SeqEnum
     Wt := we_map(t);
     S := MultiplicatorRing(s);
     T := MultiplicatorRing(t);
-    eS := ExtensionHomPicardGroups(R,S);
-    eT := ExtensionHomPicardGroups(R,T);
+    eS := ExtensionHomPicardGroupsOverOrders(R,S);
+    eT := ExtensionHomPicardGroupsOverOrders(R,T);
 
     orb := [];
     for g in DoubleKernelQuotient(R, S, T) do
@@ -76,6 +76,8 @@ intrinsic AreIsogeniesGSTEquivalent(x1::AlgEtQElt,I1::AlgEtQIdl,J1::AlgEtQIdl,x2
 }
     // FIXME: You are starting from the label (inclusion of ideals) and then you look up for the vertices.
     // This is time consuming. Can be avoided? For example including the whole Tup ?
+    // It seems that in all calls you could use the Tup
+
     R := Order(I1);
     PR,pR := PicardGroup(R);
     assert R eq Order(I2) and R eq Order(J1) and R eq Order(J2);
@@ -95,9 +97,9 @@ intrinsic AreIsogeniesGSTEquivalent(x1::AlgEtQElt,I1::AlgEtQIdl,J1::AlgEtQIdl,x2
     end if;
     T := MultiplicatorRing(target1);
 
-    eS := ExtensionHomPicardGroups(R,S);
+    eS := ExtensionHomPicardGroupsOverOrders(R,S);
     KS := Kernel(eS);
-    eT := ExtensionHomPicardGroups(R,T);
+    eT := ExtensionHomPicardGroupsOverOrders(R,T);
     KT := Kernel(eT);
     gS := (PicClass(source2) - PicClass(source1))@@eS;
     gT := (PicClass(target2) - PicClass(target1))@@eT;
@@ -126,7 +128,7 @@ intrinsic GSTCompose(phi::Tup, psi::Tup)->SeqEnum
         error "isogenies must be in the same isogeny class";
     end if;
     T := MultiplicatorRing(t2);
-    eT := ExtensionHomPicardGroups(R, T);
+    eT := ExtensionHomPicardGroupsOverOrders(R, T);
     U := MultiplicatorRing(u2);
 
     s1, hS1 := Explode(phi[1]);
@@ -207,7 +209,7 @@ intrinsic IsogenyOrbitBuilder(R::AlgEtQOrd,D::RngIntElt : dual_only:=false) -> .
     // reps_min[dM] is the sequence of minimal isogenies of degree dM
     for t in Classes(we) do
         T := MultiplicatorRing(t);
-        eT := ExtensionHomPicardGroups(R, T);
+        eT := ExtensionHomPicardGroupsOverOrders(R, T);
         Wt := we_map(t);
         dual_we[t] := TraceDualIdeal(ComplexConjugate(Wt)) @@ we_map;
         Ms := [M : M in IntermediateIdeals(Wt, D*Wt : Maximal:=true) | D mod Index(Wt, M) eq 0]; //sub-frac.R-ideals M<Wt s.t. [Wt:M]|D
@@ -224,7 +226,7 @@ intrinsic IsogenyOrbitBuilder(R::AlgEtQOrd,D::RngIntElt : dual_only:=false) -> .
             assert test; // sanity check
             label := <[* s,aaS *],[* t, PR.0@eT *], WsIaa, Wt, x>;
             for olabel in reps_min[dM] do
-                assert not AreIsogeniesEquivalent(label[5], label[3], label[4], olabel[5], olabel[3], olabel[4]);
+                assert2 not AreIsogeniesEquivalent(label[5], label[3], label[4], olabel[5], olabel[3], olabel[4]);
             end for;
             Append(~reps_min[dM], label);
             // REMOVE THE NEXT TWO IF?
@@ -343,9 +345,9 @@ intrinsic DualIsogenies_FromOrbit(R::AlgEtQOrd,D::RngIntElt)->Assoc
             GSS, proj := GSTQuotient(R, S, Sbar);
             beta := hom<GSS -> GSS | [<GSS.i, GSS.i + (ComplexConjugate(((GSS.i) @@ proj) @ pR) @@ pR) @ proj> : i in [1..Ngens(GSS)]]>;
 
-            eS := ExtensionHomPicardGroups(R,S);
+            eS := ExtensionHomPicardGroupsOverOrders(R,S);
             PicS := Codomain(eS);
-            eSb := ExtensionHomPicardGroups(R,Sbar);
+            eSb := ExtensionHomPicardGroupsOverOrders(R,Sbar);
             PicSbar := Codomain(eSb);
             bar := hom<PicS -> PicSbar | [<PicS.i, ComplexConjugate((PicS.i @@ eS) @ pR) @@ pR @ eS> : i in [1..Ngens(PicS)]]>;
             X, i1, i2 := DirectSum(PicS, PicSbar);

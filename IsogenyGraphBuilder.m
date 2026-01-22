@@ -54,7 +54,7 @@ intrinsic MinimalIsogenyGraphBuilder(R::AlgEtQOrd,D::RngIntElt) -> SeqEnum,Assoc
     // edges:=AssociativeArray(:Default:=AssociativeArray(:Default:=AssociativeArray(:Default:=[])));
     for t in Classes(we) do 
         T:=MultiplicatorRing(t);
-        eT:=ExtensionHomPicardGroups(R,T);
+        eT:=ExtensionHomPicardGroupsOverOrders(R,T);
         PT:=PicardGroup(T);
         for bbT in PT do
             Append(~classes,[* t,bbT *]);
@@ -69,7 +69,7 @@ intrinsic MinimalIsogenyGraphBuilder(R::AlgEtQOrd,D::RngIntElt) -> SeqEnum,Assoc
             s:=WEClass(source_M);
             aaS:=PicClass(source_M);
             S:=MultiplicatorRing(s);
-            eS:=ExtensionHomPicardGroups(R,S);
+            eS:=ExtensionHomPicardGroupsOverOrders(R,S);
             WsIaa,Iaa,aa:=DistinguishedRepsICM(s,aaS);
             test,x:=IsIsomorphic(M,WsIaa); // x*Ws*Iaa = M
             assert test; // sanity check

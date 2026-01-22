@@ -63,7 +63,7 @@ intrinsic IsogenyGraphBuilder_LessNaive(R::AlgEtQOrd,D::RngIntElt) -> .
     // edges[d] contains the sequence of labels of isogenies of degree d.
     for t in Classes(we) do 
         T:=MultiplicatorRing(t);
-        eT:=ExtensionHomPicardGroups(R,T);
+        eT:=ExtensionHomPicardGroupsOverOrders(R,T);
         PT:=PicardGroup(T);
         for bbT in PT do
             Append(~classes,[* t,bbT *]);
@@ -79,7 +79,7 @@ intrinsic IsogenyGraphBuilder_LessNaive(R::AlgEtQOrd,D::RngIntElt) -> .
             aaS:=PicClass(source_M);
             S:=MultiplicatorRing(s);
             Ws:=we_map(s);
-            eS:=ExtensionHomPicardGroups(R,S);
+            eS:=ExtensionHomPicardGroupsOverOrders(R,S);
             aa:=aaS@@eS; // in Pic(R);
             Iaa:=pR(aa);
             test,x:=IsIsomorphic(M,Ws*Iaa);
