@@ -319,9 +319,7 @@ intrinsic DualIsogenies_FromOrbit(R::AlgEtQOrd,D::RngIntElt)->Assoc
     we,we_map:=WeakEquivalenceClassMonoidAbstract(R);
     icm,icm_map:=IdealClassMonoidAbstract(R);
     PR,pR:=PicardGroup(R);
-    print "Starting orbit builder";
     reps := IsogenyOrbitBuilder(R, D : dual_only:=true);
-    print "Orbit builder done";
     duals := AssociativeArray();
     Js := AssociativeArray();
     homs := AssociativeArray();
