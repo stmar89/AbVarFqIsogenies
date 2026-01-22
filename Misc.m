@@ -158,7 +158,7 @@ intrinsic DoubleKernelQuotient(R::AlgEtQOrd, S::AlgEtQOrd, T::AlgEtQOrd)->.
     if not IsDefined(R`DoubleKernelQuotients,key) then
         eT := ExtensionHomPicardGroups(R,T);
         K := KernelsExtensionHom(R,T);
-        R`DoubleKernelQuotients[key] := Transversal(K, KernelIntersections(R, S, T));
+        R`DoubleKernelQuotients[key] := Transversal(K, sub<K|Generators(KernelIntersections(R, S, T))>);
     end if;
     return R`DoubleKernelQuotients[key];
 end intrinsic;

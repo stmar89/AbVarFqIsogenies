@@ -178,7 +178,7 @@ function compute_orbits_GSUT_on_Ms(T, Ms, R, Wt)
         // Reps in K of this quotient are stored in the associative array R`QuotientsUnitsOverorders[<T,S>], 
         // which is populated on demand by the corresponding intrinsc, to avoid useless recomputation.
         S := MultiplicatorRing(M1);
-        UST := QuotientsUnitsOverorders(R, S, T);
+        UST := QuotientsUnitsOverorders(R, T, S);
         for g in DoubleKernelQuotient(R, S, T) do
             I := g @ pR;
             test,y := IsIsomorphic(Wt, I * Wt); // TODO: Check that reversing this was right
@@ -194,13 +194,9 @@ end function;
 
 intrinsic IsogenyOrbitBuilder(R::AlgEtQOrd,D::RngIntElt : dual_only:=false) -> .
 {Given the Frobenius order R of a squarefree ordinary isogeny class and a positive integer D, returns an associative array whose value at each integer d dividing D is a sequence of isogenies of degree d so that the set of all isogenies of degree d is obtained by taking orbits for the action of G_(s,t) on each representative.  If the optional parameter dual_only is set, only isogenies mapping from a weak equivalence class to its dual will be included in the output.}
-    print "A";
     we,we_map:=WeakEquivalenceClassMonoidAbstract(R);
-    print "B";
     icm,icm_map:=IdealClassMonoidAbstract(R);
-    print "C";
     PR,pR:=PicardGroup(R);
-    print "D";
     dual_we:= AssociativeArray();
 
     reps:=AssociativeArray();
@@ -239,7 +235,6 @@ intrinsic IsogenyOrbitBuilder(R::AlgEtQOrd,D::RngIntElt : dual_only:=false) -> .
             Append(~reps[dM][t][s], label);
         end for;
     end for;
-    print "E";
 
     // FIXME - remove this block once done debugging
     /*for d->reps_d in reps do
@@ -300,7 +295,6 @@ intrinsic IsogenyOrbitBuilder(R::AlgEtQOrd,D::RngIntElt : dual_only:=false) -> .
             end if;
         end for;
     end for;
-    print "F";
 
     // this last step is just to be consistent with the other two algoritms
     reps_output:=AssociativeArray();
