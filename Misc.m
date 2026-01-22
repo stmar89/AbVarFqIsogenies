@@ -175,7 +175,8 @@ intrinsic TripleKernelQuotient(R::AlgEtQOrd, S::AlgEtQOrd, T::AlgEtQOrd, U::AlgE
     key := <myHash(T),{myHash(S),myHash(U)}>;
     if not IsDefined(R`TripleKernelQuotients, key) then
         kT := KernelsExtensionHom(R,T);
-        R`TripleKernelQuotients[key] := Transversal(kT, KernelIntersections(R, S, T) + KernelIntersections(R, T, U));
+//        R`TripleKernelQuotients[key] := Transversal(kT, KernelIntersections(R, S, T) + KernelIntersections(R, T, U));
+        R`TripleKernelQuotients[key] := Transversal(kT, sub<kT|Generators(KernelIntersections(R, S, T) + KernelIntersections(R, T, U))>);
     end if;
     return R`TripleKernelQuotients[key];
 end intrinsic;
