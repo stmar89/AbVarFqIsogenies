@@ -2,6 +2,8 @@ declare attributes AlgEtQOrd:UnitsModTotPos,
                              TotPosUnitsModUbarU,
                              BarInversePic;
 
+declare attributes AlgEtQWECMElt:DualWKClasses;
+
 intrinsic UnitsModTotPos(S::AlgEtQOrd)->SeqEnum[AlgEtQElt]
 {Given an order S in a CM-etale algebra K returns a set of representative in K of the quotient S^*/S_+^*, where S_+^* is the subgroup of totally real totally positive units of S.}
     if not assigned S`UnitsModTotPos then
@@ -43,14 +45,29 @@ intrinsic BarInversePic(S::AlgEtQOrd)->Map
     return S`BarInversePic;
 end intrinsic;
 
+intrinsic DualWKClasses(w::AlgEtQWECMElt)->AlgEtQWECMElt,.
+{Returns the AlEtQWEElt wtbar corresponding to Wtbar:=TraceDualIdeal(ComplexConjugate(Ideal(w))) and the invertible ideal class of the colon ideal (Wtbar,Ideal(wtbar)) as an element of Pic. Data is stored in an attribute populated on demand.}
+    if not assigned w`DualWKClasses then
+        W_map:=RepresentativeMap(Parent(w));
+        Wtbar:=TraceDualIdeal(ComplexConjugate(Ideal(w)));
+        wtbar:=Wtbar@@W_map;
+        Sb:=MultiplicatorRing(wtbar);
+        _,pSb:=PicardGroup(Sb);
+        jj:=(Sb!!ColonIdeal(Wtbar,Ideal(wtbar)))@@pSb;
+        w`DualWKClasses:=<wtbar,jj>;
+    end if;
+    return Explode(w`DualWKClasses);
+end intrinsic;
+
 function dual_vertex(w,aa)
 // given a weak equivalence class w (of type AlgEtQWECMElt), with multiplictor ring T and element aa of the abstract group representing Pic(T), say representing the ideal class of the fractioanl ideal I,  it returns wt,aat representing the ideal class of TraceDualIdeal(ComplexConjugate(I)).
     // We have the relation \bar{I*L)^t = \bar{I}^t * \bar{L}^-1
     S:=MultiplicatorRing(w);
     W:=Parent(w);
     W_map:=RepresentativeMap(W);
-    wt:=TraceDualIdeal(ComplexConjugate(Ideal(w)))@@W_map;
-    return wt,BarInversePic(S)(aa);
+    wtbar,jj:=DualWKClasses(w);
+    aat:=BarInversePic(S)(aa);
+    return wtbar,jj*aat;
 end function;
 
 function is_polarizaton(mu,PHI)
@@ -181,12 +198,15 @@ end intrinsic;
         _:=TotPosUnitsModUbarU(S);
     end for;
 
-  
+ 
+    SetDebugOnError(true);
+    SetAssertions(2);
     SetColumns(0);
     AttachSpec("~/AbVarFq/spec");
     AttachSpec("~/AbVarFqIsogenies/spec");
     _<x>:=PolynomialRing(Integers());
-    f:=x^4-2*x^2+121;
+    //f:=x^4-2*x^2+121;
+    f:=x^4 - 4*x^3 + 11*x^2 - 16*x + 16;
     If:=IsogenyClass(f);
     PHI:=pAdicPosCMType(If);
     R:=ZFVOrder(If);

@@ -46,6 +46,7 @@ intrinsic DistinguishedRepsICM(w::AlgEtQWECMElt,aa::GrpAbElt)->AlgEtQIdl,AlgEtQI
         _,pR:=PicardGroup(R);
         aaR:=aa@@eT;
         IaaR:=pR(aaR);
+        assert2 IsIsomorphic(Ideal(w)*R!!pT(aa),Ideal(w)*IaaR) where _,pT:=PicardGroup(T);
         R`DistinguishedRepsICM[w][aa]:=<Ideal(w)*IaaR,IaaR,aaR>;
     end if;
     return Explode(R`DistinguishedRepsICM[w][aa]);
@@ -80,6 +81,7 @@ intrinsic QuotientOfJoinUnitsOverOrders(R::AlgEtQOrd, O1::AlgEtQOrd, O2::AlgEtQO
     if not IsDefined(R`QuotientOfJoinUnitsOverOrders,key) then
         U2,u2:=UnitGroup(O2);
         den:=JoinUnitsOverorders(R,O1,O3) meet U2;
+        assert den subset U2; // this makes Transversal work always.
         R`QuotientOfJoinUnitsOverOrders[key]:=[u2(t): t in Transversal(U2,den)];
     end if;
     return R`QuotientOfJoinUnitsOverOrders[key];
@@ -185,7 +187,11 @@ intrinsic TripleKernelQuotient(R::AlgEtQOrd, S::AlgEtQOrd, T::AlgEtQOrd, U::AlgE
     if not IsDefined(R`TripleKernelQuotients, key) then
         kT := KernelsExtensionHom(R,T);
 //        R`TripleKernelQuotients[key] := Transversal(kT, KernelIntersections(R, S, T) + KernelIntersections(R, T, U));
-        R`TripleKernelQuotients[key] := Transversal(kT, sub<kT|Generators(KernelIntersections(R, S, T) + KernelIntersections(R, T, U))>);
+//        R`TripleKernelQuotients[key] := Transversal(kT, sub<kT|Generators(KernelIntersections(R, S, T) + KernelIntersections(R, T, U))>);
+        // cleaner workaround
+        den:=KernelIntersections(R, S, T) + KernelIntersections(R, T, U);
+        assert den subset kT;
+        R`TripleKernelQuotients[key] := Transversal(kT,den);
     end if;
     return R`TripleKernelQuotients[key];
 end intrinsic;
