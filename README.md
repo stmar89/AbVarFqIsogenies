@@ -30,7 +30,7 @@ Key intrinsics include:
 - **`IsogenyGraphBuilder.m`**: Contains the main algorithms (`MinimalIsogenyGraphBuilder`, `IsogenyGraphBuilder`) for computing the graph.
 - **`OrbitBuilder.m`**: Algorithms for computing orbits of isogenies and composing them (`IsogenyOrbitBuilder`, `GSTCompose`).
 - **`EquivIsogenies.m`**: Functions for testing equivalence of isogenies.
-- **`NonPrincipalPolarizations.m`**: Functinality related to non-principal polarizations.
+- **`NonPrincipalPolarizations.m`**: Functionality related to non-principal polarizations (`NonPrincipalPolarizationsOfDegreeDividing`).
 - **`Naive_IsogenyGraphBuilders.m`**: A naive implementation of graph building, likely for verification or simple cases.
 - **`Misc.m`**: Miscellaneous helper functions.
 - **`spec`**: Magma spec file for attaching the package.
@@ -42,3 +42,6 @@ To use the package, attach the `spec` file in your Magma session:
 ```magma
 AttachSpec("spec");
 ```
+
+In order to use the intrinsics from the file `NonPrincipalPolarizations.m` one needs to clone also the repository `https://github.com/stmar89/AbVarFq` and Attach its spec file.
+
