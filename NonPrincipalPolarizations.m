@@ -82,36 +82,83 @@ intrinsic DualIsogenies_FromIter(R::AlgEtQOrd, D::RngIntElt)->Assoc
     return ans;
 end intrinsic;
 
-intrinsic NonPrincipalPolarizationsOfDegreeDividing(R::AlgEtQOrd,PHI::AlgEtQCMType,D::RngIntElt)->Assoc
-{Given the Frobenius order R of an isogeny class of ordinary squarefree abelian varieties over a finite field, a p-adic positive CM-type PHI, and an integer D>1, it returns an associative array pols, indexed by divisors d>1 of D where pols[d] is an associative array indexed by fractional R-ideals I, representing the ideal class monoid of R, and pols[d][I] is a sequence of elements x in Q[F] each one representing a polarization of I of degree d (necesarily a sqare) up to polarized isomorphism. If no such polarization is found, an empty sequence is stored.
+intrinsic IsogeniesToDualOfDegreeDividing(R::AlgEtQOrd,D::RngIntElt : only_square_divisors:=true)->Assoc
+{Given the Frobenius order R of an isogeny class of ordinary squarefree abelian varieties over a finite field, and an integer D>1, it returns a 2-dimensional associative array isogs_to_dual where isogs_to_dual[d][IV_key] a sequence of representatives of equivalence classes of isogenies given by tuples of the form < [* w, aa *] , [* wt, aat *], IV , IVdual , x > where
+- IV is the distinguished representative of the ideal class [* w , aa *];
+- IV_key = myHash(IV);
+- IVdual = ComplexConjugate(TraceDualIdeal(IV));
+- [* wt , aat *] is the ideal class of the dual vertex
+- x*IV < IVdual is an inclusion of degree d.
+Note that IVdual might not be the distinguished representative of [* wt , aat *].
+The vararg only_square_divisors (default true) determines if d in the output must be a square.
 The intrinsic calls internally IsogenyGraphBuilder.}
     classes,edges:=IsogenyGraphBuilder(R,D);
     pols:=AssociativeArray();
     for vertex in classes do
         w,aa:=Explode(vertex);
         IV:=DistinguishedRepsICM(w,aa); // IV is the same as I in the description.
-        S:=MultiplicatorRing(w);
-        cS:=UnitsModTotPos(S);
-        cSp:=TotPosUnitsModUbarU(S);
+        IV_key:=myHash(IV);
         wt,aat:=dual_vertex(w,aa);
         IVv:=DistinguishedRepsICM(wt,aat);
-        test,i:=IsIsomorphic(ComplexConjugate(TraceDualIdeal(IV)),IVv); // i*IVv=\bar(IV^t)
+        IVtbar:=ComplexConjugate(TraceDualIdeal(IV));
+        test,i:=IsIsomorphic(IVtbar,IVv); // i*IVv=\bar(IV^t)
         assert test;
+        isogs_to_dual:=AssociativeArray();
         for d->edges_d in edges do
-            if IsSquare(d) then // polarizations have always square degree
-                if not IsDefined(pols,d) then
-                    pols[d]:=AssociativeArray();
+            if IsSquare(d) or not only_square_divisors then
+                if not IsDefined(isogs_to_dual,d) then
+                    isogs_to_dual[d]:=AssociativeArray();
                 end if;
-                pols_d_IV:=[];
-                isog_d_IV:=[ E[5] : E in edges_d | E[3] eq IV and E[4] eq IVv ];
-                for x0 in isog_d_IV, v in cS do
-                    mu:=i*x0*v;
-                    if is_polarizaton(mu,PHI) then
-                        pols_d_IV cat:= [mu*vv: vv in cSp];
+                assert not IsDefined(isogs_to_dual[d],IV_key);
+                isogs_to_dual[d][IV_key]:=[];
+                for E in edges_d do
+                    // we check if the source is IV and target is IVv
+                    if E[3] eq IV and E[4] eq IVv then 
+                        i_x0:=i*E[5];
+                        assert2 E[1] eq vertex and E[2] eq [* wt,aat *];
+                        new_tup:=< E[1] , E[2], IV, IVtbar , i_x0 >;
+                        // Note: we include the tuple but changing the label:
+                        // instead of x0*IV<IVv we put i*x0*IV<\bar{IV}^t. 
+                        Append(~isogs_to_dual[d][IV_key],new_tup);
                     end if;
                 end for;
-                pols[d][IV]:=pols_d_IV; // should we omit this when no polarization exists (for the case of large Pic)
             end if;
+        end for;
+    end for;
+    return isogs_to_dual;
+end intrinsic;
+
+intrinsic NonPrincipalPolarizationsOfDegreeDividing(R::AlgEtQOrd,PHI::AlgEtQCMType,D::RngIntElt)->Assoc
+{Given the Frobenius order R of an isogeny class of ordinary squarefree abelian varieties over a finite field, a p-adic positive CM-type PHI, and an integer D>1, it returns a 2-dimensisonal associative array pols, with pols[d][IV_key] consisting of representatives of isomorphism classes of polarizations of degree d, where d>1 is a divisor of D, given by tuples of the form < [* w, aa *] , [* wt, aat *], IV , IVdual , lambda > where
+- IV is the distinguished representative of the ideal class [* w , aa *];
+- IV_key = myHash(IV);
+- IVdual = ComplexConjugate(TraceDualIdeal(IV));
+- [* wt , aat *] is the ideal class of the dual vertex
+- lambda*IV < IVdual is a polarization of degree d.
+Note that IVdual might not be the distinguished representative of [* wt , aat *]. 
+}
+    isogs_to_dual:=IsogeniesToDualOfDegreeDividing(R,D : only_square_divisors:=true );
+    pols:=AssociativeArray();
+    for d->isogs_to_dual_d in isogs_to_dual do
+        if not IsDefined(pols,d) then
+            pols[d]:=AssociativeArray();
+        end if;
+        for IV_key->isogs_IV_d in isogs_to_dual_d do
+            pols_d_IV:=[];
+            for isog in isogs_IV_d do
+                V,Vv,IV,IVbart,x:=Explode(isog);
+                S:=MultiplicatorRing(IV);
+                cS:=UnitsModTotPos(S);
+                for v in cS do
+                    mu:=x*v;
+                    if is_polarizaton(mu,PHI) then
+                        cSp:=TotPosUnitsModUbarU(S);
+                        pols_d_IV cat:= [ <V,Vv,IV,IVbart,mu*vv> : vv in cSp];
+                        break v; // if v such that mu is tot img and PHI-positive exists, then it is unique
+                    end if;
+                end for;
+            end for;
+            pols[d][IV_key]:=pols_d_IV; // this might be empty
         end for;
     end for;
     return pols;
