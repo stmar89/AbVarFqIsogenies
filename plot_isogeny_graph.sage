@@ -259,6 +259,9 @@ def main():
         vertex_colors[c] = list(cell)
 
     # Plot
+    import os
+    os.makedirs(os.path.dirname(os.path.abspath(output_file)), exist_ok=True)
+
     fig = G_sage.plot(
         pos=pos,
         vertex_colors=vertex_colors,
