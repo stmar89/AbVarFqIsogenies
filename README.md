@@ -26,6 +26,8 @@ cd AbVarFqIsogenies
 magma
 ```
 
+> **Note:** To use `NonPrincipalPolarizations.m`, also clone [`https://github.com/stmar89/AbVarFq`](https://github.com/stmar89/AbVarFq) and attach its spec file in your Magma session.
+
 Inside Magma, load the package with a single line:
 
 ```magma
