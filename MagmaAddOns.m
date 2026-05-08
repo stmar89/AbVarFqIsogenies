@@ -40,11 +40,9 @@ intrinsic ComputeIsogenyGraph(h::RngUPolElt, D::RngIntElt) -> GrphMult, SeqEnum,
 corresponding ordinary isogeny class. Returns:
   G    -- the D-isogeny graph as a directed multigraph (GrphMult)
   vert -- sequence of fractional R-ideals indexing vertices, as returned by IsogenyGraphBuilder
-  Pi   -- partition of {1..#vert} by endomorphism ring; Pi is a sequence of sequences of
-          vertex indices, one sequence per endomorphism ring, sorted lexicographically
-To plot a component C of G, call:
-  Pi_C := RestrictPartition(G, C, Pi);
-  PrintIsogenyGraphForSage(G, C, Pi_C);
+  Pi   -- partition of vertex indices 1..#vert by endomorphism ring; a sequence of sequences
+          of vertex indices, one per endomorphism ring, sorted lexicographically
+To plot a component C of G, call RestrictPartition(G, C, Pi) then PrintIsogenyGraphForSage,
 and paste the printed output into isogeny-graphs.ipynb.}
     g, q, p := Getgqp(h);
     K    := EtaleAlgebra(h);

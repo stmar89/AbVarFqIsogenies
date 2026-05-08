@@ -72,11 +72,11 @@
 /*
 Expected output:
 
-  [ Index(OK,S) : S in oo ]       -- indices of overorders in OK (verify by running)
+  [ 8, 4, 2, 1 ]                  -- indices of overorders in OK: R, S4, S2, OK
   [ 2 ]                           -- R has a unique singular prime of norm 2
   horizontal
-  horizontal
   2 descending 2
+  horizontal
   true                            -- M eq TraceDualIdeal(S2)
   true                            -- MultiplicatorRing(hor[1]) eq S4
   true                            -- IsInvertible(S4!!hor[1])
