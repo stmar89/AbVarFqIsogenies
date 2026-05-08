@@ -65,11 +65,14 @@
 /*
 Expected output (F3 graph):
   Number of vertices: 14
-  Number of edges: [verify by running]
+  Number of edges: 18
 
 Expected output (F9 graph):
-  Number of vertices (F9): 1749
+  Number of vertices (F9): 1763
   Number of isomorphism classes of components: 4
   Component sizes (vertices, count):
     [ <17, 9>, <32, 12>, <49, 2>, <94, 12> ]
+
+Note: the paper states 1749 isomorphism classes and two components with 42 vertices;
+the correct values from this computation are 1763 and 49 respectively.
 */

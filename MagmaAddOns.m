@@ -30,7 +30,8 @@ intrinsic RestrictPartition(G::GrphMult, G0::GrphMult, Pi::SeqEnum) -> SeqEnum
 {Given the full isogeny graph G, a connected component G0, and a partition Pi of vertex
 indices in G (as returned by PartitionByEndomorphismRing), returns the restriction of Pi
 to the vertices of G0. Empty cells are dropped.}
-    verts0 := {Index(G!v) : v in Vertices(G0)};
+    V      := Vertices(G);
+    verts0 := {Index(V!v) : v in Vertices(G0)};
     Pi0    := [Sort([i : i in cell | i in verts0]) : cell in Pi];
     return [cell : cell in Pi0 | #cell gt 0];
 end intrinsic;
