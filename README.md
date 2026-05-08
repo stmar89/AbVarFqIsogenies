@@ -112,21 +112,34 @@ Graph figures are produced in SageMath using the [phitigra](https://github.com/p
 pip install phitigra
 ```
 
-### Pipeline: Magma → SageMath
+### Option A: Standalone script (automated, no browser needed)
 
-1. **In Magma**, call `PrintIsogenyGraphForSage` to print the edge list and partition for a component:
+1. **In Magma**, redirect `PrintIsogenyGraphForSage` output to a file:
 
    ```magma
+   // in your script, after computing G, C, Pi_C:
    PrintIsogenyGraphForSage(G, C, Pi_C);
    ```
+   ```bash
+   magma -b my_script.m > component.txt
+   ```
 
-2. **Copy the printed output** and paste it into `isogeny-graphs.ipynb` as the `edges` and `Pi` variables.
+2. **Run the plotting script** to produce a PDF automatically:
 
-3. **Run the notebook** to produce the figure in the phitigra widget. Export the PNG manually from the browser.
+   ```bash
+   sage plot_isogeny_graph.sage component.txt figure.pdf
+   ```
 
-### Workaround: phitigra shows a string after restarting the notebook server
+   The script implements the full concentric-ring layout (one ring per endomorphism ring level, angular order by lex-DFS of the minor cluster tree) and saves directly to PDF or PNG.
 
-After restarting the Jupyter kernel, re-run the cell that constructs the graph editor widget (`ed = graph_editor(G, ...)`) before calling `ed.show()`. The widget loses its state on restart and must be rebuilt.
+### Option B: Interactive notebook (phitigra, fine-tuned export)
+
+1. Call `PrintIsogenyGraphForSage` and paste the printed output into `isogeny-graphs.ipynb` as the `edges` and `Pi` variables.
+
+2. Run the notebook to produce the figure in the phitigra widget and export the PNG manually from the browser.
+
+**Workaround: phitigra shows a string after restarting the notebook server.**
+Re-run the cell that constructs the graph editor widget (`ed = graph_editor(G, ...)`) before calling `ed.show()`. The widget loses its state on restart and must be rebuilt.
 
 ---
 
@@ -170,7 +183,8 @@ Timings are approximate and depend on hardware. The $\mathbb{F}_9$ computation i
 | `NonPrincipalPolarizations.m` | Non-principal polarization algorithms |
 | `Naive_IsogenyGraphBuilders.m` | Naive reference implementations for verification |
 | `Misc.m` | Shared helper functions |
-| `isogeny-graphs.ipynb` | SageMath notebook for producing figures with phitigra |
+| `plot_isogeny_graph.sage` | Standalone SageMath script: auto-layout + export to PDF/PNG |
+| `isogeny-graphs.ipynb` | Interactive SageMath notebook for figures with phitigra |
 | `magma_ex_2.11.a_ac.m` | Worked example: Example 3.10 from the paper |
 | `magma_ex_4.3.c_ab_af_ai.m` | Worked example: Example 1.1 from the paper |
 
