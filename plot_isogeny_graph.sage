@@ -212,7 +212,7 @@ def compute_layout(G_sage, Pi_sorted, r0=1.5):
 # ---------------------------------------------------------------------------
 
 def draw_graph(G_sage, pos, vertex_level, Pi_sorted, output_file, r0=1.5,
-               vertex_radius=0.12, figsize=12,
+               vertex_radius=0.28, figsize=12,
                global_num_levels=None, global_level_indices=None):
     import matplotlib
     matplotlib.use('Agg')
@@ -284,9 +284,9 @@ def draw_graph(G_sage, pos, vertex_level, Pi_sorted, output_file, r0=1.5,
         arrow = FancyArrowPatch(
             (ax1, ay1), (ax2, ay2),
             arrowstyle='-|>',
-            mutation_scale=10,
+            mutation_scale=28,
             color='black',
-            linewidth=0.8,
+            linewidth=5.0,
             zorder=1,
         )
         ax.add_patch(arrow)
@@ -301,7 +301,7 @@ def draw_graph(G_sage, pos, vertex_level, Pi_sorted, output_file, r0=1.5,
         for v in cell:
             x, y = pos[v]
             circle = plt.Circle((x, y), vertex_radius, color=color,
-                                 ec='black', linewidth=0.8, zorder=2)
+                                 ec='black', linewidth=5.0, zorder=2)
             ax.add_patch(circle)
 
     # --- axis limits with padding ---
