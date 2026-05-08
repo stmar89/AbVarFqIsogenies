@@ -80,23 +80,26 @@ def compute_layout(G_sage, Pi_sorted, r0=1.5):
         for v in cell:
             vertex_level[v] = l
 
+    # Gfil[k] = undirected subgraph of Pi[k+1 .. n-1] (the OUTER rings above level k).
+    # Matching the original notebook: Gfil is built from Pi reversed then re-reversed so that
+    # Gfil[i-1] = subgraph of Pi[i .. n-1], used for minor-cluster construction at level i.
     Gfil = {}
-    for k in range(n_levels - 1):
-        verts = [v for l in range(k + 2) for v in Pi_sorted[l]]
+    for k in range(n_levels):
+        verts = [v for l in range(k + 1, n_levels) for v in Pi_sorted[l]]
         Gfil[k] = G_sage.subgraph(verts).to_undirected()
 
     minor_cluster_dict = {0: [list(Pi_sorted[0])]}
     for i in range(1, n_levels):
+        # Gun = outer subgraph Pi[i .. n-1]; Pi[i] vertices are all present in Gun.
         Gun = Gfil[i - 1]
         remaining = list(Pi_sorted[i])
         minor_cluster_dict[i] = []
         while remaining:
             x = remaining[0]
-            if Gun.has_vertex(x):
-                comp = set(Gun.connected_component_containing_vertex(x))
-                part_in_comp = [y for y in remaining if y in comp]
-                cluster = [y for y in part_in_comp if Gun.distance(x, y) <= 2]
-            else:
+            comp = set(Gun.connected_component_containing_vertex(x))
+            part_in_comp = [y for y in remaining if y in comp]
+            cluster = [y for y in part_in_comp if Gun.distance(x, y) <= 2]
+            if not cluster:
                 cluster = [x]
             minor_cluster_dict[i].append(cluster)
             cluster_set = set(cluster)
