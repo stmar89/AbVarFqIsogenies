@@ -18,8 +18,6 @@ intrinsic GSTAct(g::GrpAbElt, phi::Tup)->Tup
     gS := (g@eS)+hS;
     gT := (g@eT)+hT;
 
-    // FIXME: DistinguishedICMRep from Misc.m should help here
-    // DONE
     G := g@pR;
     gI := DistinguishedRepsICM(s, gS);
     gJ := DistinguishedRepsICM(t, gT);
@@ -73,58 +71,8 @@ intrinsic GSTOrbit(phi::Tup)->SeqEnum
     return orb;
 end intrinsic;
 
-// OLD VERSION
-//intrinsic AreIsogeniesGSTEquivalent(x1::AlgEtQElt,I1::AlgEtQIdl,J1::AlgEtQIdl,x2::AlgEtQElt,I2::AlgEtQIdl,J2::AlgEtQIdl)->BoolElt
-//{//TODO
-//}
-//    // FIXME: You are starting from the label (inclusion of ideals) and then you look up for the vertices.
-//    // This is time consuming. Can be avoided? For example including the whole Tup ?
-//    // It seems that in all calls you could use the Tup
-//
-//    R := Order(I1);
-//    PR,pR := PicardGroup(R);
-//    assert R eq Order(I2) and R eq Order(J1) and R eq Order(J2);
-//    icm,icm_map := IdealClassMonoidAbstract(R);
-//    source1 := I1@@icm_map;
-//    source2 := I2@@icm_map;
-//    s := WEClass(source1);
-//    if s ne WEClass(source2) then
-//        return false;
-//    end if;
-//    S := MultiplicatorRing(source1);
-//    target1 := J1@@icm_map;
-//    target2 := J2@@icm_map;
-//    t := WEClass(target1);
-//    if t ne WEClass(target2) then
-//        return false;
-//    end if;
-//    T := MultiplicatorRing(target1);
-//
-//    eS := ExtensionHomPicardGroupsOverOrders(R,S);
-//    KS := Kernel(eS);
-//    eT := ExtensionHomPicardGroupsOverOrders(R,T);
-//    KT := Kernel(eT);
-//    gS := (PicClass(source2) - PicClass(source1))@@eS;
-//    gT := (PicClass(target2) - PicClass(target1))@@eT;
-//    g := gS - gT;
-//    // Want to express gS - gT = ks + kt, since then (gS - ks) = (gT + kt) is an element with the right image under eS and under eT
-//    KSKT, incs, projs := DirectSum([KS,KT]);
-//    pS, pT := Explode(projs);
-//    Ksum := hom<KSKT->PR | [<KSKT.i,pS(KSKT.i)+pT(KSKT.i)> : i in [1..Ngens(KSKT)]]>;
-//    try
-//        ks := (g @@ Ksum) @ pS;
-//    catch e
-//        return false;
-//    end try;
-//    iso1 := GSTAct(gS - ks, <[* s, PicClass(source1) *], [* t, PicClass(target1) *], I1, J1, x1>);
-//    return AreIsogeniesEquivalent(iso1[5], iso1[3], iso1[4], x2, I2, J2);
-//end intrinsic;
-
-// 20260122 improved?
 intrinsic AreIsogeniesGSTEquivalent(tup1::Tup,tup2::Tup)->BoolElt
-{Given two isogenies represented as 5-tuples, returns whether they are equivalent by the action of GST.
-//FIXME improve this description
-}
+{Given two isogenies phi1, phi2 represented as 5-tuples <source, target, I, J, x>, returns whether phi1 and phi2 are equivalent under the action of the group GST.}
     source1,target1,I1,J1,x1:=Explode(tup1);
     s,aa1:=Explode(source1);
     t,bb1:=Explode(target1);
@@ -292,19 +240,6 @@ intrinsic IsogenyOrbitBuilder(R::AlgEtQOrd,D::RngIntElt : dual_only:=false) -> .
             Append(~reps[dM][t][s], label);
         end for;
     end for;
-
-    // FIXME - remove this block once done debugging
-    /*for d->reps_d in reps do
-        for t->reps_d_t in reps[d] do
-            for s->reps_d_t_s in reps[d][t] do
-                if #reps_d_t_s eq 2 then //FIXME Stefano: why testing only for eq 2 and not ge 2?
-                    phi, psi := Explode(reps_d_t_s);
-                    assert not AreIsogeniesEquivalent(phi[5],phi[3],phi[4],psi[5],psi[3],psi[4]);
-                end if;
-            end for;
-        end for;
-    end for;*/
-    // FIXME - remove this block once done debugging
 
     // now we have all minimal reps. we compose
     for n in Exclude(Divisors(D), 1) do

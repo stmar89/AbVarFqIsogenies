@@ -1,13 +1,15 @@
 /*
-    Examples 1.1 and ?
+    Example 1.1
 
-    This example is about the 2-isogenies in the isogeny class 4.3.c_ab_af_ai of abelian varieties over F3, i
+    This example is about the 2-isogenies in the isogeny class 4.3.c_ab_af_ai of abelian varieties over F3,
     and of its extension to F9.
 
-    This code is paired with a sage-notebook for the graphical outputs.
+    Run from the AbVarFqIsogenies/ directory.
+    This code is paired with isogeny-graphs.ipynb for the graphical outputs.
 */
 
-    AttachSpec("~/AbVarFqIsogenies/spec");
+    // Run from the AbVarFqIsogenies/ directory
+    AttachSpec("spec");
     _<x>:=PolynomialRing(Integers());
     h:=x^8 + 2*x^7- x^6 - 5*x^5 - 8*x^4 - 15*x^3 - 9*x^2 + 54*x + 81;
     q:=Round(ConstantCoefficient(h)^(2/Degree(h)));
@@ -30,7 +32,7 @@
     comps:=[ Component(Random(c)) : c in StronglyConnectedComponents(GD2) ];
     classes:=[];
     for Gc in comps do
-        if not exists{G:G in classes|IsIsomorphic(Gc,G)} then // FIXME cannot test IsIsomorphic for MultiDiGraph :-(
+        if not exists{G:G in classes|IsIsomorphic(UnderlyingDigraph(Gc),UnderlyingDigraph(G))} then
             Append(~classes,Gc);
         end if;
     end for;

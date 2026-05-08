@@ -86,7 +86,6 @@ intrinsic IsogenyGraphBuilder_LessNaive(R::AlgEtQOrd,D::RngIntElt) -> .
             assert test; // sanity check
             for bbT in PT do
                 bb:=bbT@@eT;
-                //TODO Ibb, Wt*Ibb, Ws*Iaa*Ibb are computed over an over... this is not smart.
                 Ibb:=pR(bb);
                 Append(~edges[d],<[* s,aaS *],[* t,bbT *],Ws*Iaa*Ibb,Wt*Ibb,x>);
             end for;
