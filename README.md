@@ -190,4 +190,4 @@ Timings are approximate and depend on hardware. The $\mathbb{F}_9$ computation i
 
 ---
 
-*README.md modified by Claude Sonnet 4.6 using ANTS code review feedback, May 7 2026.*
+*README.md modified by Claude Sonnet 4.6, May 7 2026.*

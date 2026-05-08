@@ -228,7 +228,7 @@ def main():
 
     data_file   = sys.argv[1]
     output_file = sys.argv[2]
-    r0          = int(sys.argv[3]) if len(sys.argv) >= 4 else 300
+    r0          = float(sys.argv[3]) if len(sys.argv) >= 4 else 1.5
 
     edges, Pi = parse_input(data_file)
 
@@ -252,16 +252,15 @@ def main():
         vertex_colors[c] = list(cell)
 
     # Plot
-    gp = G_sage.graphplot(
+    fig = G_sage.plot(
         pos=pos,
         vertex_colors=vertex_colors,
-        vertex_size=150,
-        edge_style='->',
+        vertex_size=800,
         color_by_label=False,
         vertex_labels=False,
+        figsize=[12, 12],
     )
-    fig = gp.plot()
-    fig.save(output_file, figsize=[12, 12])
+    fig.save(output_file)
     print("Saved: %s" % output_file)
 
 
