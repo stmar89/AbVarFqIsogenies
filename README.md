@@ -114,6 +114,16 @@ pip install phitigra
 
 ### Option A: Standalone script (automated, no browser needed)
 
+To reproduce all figures at once:
+
+```bash
+bash gen_v4_plots.sh
+```
+
+This runs the full pipeline: Magma computes both isogeny graphs (F3 and its F9 base change), splits the output into per-component data files, and calls `sage plot_isogeny_graph.sage` to render each component to a PNG in `figures/`. The F3 graph produces 5 images (one per strongly connected component); the F9 base change produces 35 images (all components of sizes 17, 32, 49, and 94). Colors are consistent across components of the same graph: the same endomorphism ring always appears in the same color. The F9 computation takes approximately 6 minutes.
+
+To plot a **single component**:
+
 1. **In Magma**, redirect `PrintIsogenyGraphForSage` output to a file:
 
    ```magma
@@ -124,13 +134,13 @@ pip install phitigra
    magma -b my_script.m > component.txt
    ```
 
-2. **Run the plotting script** to produce a PDF automatically:
+2. **Run the plotting script** to produce a PNG or PDF:
 
    ```bash
-   sage plot_isogeny_graph.sage component.txt figure.pdf
+   sage plot_isogeny_graph.sage component.txt figure.png
    ```
 
-   The script implements the full concentric-ring layout (one ring per endomorphism ring level, angular order by lex-DFS of the minor cluster tree) and saves directly to PDF or PNG.
+   The script implements the full concentric-ring layout (one ring per endomorphism ring level, angular order by DFS of the minor cluster tree) and saves directly to PDF or PNG.
 
 ### Option B: Interactive notebook (phitigra, fine-tuned export)
 
@@ -184,6 +194,9 @@ Timings are approximate and depend on hardware. The $\mathbb{F}_9$ computation i
 | `Naive_IsogenyGraphBuilders.m` | Naive reference implementations for verification |
 | `Misc.m` | Shared helper functions |
 | `plot_isogeny_graph.sage` | Standalone SageMath script: auto-layout + export to PDF/PNG |
+| `magma_gen_all_plots.m` | Generates graph data for all 40 figures (all F3 and F9 components) in one Magma run |
+| `magma_split_sections.py` | Splits `magma_gen_all_plots.m` output into per-figure data files |
+| `gen_v4_plots.sh` | Shell script: runs the full Magma → split → Sage pipeline, producing all 40 figures |
 | `isogeny-graphs.ipynb` | Interactive SageMath notebook for figures with phitigra |
 | `magma_ex_2.11.a_ac.m` | Worked example: Example 3.10 from the paper |
 | `magma_ex_4.3.c_ab_af_ai.m` | Worked example: Example 1.1 from the paper |

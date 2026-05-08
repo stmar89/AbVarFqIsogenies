@@ -38,7 +38,12 @@ from math import pi, cos, sin, sqrt, atan2
 # ---------------------------------------------------------------------------
 
 def parse_input(filename):
-    """Parse output of PrintIsogenyGraphForSage into (edges, Pi)."""
+    """Parse output of PrintIsogenyGraphForSage.
+
+    Returns (edges, Pi, global_num_levels, global_level_indices).
+    global_num_levels and global_level_indices are None if not present in the file
+    (older format without cross-component color consistency).
+    """
     with open(filename) as f:
         content = f.read()
     start = content.find('edges=[')
@@ -47,15 +52,24 @@ def parse_input(filename):
     snippet = content[start:]
     namespace = {}
     exec(compile(snippet, filename, 'exec'), namespace)
-    return namespace['edges'], namespace['Pi']
+    edges = namespace['edges']
+    Pi    = namespace['Pi']
+    global_num_levels    = namespace.get('global_num_levels', None)
+    global_level_indices = namespace.get('global_level_indices', None)
+    return edges, Pi, global_num_levels, global_level_indices
 
 
 # ---------------------------------------------------------------------------
 # Coloring: orange (level 0, center) to yellow (outermost)
 # ---------------------------------------------------------------------------
 
-def make_color_rgb(level_index, num_levels):
-    t = level_index / max(num_levels - 1, 1)
+def make_color_rgb(global_level_index, global_num_levels):
+    """Map a global level index to an RGB color (orange=innermost, yellow=outermost).
+
+    Using global_level_index / global_num_levels ensures that the same order type
+    gets the same color across separate plots of different components of the same graph.
+    """
+    t = global_level_index / max(global_num_levels - 1, 1)
     g = int(t * 255)
     return (1.0, g / 255.0, 0.0)
 
@@ -198,7 +212,8 @@ def compute_layout(G_sage, Pi_sorted, r0=1.5):
 # ---------------------------------------------------------------------------
 
 def draw_graph(G_sage, pos, vertex_level, Pi_sorted, output_file, r0=1.5,
-               vertex_radius=0.12, figsize=12):
+               vertex_radius=0.12, figsize=12,
+               global_num_levels=None, global_level_indices=None):
     import matplotlib
     matplotlib.use('Agg')
     import matplotlib.pyplot as plt
@@ -277,8 +292,12 @@ def draw_graph(G_sage, pos, vertex_level, Pi_sorted, output_file, r0=1.5,
         ax.add_patch(arrow)
 
     # --- vertices ---
+    # Use global level indices when available so same order type gets same color
+    # across separate plots of different components of the same graph.
+    g_n = global_num_levels if global_num_levels is not None else n_levels
+    g_idx = global_level_indices if global_level_indices is not None else list(range(n_levels))
     for l, cell in enumerate(Pi_sorted):
-        color = make_color_rgb(l, n_levels)
+        color = make_color_rgb(g_idx[l], g_n)
         for v in cell:
             x, y = pos[v]
             circle = plt.Circle((x, y), vertex_radius, color=color,
@@ -311,7 +330,7 @@ def main():
     output_file = sys.argv[2]
     r0          = float(sys.argv[3]) if len(sys.argv) >= 4 else 1.5
 
-    edges, Pi = parse_input(data_file)
+    edges, Pi, global_num_levels, global_level_indices = parse_input(data_file)
     Pi_sorted = sorted(Pi, key=len)
     G_sage = DiGraph(edges, multiedges=True)
 
@@ -320,7 +339,9 @@ def main():
 
     pos, vertex_level = compute_layout(G_sage, Pi_sorted, r0=r0)
 
-    draw_graph(G_sage, pos, vertex_level, Pi_sorted, output_file, r0=r0)
+    draw_graph(G_sage, pos, vertex_level, Pi_sorted, output_file, r0=r0,
+               global_num_levels=global_num_levels,
+               global_level_indices=global_level_indices)
     print("Saved: %s" % output_file)
 
 
