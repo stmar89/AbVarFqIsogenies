@@ -38,13 +38,20 @@ from math import pi, cos, sin
 # ---------------------------------------------------------------------------
 
 def parse_input(filename):
-    """Parse output of PrintIsogenyGraphForSage into (edges, Pi)."""
+    """Parse output of PrintIsogenyGraphForSage into (edges, Pi).
+
+    Extracts the edges=[...] and Pi=[...] blocks from the file, ignoring
+    any other output (e.g. vertex/edge counts printed by the Magma script).
+    """
     with open(filename) as f:
         content = f.read()
-    # Magma's %o format for integer sequences is [ a, b, c ] which is
-    # valid Python list syntax.  exec the two assignment lines directly.
+    # Find the edges block: from 'edges=[' to the closing ']]'
+    start = content.find('edges=[')
+    if start == -1:
+        raise ValueError("Could not find 'edges=[' in %s" % filename)
+    snippet = content[start:]
     namespace = {}
-    exec(compile(content, filename, 'exec'), namespace)
+    exec(compile(snippet, filename, 'exec'), namespace)
     return namespace['edges'], namespace['Pi']
 
 
