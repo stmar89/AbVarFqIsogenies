@@ -136,11 +136,37 @@ def compute_layout(G_sage, Pi_sorted, r0=1.5):
     if mc_edges:
         mc_graph = Graph(mc_edges)
     else:
-        mc_graph = Graph(len(minor_clusters))
+        mc_graph = Graph()
+    # Ensure every minor cluster index is a vertex (isolated clusters must still rank)
+    mc_graph.add_vertices(list(range(len(minor_clusters))))
 
     root_mc = minor_cluster_dict[0][0]
     i0 = mc_index[id(root_mc)]
-    dfs = mc_graph.lex_DFS(initial_vertex=i0) if minor_clusters else [i0]
+
+    # Standard iterative DFS that visits all children of a node before
+    # backtracking — this keeps sibling clusters adjacent in the ordering.
+    # lex_DFS is NOT used because it can interleave children from different
+    # parents, splitting clusters that should be angularly adjacent.
+    def _dfs(start, visited):
+        result = []
+        stack = [start]
+        while stack:
+            v = stack.pop()
+            if v not in visited:
+                visited.add(v)
+                result.append(v)
+                for w in sorted(mc_graph.neighbors(v), reverse=True):
+                    if w not in visited:
+                        stack.append(w)
+        return result
+
+    dfs = []
+    visited = set()
+    seeds = [i0] + [j for j in range(len(minor_clusters)) if j != i0]
+    for seed in seeds:
+        if seed not in visited:
+            dfs.extend(_dfs(seed, visited))
+
     dfs_rank = {v: k for k, v in enumerate(dfs)}
 
     def sort_key(v):
