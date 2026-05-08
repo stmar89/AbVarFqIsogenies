@@ -171,3 +171,7 @@ Timings are approximate and depend on hardware. The $\mathbb{F}_9$ computation i
 | `isogeny-graphs.ipynb` | SageMath notebook for producing figures with phitigra |
 | `magma_ex_2.11.a_ac.m` | Worked example: Example 3.10 from the paper |
 | `magma_ex_4.3.c_ab_af_ai.m` | Worked example: Example 1.1 from the paper |
+
+---
+
+*README.md modified by Claude Sonnet 4.6 using ANTS code review feedback, May 7 2026.*
