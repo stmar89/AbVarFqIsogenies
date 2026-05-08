@@ -10,7 +10,7 @@ Arguments:
                      edges=[ [a,b], [c,d], ... ]
                      Pi=[ [v1,v2,...], [w1,...], ... ]
     output_file  Output path; extension determines format (.png, .pdf, .svg).
-    r0           Optional ring spacing in pixels (default: 300).
+    r0           Optional ring spacing in data units (default: 1.5).
 
 Pipeline:
     1. In Magma, run PrintIsogenyGraphForSage and redirect output to a file:
@@ -30,7 +30,7 @@ Layout algorithm (concentric rings + DFS minor cluster ordering):
 """
 
 import sys
-from math import pi, cos, sin
+from math import pi, cos, sin, sqrt, atan2
 
 
 # ---------------------------------------------------------------------------
@@ -38,14 +38,9 @@ from math import pi, cos, sin
 # ---------------------------------------------------------------------------
 
 def parse_input(filename):
-    """Parse output of PrintIsogenyGraphForSage into (edges, Pi).
-
-    Extracts the edges=[...] and Pi=[...] blocks from the file, ignoring
-    any other output (e.g. vertex/edge counts printed by the Magma script).
-    """
+    """Parse output of PrintIsogenyGraphForSage into (edges, Pi)."""
     with open(filename) as f:
         content = f.read()
-    # Find the edges block: from 'edges=[' to the closing ']]'
     start = content.find('edges=[')
     if start == -1:
         raise ValueError("Could not find 'edges=[' in %s" % filename)
@@ -56,13 +51,13 @@ def parse_input(filename):
 
 
 # ---------------------------------------------------------------------------
-# Coloring
+# Coloring: orange (level 0, center) to yellow (outermost)
 # ---------------------------------------------------------------------------
 
-def make_color(level_index, num_levels):
-    """Orange-to-yellow gradient: level 0 (highest ring) is darkest orange."""
-    rgbv = int(level_index * 255 / num_levels)
-    return '#%02x%02x%02x' % (255, rgbv, 0)
+def make_color_rgb(level_index, num_levels):
+    t = level_index / max(num_levels - 1, 1)
+    g = int(t * 255)
+    return (1.0, g / 255.0, 0.0)
 
 
 # ---------------------------------------------------------------------------
@@ -77,70 +72,40 @@ def kill_repeats(lst):
     return seen
 
 
-def compute_layout(G_sage, Pi_sorted, r0=300):
-    """
-    Return a position dict {vertex: (x, y)} using concentric rings with
-    angular order determined by a lex_DFS traversal of the minor cluster tree.
-
-    Parameters
-    ----------
-    G_sage     : SageMath DiGraph (multiedges allowed)
-    Pi_sorted  : list of lists, partition of vertex indices sorted ascending
-                 by cell size (level 0 = center = smallest cell)
-    r0         : ring spacing in pixels
-    """
+def compute_layout(G_sage, Pi_sorted, r0=1.5):
     n_levels = len(Pi_sorted)
 
-    # Map each vertex to its level index
     vertex_level = {}
     for l, cell in enumerate(Pi_sorted):
         for v in cell:
             vertex_level[v] = l
 
-    # ------------------------------------------------------------------
-    # Build undirected filtered subgraphs.
-    # Gfil[k] = undirected subgraph induced by vertices at levels 0..k+1.
-    # Used for minor cluster construction at level k+1.
-    # ------------------------------------------------------------------
     Gfil = {}
     for k in range(n_levels - 1):
         verts = [v for l in range(k + 2) for v in Pi_sorted[l]]
         Gfil[k] = G_sage.subgraph(verts).to_undirected()
 
-    # ------------------------------------------------------------------
-    # Minor clusters.
-    # Level 0: one cluster containing all level-0 vertices.
-    # Level i > 0: split Pi[i] by (a) connected component in Gfil[i-1]
-    #              and (b) undirected distance <= 2 within that component.
-    # ------------------------------------------------------------------
     minor_cluster_dict = {0: [list(Pi_sorted[0])]}
-
     for i in range(1, n_levels):
         Gun = Gfil[i - 1]
         remaining = list(Pi_sorted[i])
         minor_cluster_dict[i] = []
-
         while remaining:
             x = remaining[0]
             if Gun.has_vertex(x):
                 comp = set(Gun.connected_component_containing_vertex(x))
                 part_in_comp = [y for y in remaining if y in comp]
-                cluster = [y for y in part_in_comp
-                           if Gun.distance(x, y) <= 2]
+                cluster = [y for y in part_in_comp if Gun.distance(x, y) <= 2]
             else:
                 cluster = [x]
             minor_cluster_dict[i].append(cluster)
             cluster_set = set(cluster)
             remaining = [v for v in remaining if v not in cluster_set]
 
-    # Flattened list of all minor clusters (order matters for DFS indexing)
     minor_clusters = []
     for i in range(n_levels):
         minor_clusters.extend(minor_cluster_dict[i])
 
-    # ------------------------------------------------------------------
-    # Lookup helpers
-    # ------------------------------------------------------------------
     def get_minor_cluster(v):
         l = vertex_level[v]
         for mc in minor_cluster_dict[l]:
@@ -148,15 +113,6 @@ def compute_layout(G_sage, Pi_sorted, r0=300):
                 return mc
         raise ValueError("Vertex %s not found in minor clusters" % v)
 
-    def get_minor_clusters_for(major_cluster):
-        return kill_repeats([get_minor_cluster(v) for v in major_cluster])
-
-    # ------------------------------------------------------------------
-    # Minor cluster tree edges.
-    # Edge from mc_A (level l) to mc_B (level l+1) if any vertex of mc_A
-    # has an outgoing edge (in the directed isogeny graph) to any vertex
-    # whose minor cluster is mc_B.
-    # ------------------------------------------------------------------
     mc_index = {id(mc): i for i, mc in enumerate(minor_clusters)}
 
     mc_edge_set = set()
@@ -174,33 +130,20 @@ def compute_layout(G_sage, Pi_sorted, r0=300):
                     mc_edge_set.add((src, dst))
 
     mc_edges = list(mc_edge_set)
-
-    # Build undirected graph on minor clusters for lex_DFS
     if mc_edges:
         mc_graph = Graph(mc_edges)
     else:
         mc_graph = Graph(len(minor_clusters))
 
-    # ------------------------------------------------------------------
-    # lex_DFS from the root (level-0 minor cluster)
-    # ------------------------------------------------------------------
     root_mc = minor_cluster_dict[0][0]
     i0 = mc_index[id(root_mc)]
-
-    if minor_clusters:
-        dfs = mc_graph.lex_DFS(initial_vertex=i0)
-    else:
-        dfs = [i0]
-
+    dfs = mc_graph.lex_DFS(initial_vertex=i0) if minor_clusters else [i0]
     dfs_rank = {v: k for k, v in enumerate(dfs)}
 
     def sort_key(v):
         mc = get_minor_cluster(v)
         return dfs_rank.get(mc_index[id(mc)], 0)
 
-    # ------------------------------------------------------------------
-    # Assign angles within each ring by DFS order
-    # ------------------------------------------------------------------
     angle_dict = {}
     for cell in Pi_sorted:
         N = len(cell)
@@ -208,9 +151,6 @@ def compute_layout(G_sage, Pi_sorted, r0=300):
         for k, v in enumerate(sorted(cell, key=sort_key)):
             angle_dict[v] = k * step
 
-    # ------------------------------------------------------------------
-    # Convert polar -> Cartesian
-    # ------------------------------------------------------------------
     pos = {}
     for v in G_sage.vertices():
         l = vertex_level[v]
@@ -221,7 +161,112 @@ def compute_layout(G_sage, Pi_sorted, r0=300):
         pos[v] = (float(r * cos(alpha + offset)),
                   float(r * sin(alpha + offset)))
 
-    return pos
+    return pos, vertex_level
+
+
+# ---------------------------------------------------------------------------
+# Matplotlib rendering
+# ---------------------------------------------------------------------------
+
+def draw_graph(G_sage, pos, vertex_level, Pi_sorted, output_file, r0=1.5,
+               vertex_radius=0.12, figsize=12):
+    import matplotlib
+    matplotlib.use('Agg')
+    import matplotlib.pyplot as plt
+    import matplotlib.patches as mpatches
+    from matplotlib.patches import FancyArrowPatch
+    import matplotlib.patheffects as pe
+    import numpy as np
+
+    n_levels = len(Pi_sorted)
+
+    fig, ax = plt.subplots(figsize=(figsize, figsize))
+    ax.set_aspect('equal')
+    ax.axis('off')
+
+    # --- concentric guide circles (dashed gray) ---
+    for l in range(1, n_levels):
+        r = l * r0
+        circle = plt.Circle((0, 0), r, color='#cccccc', fill=False,
+                             linestyle='--', linewidth=0.8, zorder=0)
+        ax.add_patch(circle)
+
+    # --- detect bidirectional pairs for arc routing ---
+    edge_list = [(u, v) for u, v, _ in G_sage.edges()]
+    edge_set = set(edge_list)
+    # count multiplicity
+    from collections import Counter
+    edge_count = Counter(edge_list)
+
+    def _angle(p1, p2):
+        return atan2(p2[1] - p1[1], p2[0] - p1[0])
+
+    drawn_pairs = set()
+
+    for (u, v), cnt in edge_count.items():
+        x1, y1 = pos[u]
+        x2, y2 = pos[v]
+        bidir = (v, u) in edge_set
+        pair_key = (min(u, v), max(u, v))
+
+        # Perpendicular offset for bidirectional edges
+        dx = x2 - x1
+        dy = y2 - y1
+        dist = sqrt(dx*dx + dy*dy) or 1.0
+        nx = -dy / dist
+        ny = dx / dist
+
+        if bidir:
+            offset_scale = vertex_radius * 0.7
+            # forward arc (u->v)
+            ox1 = x1 + nx * offset_scale
+            oy1 = y1 + ny * offset_scale
+            ox2 = x2 + nx * offset_scale
+            oy2 = y2 + ny * offset_scale
+        else:
+            ox1, oy1 = x1, y1
+            ox2, oy2 = x2, y2
+
+        # Shorten arrow to not overlap vertex circles
+        sdx = ox2 - ox1
+        sdy = oy2 - oy1
+        slen = sqrt(sdx*sdx + sdy*sdy) or 1.0
+        shrink = vertex_radius + 0.02
+        ax1 = ox1 + sdx / slen * shrink
+        ay1 = oy1 + sdy / slen * shrink
+        ax2 = ox2 - sdx / slen * shrink
+        ay2 = oy2 - sdy / slen * shrink
+
+        arrow = FancyArrowPatch(
+            (ax1, ay1), (ax2, ay2),
+            arrowstyle='-|>',
+            mutation_scale=10,
+            color='black',
+            linewidth=0.8,
+            zorder=1,
+        )
+        ax.add_patch(arrow)
+
+    # --- vertices ---
+    for l, cell in enumerate(Pi_sorted):
+        color = make_color_rgb(l, n_levels)
+        for v in cell:
+            x, y = pos[v]
+            circle = plt.Circle((x, y), vertex_radius, color=color,
+                                 ec='black', linewidth=0.8, zorder=2)
+            ax.add_patch(circle)
+
+    # --- axis limits with padding ---
+    all_x = [p[0] for p in pos.values()]
+    all_y = [p[1] for p in pos.values()]
+    pad = r0 * 0.4
+    ax.set_xlim(min(all_x) - pad, max(all_x) + pad)
+    ax.set_ylim(min(all_y) - pad, max(all_y) + pad)
+
+    import os
+    os.makedirs(os.path.dirname(os.path.abspath(output_file)), exist_ok=True)
+    fig.savefig(output_file, bbox_inches='tight', dpi=200)
+    plt.close(fig)
 
 
 # ---------------------------------------------------------------------------
@@ -238,39 +283,15 @@ def main():
     r0          = float(sys.argv[3]) if len(sys.argv) >= 4 else 1.5
 
     edges, Pi = parse_input(data_file)
-
-    # Sort Pi ascending by cell size (level 0 = center = fewest vertices)
     Pi_sorted = sorted(Pi, key=len)
-
-    # Build SageMath DiGraph
     G_sage = DiGraph(edges, multiedges=True)
 
     print("Vertices: %d   Edges: %d   Levels: %d" % (
         G_sage.num_verts(), G_sage.num_edges(), len(Pi_sorted)))
 
-    # Compute layout
-    pos = compute_layout(G_sage, Pi_sorted, r0=r0)
+    pos, vertex_level = compute_layout(G_sage, Pi_sorted, r0=r0)
 
-    # Build vertex color dict {color: [vertices]}
-    vertex_colors = {}
-    n = len(Pi_sorted)
-    for l, cell in enumerate(Pi_sorted):
-        c = make_color(l, n)
-        vertex_colors[c] = list(cell)
-
-    # Plot
-    import os
-    os.makedirs(os.path.dirname(os.path.abspath(output_file)), exist_ok=True)
-
-    fig = G_sage.plot(
-        pos=pos,
-        vertex_colors=vertex_colors,
-        vertex_size=800,
-        color_by_label=False,
-        vertex_labels=False,
-        figsize=[12, 12],
-    )
-    fig.save(output_file)
+    draw_graph(G_sage, pos, vertex_level, Pi_sorted, output_file, r0=r0)
     print("Saved: %s" % output_file)
 
 
