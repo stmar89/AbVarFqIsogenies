@@ -69,3 +69,19 @@
     // The two isogenies are not equivalent, that is, they give rise to discinct edges in the 2-isogeny graph.
     AreIsogeniesEquivalent(K!1,hor[1],J,K!1,hor[2],J);
 
+/*
+Expected output:
+
+  [ Index(OK,S) : S in oo ]       -- indices of overorders in OK (verify by running)
+  [ 2 ]                           -- R has a unique singular prime of norm 2
+  horizontal
+  horizontal
+  2 descending 2
+  true                            -- M eq TraceDualIdeal(S2)
+  true                            -- MultiplicatorRing(hor[1]) eq S4
+  true                            -- IsInvertible(S4!!hor[1])
+  true                            -- MultiplicatorRing(hor[2]) eq S4
+  true                            -- IsInvertible(S4!!hor[2])
+  false                           -- the two horizontal isogenies are not equivalent
+*/
+
