@@ -218,7 +218,7 @@ If you use this code in your research, please cite the accompanying paper:
 @inproceedings{CDMRV-OrdinaryAbVarIsogenies,
   title     = {Ordinary abelian varieties: isogeny graphs and polarizations},
   author    = {Costa, Edgar and Dupuy, Taylor and Marseglia, Stefano and Roe, David and Vincent, Christelle},
-  booktitle = {Algorithmic Number Theory Symposium (ANTS)},
-  note      = {Accepted; proceedings to appear}
+  booktitle = {Proceedings of the Seventeenth Algorithmic Number Theory Symposium (ANTS-XVII)},
+  year      = {2026}
 }
 ```
