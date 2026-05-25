@@ -77,7 +77,7 @@ G, vert, Pi := ComputeIsogenyGraph(h, D);
 | Name | Type | Description |
 |------|------|-------------|
 | `G` | `GrphMult` | The $D$-isogeny graph as a Magma directed multigraph |
-| `vert` | `SeqEnum` | Sequence of fractional $R$-ideals, one per vertex; vertex $i$ corresponds to `vert[i]` |
+| `vert` | `SeqEnum` | One entry per vertex: `vert[i] = [*W, L*]` with `W` a weak-equivalence class (`AlgEtQWECMElt`) and `L` an element of an abstract group representing `Pic(MultiplicatorRing(W))` |
 | `Pi` | `SeqEnum` | Partition of `{1..#vert}` by endomorphism ring; each cell is a sorted list of vertex indices sharing the same endomorphism ring (`MultiplicatorRing`), cells sorted lexicographically |
 
 ### Working with components
