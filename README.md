@@ -174,6 +174,7 @@ Timings are approximate and depend on hardware. The $\mathbb{F}_9$ computation i
 |-----------|-------------|
 | `ComputeIsogenyGraph(h, D)` | Main entry point: Weil polynomial + degree → graph, vertices, partition |
 | `IsogenyGraphBuilder(R, D)` | Lower-level: Frobenius order + degree → vertex and edge sequences |
+| `MinimalIsogenyGraphBuilder(R, D)` | First stage of the paper algorithm: minimal-degree edges only (`IsogenyGraphBuilder` composes these) |
 | `ConstructStandardGrphMultDir(vert, edges)` | Build the Magma multigraph from vertex/edge sequences |
 | `PartitionByEndomorphismRing(vert, R)` | Partition vertices by endomorphism ring |
 | `RestrictPartition(G, G0, Pi)` | Restrict a partition to a connected component |
