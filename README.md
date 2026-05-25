@@ -174,6 +174,8 @@ End-to-end `gen_v4_plots.sh` (both graphs above, plus splitting and rendering al
 
 Measured on an Intel Core i9-13900KS (32 threads, 188 GiB RAM) with Magma 2.29-7 and SageMath 10.8. Timings and memory are approximate and depend on hardware. The $\mathbb{F}_9$ computation is the most expensive example in the paper.
 
+For the systematic timing table from Section 8 of the paper — comparing `IsogenyGraphBuilder`, `IsogenyOrbitBuilder`, and polarization computation across eight isogeny classes with different Picard group sizes — see [`timings/`](timings/README.md). The directory ships a reproducible harness (single-cold-run methodology, pinned to one P-core, adaptive per-cell timeout) and the recorded `timings.tsv` from the paper's measurements.
+
 ---
 
 ## Key Intrinsics
