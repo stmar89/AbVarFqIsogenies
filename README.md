@@ -118,7 +118,7 @@ To reproduce all figures at once:
 bash gen_v4_plots.sh
 ```
 
-This runs the full pipeline: Magma computes both isogeny graphs (F3 and its F9 base change), splits the output into per-component data files, and calls `sage plot_isogeny_graph.sage` to render each component to a PNG in `figures/`. The F3 graph produces 5 images (one per strongly connected component); the F9 base change produces 35 images (all components of sizes 17, 32, 49, and 94). Colors are consistent across components of the same graph: the same endomorphism ring always appears in the same color. The F9 computation takes approximately 6 minutes.
+This runs the full pipeline: Magma computes both isogeny graphs (F3 and its F9 base change), splits the output into per-component data files, and calls `sage plot_isogeny_graph.sage` to render each component to a PNG in `figures/`. The F3 graph produces 5 images (one per strongly connected component); the F9 base change produces 35 images (all components of sizes 17, 32, 49, and 94). Colors are consistent across components of the same graph: the same endomorphism ring always appears in the same color. The F9 computation takes approximately 3 minutes.
 
 To plot a **single component**:
 
@@ -162,9 +162,17 @@ Re-run the cell that constructs the graph editor widget (`ed = graph_editor(G, .
 | Example | Vertices | $D$ | Time |
 |---------|----------|-----|------|
 | `4.3.c_ab_af_ai` over $\mathbb{F}_3$ | 14 | 2 | < 1 second |
-| `4.3.c_ab_af_ai` base-changed to $\mathbb{F}_9$ | 1749 | 2 | ~6 minutes |
+| `4.3.c_ab_af_ai` base-changed to $\mathbb{F}_9$ | 1763 | 2 | ~3 minutes |
 
-Timings are approximate and depend on hardware. The $\mathbb{F}_9$ computation is the most expensive example in the paper.
+End-to-end `gen_v4_plots.sh` (both graphs above, plus splitting and rendering all 40 figures):
+
+| Stage | Wall time | Peak RSS |
+|-------|-----------|----------|
+| Magma — graph computation (F3 + F9) | ~3 min 10s | 551 MB |
+| Python split + Sage render (40 figures) | ~50s | 282 MB |
+| **Overall peak** | — | **551 MB** |
+
+Measured on an Intel Core i9-13900KS (32 threads, 188 GiB RAM) with Magma 2.29-7 and SageMath 10.8. Timings and memory are approximate and depend on hardware. The $\mathbb{F}_9$ computation is the most expensive example in the paper.
 
 ---
 

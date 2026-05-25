@@ -2,7 +2,7 @@
 plot_isogeny_graph.sage — Automatic isogeny graph layout and export.
 
 Usage:
-    sage plot_isogeny_graph.sage <data_file> <output_file> [r0]
+    sage plot_isogeny_graph.sage <data_file> <output_file> [r0] [target_scale]
 
 Arguments:
     data_file    Text file containing the output of PrintIsogenyGraphForSage (Magma).
@@ -11,6 +11,11 @@ Arguments:
                      Pi=[ [v1,v2,...], [w1,...], ... ]
     output_file  Output path; extension determines format (.png, .pdf, .svg).
     r0           Optional ring spacing in data units (default: 1.5).
+    target_scale Optional. The intended \\includegraphics scale=... in paper.tex
+                 (e.g. 0.1, 0.23, 0.33). When provided, vertex circles and arrow
+                 dimensions are enlarged by 1/target_scale so that the printed
+                 result has constant absolute size across figures with different
+                 LaTeX scales.
 
 Pipeline:
     1. In Magma, run PrintIsogenyGraphForSage and redirect output to a file:
@@ -40,9 +45,9 @@ from math import pi, cos, sin, sqrt, atan2
 def parse_input(filename):
     """Parse output of PrintIsogenyGraphForSage.
 
-    Returns (edges, Pi, global_num_levels, global_level_indices).
-    global_num_levels and global_level_indices are None if not present in the file
-    (older format without cross-component color consistency).
+    Returns (edges, Pi, global_num_levels, global_level_indices, global_max_local_levels).
+    Trailing fields are None if absent (older format without cross-component
+    color/scale consistency).
     """
     with open(filename) as f:
         content = f.read()
@@ -52,11 +57,11 @@ def parse_input(filename):
     snippet = content[start:]
     namespace = {}
     exec(compile(snippet, filename, 'exec'), namespace)
-    edges = namespace['edges']
-    Pi    = namespace['Pi']
-    global_num_levels    = namespace.get('global_num_levels', None)
-    global_level_indices = namespace.get('global_level_indices', None)
-    return edges, Pi, global_num_levels, global_level_indices
+    return (namespace['edges'],
+            namespace['Pi'],
+            namespace.get('global_num_levels', None),
+            namespace.get('global_level_indices', None),
+            namespace.get('global_max_local_levels', None))
 
 
 # ---------------------------------------------------------------------------
@@ -212,15 +217,51 @@ def compute_layout(G_sage, Pi_sorted, r0=1.5):
 # ---------------------------------------------------------------------------
 
 def draw_graph(G_sage, pos, vertex_level, Pi_sorted, output_file, r0=1.5,
-               vertex_radius=0.28, figsize=12,
-               global_num_levels=None, global_level_indices=None):
+               figsize=12, target_scale=None,
+               global_num_levels=None, global_level_indices=None,
+               global_max_local_levels=None):
+    """Render the graph to PNG.
+
+    target_scale: the eventual \\includegraphics scale=... in paper.tex.
+    When provided, vertex circles, arrow line widths, and arrowhead sizes are
+    enlarged by 1/target_scale so the printed result has constant absolute size
+    regardless of how each figure is scaled in the LaTeX layout.
+    """
     import matplotlib
     matplotlib.use('Agg')
     import matplotlib.pyplot as plt
-    import matplotlib.patches as mpatches
     from matplotlib.patches import FancyArrowPatch
-    import matplotlib.patheffects as pe
-    import numpy as np
+
+    # Determine canvas data extent before computing scaled dimensions.
+    pad = r0 * 0.4
+    if global_max_local_levels is not None:
+        extent = (global_max_local_levels - 1) * r0 + pad
+    else:
+        all_x = [p[0] for p in pos.values()]
+        all_y = [p[1] for p in pos.values()]
+        extent = max(max(all_x), max(all_y), -min(all_x), -min(all_y)) + pad
+    data_extent_total = 2.0 * extent
+    figsize_pt = figsize * 72.0  # figure size in points
+
+    # Compute rendering dimensions. When target_scale is set, every quantity
+    # below is sized so that (PNG size) * target_scale = a fixed printed size,
+    # uniform across figures with different intended LaTeX scales.
+    if target_scale is not None and float(target_scale) > 0:
+        s = float(target_scale)
+        TARGET_VERTEX_RADIUS_PT = 3.0
+        TARGET_LINEWIDTH_PT     = 0.8
+        TARGET_RING_LW_PT       = 0.15
+        # vertex_radius_data = (target_pt_natural) * (data_per_pt)
+        #                    = (TARGET_RADIUS_PT / s) * (data_extent_total / figsize_pt)
+        vertex_radius  = TARGET_VERTEX_RADIUS_PT * data_extent_total / (figsize_pt * s)
+        linewidth      = TARGET_LINEWIDTH_PT / s
+        mutation_scale = linewidth * 5.6   # arrowhead size proportional to lw (matches old 28/5 ratio)
+        ring_lw        = TARGET_RING_LW_PT / s
+    else:
+        vertex_radius  = 0.28
+        linewidth      = 5.0
+        mutation_scale = 28.0
+        ring_lw        = 0.8
 
     n_levels = len(Pi_sorted)
 
@@ -229,71 +270,56 @@ def draw_graph(G_sage, pos, vertex_level, Pi_sorted, output_file, r0=1.5,
     ax.axis('off')
 
     # --- concentric guide circles (dashed gray) ---
-    for l in range(1, n_levels):
+    # Draw rings up to the deepest component in the parent graph so every
+    # component renders to the same canvas size.
+    ring_levels = global_max_local_levels if global_max_local_levels is not None else n_levels
+    for l in range(1, ring_levels):
         r = l * r0
         circle = plt.Circle((0, 0), r, color='#cccccc', fill=False,
-                             linestyle='--', linewidth=0.8, zorder=0)
+                             linestyle='--', linewidth=ring_lw, zorder=0)
         ax.add_patch(circle)
 
-    # --- detect bidirectional pairs for arc routing ---
+    # --- detect bidirectional pairs ---
     edge_list = [(u, v) for u, v, _ in G_sage.edges()]
     edge_set = set(edge_list)
-    # count multiplicity
     from collections import Counter
     edge_count = Counter(edge_list)
-
-    def _angle(p1, p2):
-        return atan2(p2[1] - p1[1], p2[0] - p1[0])
 
     drawn_pairs = set()
 
     for (u, v), cnt in edge_count.items():
-        x1, y1 = pos[u]
-        x2, y2 = pos[v]
         bidir = (v, u) in edge_set
         pair_key = (min(u, v), max(u, v))
+        if bidir and pair_key in drawn_pairs:
+            continue
+        drawn_pairs.add(pair_key)
 
-        # Perpendicular offset for bidirectional edges
-        dx = x2 - x1
-        dy = y2 - y1
-        dist = sqrt(dx*dx + dy*dy) or 1.0
-        nx = -dy / dist
-        ny = dx / dist
-
-        if bidir:
-            offset_scale = vertex_radius * 0.7
-            # forward arc (u->v)
-            ox1 = x1 + nx * offset_scale
-            oy1 = y1 + ny * offset_scale
-            ox2 = x2 + nx * offset_scale
-            oy2 = y2 + ny * offset_scale
-        else:
-            ox1, oy1 = x1, y1
-            ox2, oy2 = x2, y2
+        x1, y1 = pos[u]
+        x2, y2 = pos[v]
 
         # Shorten arrow to not overlap vertex circles
-        sdx = ox2 - ox1
-        sdy = oy2 - oy1
+        sdx = x2 - x1
+        sdy = y2 - y1
         slen = sqrt(sdx*sdx + sdy*sdy) or 1.0
         shrink = vertex_radius + 0.02
-        ax1 = ox1 + sdx / slen * shrink
-        ay1 = oy1 + sdy / slen * shrink
-        ax2 = ox2 - sdx / slen * shrink
-        ay2 = oy2 - sdy / slen * shrink
+        ax1 = x1 + sdx / slen * shrink
+        ay1 = y1 + sdy / slen * shrink
+        ax2 = x2 - sdx / slen * shrink
+        ay2 = y2 - sdy / slen * shrink
 
         arrow = FancyArrowPatch(
             (ax1, ay1), (ax2, ay2),
-            arrowstyle='-|>',
-            mutation_scale=28,
+            arrowstyle='<|-|>' if bidir else '-|>',
+            mutation_scale=mutation_scale,
             color='black',
-            linewidth=5.0,
+            linewidth=linewidth,
             zorder=1,
         )
         ax.add_patch(arrow)
 
     # --- vertices ---
-    # Use global level indices when available so same order type gets same color
-    # across separate plots of different components of the same graph.
+    # Use global level indices when available so the same endo ring gets the
+    # same color across separate plots of different components.
     g_n = global_num_levels if global_num_levels is not None else n_levels
     g_idx = global_level_indices if global_level_indices is not None else list(range(n_levels))
     for l, cell in enumerate(Pi_sorted):
@@ -301,15 +327,12 @@ def draw_graph(G_sage, pos, vertex_level, Pi_sorted, output_file, r0=1.5,
         for v in cell:
             x, y = pos[v]
             circle = plt.Circle((x, y), vertex_radius, color=color,
-                                 ec='black', linewidth=5.0, zorder=2)
+                                 ec='black', linewidth=linewidth, zorder=2)
             ax.add_patch(circle)
 
-    # --- axis limits with padding ---
-    all_x = [p[0] for p in pos.values()]
-    all_y = [p[1] for p in pos.values()]
-    pad = r0 * 0.4
-    ax.set_xlim(min(all_x) - pad, max(all_x) + pad)
-    ax.set_ylim(min(all_y) - pad, max(all_y) + pad)
+    # --- axis limits ---
+    ax.set_xlim(-extent, extent)
+    ax.set_ylim(-extent, extent)
 
     import os
     os.makedirs(os.path.dirname(os.path.abspath(output_file)), exist_ok=True)
@@ -326,22 +349,25 @@ def main():
         print(__doc__)
         sys.exit(1)
 
-    data_file   = sys.argv[1]
-    output_file = sys.argv[2]
-    r0          = float(sys.argv[3]) if len(sys.argv) >= 4 else 1.5
+    data_file    = sys.argv[1]
+    output_file  = sys.argv[2]
+    r0           = float(sys.argv[3]) if len(sys.argv) >= 4 else 1.5
+    target_scale = float(sys.argv[4]) if len(sys.argv) >= 5 else None
 
-    edges, Pi, global_num_levels, global_level_indices = parse_input(data_file)
+    edges, Pi, global_num_levels, global_level_indices, global_max_local_levels = parse_input(data_file)
     Pi_sorted = sorted(Pi, key=len)
     G_sage = DiGraph(edges, multiedges=True)
 
-    print("Vertices: %d   Edges: %d   Levels: %d" % (
-        G_sage.num_verts(), G_sage.num_edges(), len(Pi_sorted)))
+    print("Vertices: %d   Edges: %d   Levels: %d   target_scale=%s" % (
+        G_sage.num_verts(), G_sage.num_edges(), len(Pi_sorted), target_scale))
 
     pos, vertex_level = compute_layout(G_sage, Pi_sorted, r0=r0)
 
     draw_graph(G_sage, pos, vertex_level, Pi_sorted, output_file, r0=r0,
+               target_scale=target_scale,
                global_num_levels=global_num_levels,
-               global_level_indices=global_level_indices)
+               global_level_indices=global_level_indices,
+               global_max_local_levels=global_max_local_levels)
     print("Saved: %s" % output_file)
 
 
