@@ -5,7 +5,7 @@ Magma code accompanying the paper:
 > **Ordinary abelian varieties: isogeny graphs and polarizations**
 > Edgar Costa, Taylor Dupuy, Stefano Marseglia, David Roe, and Christelle Vincent.
 
-Given an ordinary isogeny class of abelian varieties over $\mathbb{F}_q$ with commutative $\mathbb{F}_q$-endomorphism algebra and an integer $D$, this package computes $D$-isogeny graphs and polarizations.
+Given an ordinary squarefree isogeny class of abelian varieties over $\mathbb{F}_q$ with commutative $\mathbb{F}_q$-endomorphism algebra and an integer $D$, this package computes $D$-isogeny graphs and polarizations.
 
 ---
 
