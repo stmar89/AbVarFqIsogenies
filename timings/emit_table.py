@@ -151,7 +151,7 @@ def emit_table(selected, timings):
     lines.append(
         r'\caption{Wall-clock seconds per cell on a single P-core of an Intel '
         r'i9-13900KS (188\,GB RAM), Magma \magmaVersion. Each cell is a single '
-        r'cold run; $\dash$ = timeout or OOM; $?$ = Magma-level error; $<0.1$ '
+        r'cold run; \(-\) = timeout or OOM; \(?\) = Magma-level error; \(<0.1\) '
         r'is below the single-run noise floor. The \emph{Polarizations} column '
         r'group times \texttt{NonPrincipalPolarizationsOfDegreeDividing}, which '
         r'internally calls \texttt{IsogenyGraphBuilder}; the reported cost '

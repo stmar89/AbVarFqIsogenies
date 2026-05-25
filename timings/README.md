@@ -82,6 +82,16 @@ sha256sum -c table8.sha256        # in private/tex/, after copying
 
 If the check fails, re-copy from `public/timings/table8.tex`.
 
+The paper preamble must load `rotating` (for `sidewaystable`) and `booktabs`
+(for `\toprule`/`\midrule`/`\bottomrule`/`\cmidrule`):
+
+```latex
+\usepackage{rotating}
+\usepackage{booktabs}
+```
+
+If your paper already loads these, no action is needed.
+
 ## Methodology
 
 - **Each cell is a single cold run** in a fresh Magma process. No
@@ -106,9 +116,9 @@ If the check fails, re-copy from `public/timings/table8.tex`.
 | Status | Meaning | In the table |
 |--------|---------|--------------|
 | `ok` | Magma returned normally | numeric value |
-| `error` | Magma-level exception caught by `time_one.m` | `?` |
-| `timeout` | Killed by bash `timeout` (exit 124) | `--` |
-| `oom` | Killed by signal (exit 137/143; typical OOM-killer) | `--` |
+| `error` | Magma-level exception caught by `time_one.m` | `\(?\)` |
+| `timeout` | Killed by bash `timeout` (exit 124) | `\(-\)` |
+| `oom` | Killed by signal (exit 137/143; typical OOM-killer) | `\(-\)` |
 
 `timeout` and `oom` rows are synthesized by `run_all.sh` from the exit
 code — Magma itself never writes these.
