@@ -40,10 +40,12 @@ AttachSpec("spec");
 
 ## Where to Start
 
-Two worked examples from the paper are included:
+Four worked examples from the paper are included:
 
 | File | What it demonstrates |
 |------|----------------------|
+| `magma_ex_2.3.ad_f.m` | Example 4.5: no 2-isogenies over $\mathbb{F}_3$ for the class `2.3.ad_f`, but they appear after specific field extensions |
+| `magma_ex_2.5.a_g.m` | Example 3.7: a descending 2-isogeny $A \to B$ with non-minimal `End(B) < End(A)` (impossible for elliptic curves) |
 | `magma_ex_2.11.a_ac.m` | Example 3.10: horizontal vs. descending isogenies for a surface over $\mathbb{F}_{11}$ |
 | `magma_ex_4.3.c_ab_af_ai.m` | Example 1.1: 2-isogeny graph for a 4-fold over $\mathbb{F}_3$ and its base change to $\mathbb{F}_9$ |
 
@@ -200,6 +202,8 @@ Timings are approximate and depend on hardware. The $\mathbb{F}_9$ computation i
 | `magma_split_sections.py` | Splits `magma_gen_all_plots.m` output into per-figure data files |
 | `gen_v4_plots.sh` | Shell script: runs the full Magma → split → Sage pipeline, producing all 40 figures |
 | `isogeny-graphs.ipynb` | Interactive SageMath notebook for figures with phitigra |
+| `magma_ex_2.3.ad_f.m` | Worked example: Example 4.5 from the paper |
+| `magma_ex_2.5.a_g.m` | Worked example: Example 3.7 from the paper |
 | `magma_ex_2.11.a_ac.m` | Worked example: Example 3.10 from the paper |
 | `magma_ex_4.3.c_ab_af_ai.m` | Worked example: Example 1.1 from the paper |
 
