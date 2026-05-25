@@ -132,13 +132,13 @@ To plot a **single component**:
    magma -b my_script.m > component.txt
    ```
 
-2. **Run the plotting script** to produce a PNG or PDF:
+2. **Run the plotting script** to produce a PNG, PDF, or SVG (the output extension determines the format):
 
    ```bash
    sage plot_isogeny_graph.sage component.txt figure.png
    ```
 
-   The script implements the full concentric-ring layout (one ring per endomorphism ring level, angular order by DFS of the minor cluster tree) and saves directly to PDF or PNG.
+   The script implements the full concentric-ring layout (one ring per endomorphism ring level, angular order by DFS of the minor cluster tree).
 
 ### Option B: Interactive notebook (phitigra, fine-tuned export)
 
