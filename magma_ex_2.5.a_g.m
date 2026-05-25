@@ -6,7 +6,7 @@
     This cannot happend for elliptic curves.
 */
 
-    AttachSpec("~/AbVarFqIsogenies/spec");
+    AttachSpec("spec");
     PP<x>:=PolynomialRing(Integers());
     SetColumns(0);
 

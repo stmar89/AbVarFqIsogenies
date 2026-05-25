@@ -18,7 +18,7 @@ Given an ordinary isogeny class of abelian varieties over $\mathbb{F}_q$ with co
 
 ## Installation
 
-Clone the repository and run Magma from the repo directory:
+Clone the repository and run Magma **from the repo root**:
 
 ```bash
 git clone https://github.com/stmar89/AbVarFqIsogenies
@@ -26,13 +26,15 @@ cd AbVarFqIsogenies
 magma
 ```
 
-> **Note:** To use `NonPrincipalPolarizations.m`, also clone [`https://github.com/stmar89/AbVarFq`](https://github.com/stmar89/AbVarFq) and attach its spec file in your Magma session.
-
 Inside Magma, load the package with a single line:
 
 ```magma
 AttachSpec("spec");
 ```
+
+> **Important:** `AttachSpec("spec")` is a *relative* path. Magma must be launched from the repo root (or, from within Magma, you must `ChangeDirectory("/path/to/AbVarFqIsogenies")` first). The same applies when running any script in this repo with `magma some_script.m` — every worked example and test starts with `AttachSpec("spec");` and will fail to load if your working directory is elsewhere.
+
+> **Note:** To use `NonPrincipalPolarizations.m`, also clone [`https://github.com/stmar89/AbVarFq`](https://github.com/stmar89/AbVarFq) and attach its spec file in your Magma session.
 
 ---
 

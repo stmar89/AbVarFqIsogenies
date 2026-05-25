@@ -2,7 +2,7 @@
     Tests for IsogenyOrbitBuilder
 */
 
-    AttachSpec("~/AbVarFqIsogenies/spec");
+    AttachSpec("spec");
     _<x>:=PolynomialRing(Integers());
     f:=x^4-2*x^2+121;
     q:=Round(ConstantCoefficient(f)^(2/Degree(f)));
@@ -22,7 +22,7 @@
     end for;
 
     // profiling
-    AttachSpec("~/AbVarFqIsogenies/spec");
+    AttachSpec("spec");
     _<x>:=PolynomialRing(Integers());
     f:=x^4-2*x^2+121;
     q:=Round(ConstantCoefficient(f)^(2/Degree(f)));
@@ -43,7 +43,7 @@
     // ProfilePrintChildrenByTime(G,2:Max:=20);
 
     //timings
-    AttachSpec("~/AbVarFqIsogenies/spec");
+    AttachSpec("spec");
     _<x>:=PolynomialRing(Integers());
 
     for D in [2,3,4,6,8,9] do

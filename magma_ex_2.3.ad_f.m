@@ -15,7 +15,7 @@
         return str;
     end function;
 
-    AttachSpec("~/AbVarFqIsogenies/spec");
+    AttachSpec("spec");
     SetColumns(0);
     _<x>:=PolynomialRing(Integers());
     h:=x^4-3*x^3+5*x^2-9*x+9;

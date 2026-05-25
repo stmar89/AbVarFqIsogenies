@@ -3,7 +3,7 @@
     IsogenyGraphBuilder against each other.
 */
 
-    AttachSpec("~/AbVarFqIsogenies/spec");
+    AttachSpec("spec");
     _<x>:=PolynomialRing(Integers());
     f:=x^4-2*x^2+121;
     //f:=x^2 - 2*x + 5;
@@ -53,7 +53,7 @@
     end for;
 
 // timings only 3rd algorithm
-    AttachSpec("~/AbVarFqIsogenies/spec");
+    AttachSpec("spec");
     _<x>:=PolynomialRing(Integers());
     f:=x^4-2*x^2+121;
     q:=Round(ConstantCoefficient(f)^(2/Degree(f)));
@@ -120,7 +120,7 @@
 //N= 15, t=4.140, connected? false
     
     // 3rd Algorithm, with Profiler.
-    AttachSpec("~/AbVarFqIsogenies/spec");
+    AttachSpec("spec");
     _<x>:=PolynomialRing(Integers());
     f:=x^4-2*x^2+121;
     q:=Round(ConstantCoefficient(f)^(2/Degree(f)));
@@ -143,7 +143,7 @@
     [ 4096, 768, 97, 12, 1 ],
     [ 1681, 410, 67, 10, 1 ]
     ];
-    AttachSpec("~/AbVarFqIsogenies/spec");
+    AttachSpec("spec");
     PP<x>:=PolynomialRing(Integers());
 
     for c in issues do
