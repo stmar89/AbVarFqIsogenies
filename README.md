@@ -106,17 +106,11 @@ Pi   := PartitionByEndomorphismRing(vert, R);
 
 ---
 
-## Visualization with phitigra
+## Visualization
 
-Graph figures are produced in SageMath using the [phitigra](https://github.com/phitigra/phitigra) interactive graph editor.
+Graph figures are produced in SageMath. Two workflows are supported: a non-interactive matplotlib pipeline (Option A) and an interactive phitigra notebook (Option B). Only Option B requires `phitigra`.
 
-### Installing phitigra
-
-```bash
-pip install phitigra
-```
-
-### Option A: Standalone script (automated, no browser needed)
+### Option A: Standalone script (matplotlib, automated, no browser)
 
 To reproduce all figures at once:
 
@@ -147,6 +141,12 @@ To plot a **single component**:
    The script implements the full concentric-ring layout (one ring per endomorphism ring level, angular order by DFS of the minor cluster tree) and saves directly to PDF or PNG.
 
 ### Option B: Interactive notebook (phitigra, fine-tuned export)
+
+This option uses the [phitigra](https://github.com/phitigra/phitigra) interactive graph editor. Install it first:
+
+```bash
+pip install phitigra
+```
 
 1. Call `PrintIsogenyGraphForSage` and paste the printed output into `isogeny-graphs.ipynb` as the `edges` and `Pi` variables.
 
