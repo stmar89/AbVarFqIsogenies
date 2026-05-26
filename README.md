@@ -5,7 +5,7 @@ Magma code accompanying the paper:
 > **Ordinary abelian varieties: isogeny graphs and polarizations**
 > Edgar Costa, Taylor Dupuy, Stefano Marseglia, David Roe, and Christelle Vincent.
 
-Given an ordinary isogeny class of abelian varieties over $\mathbb{F}_q$ with commutative $\mathbb{F}_q$-endomorphism algebra and an integer $D$, this package computes $D$-isogeny graphs and polarizations.
+Given an ordinary squarefree isogeny class of abelian varieties over $\mathbb{F}_q$ with commutative $\mathbb{F}_q$-endomorphism algebra and an integer $D$, this package computes $D$-isogeny graphs and polarizations.
 
 ---
 
@@ -18,7 +18,7 @@ Given an ordinary isogeny class of abelian varieties over $\mathbb{F}_q$ with co
 
 ## Installation
 
-Clone the repository and run Magma from the repo directory:
+Clone the repository and run Magma **from the repo root**:
 
 ```bash
 git clone https://github.com/stmar89/AbVarFqIsogenies
@@ -26,22 +26,26 @@ cd AbVarFqIsogenies
 magma
 ```
 
-> **Note:** To use `NonPrincipalPolarizations.m`, also clone [`https://github.com/stmar89/AbVarFq`](https://github.com/stmar89/AbVarFq) and attach its spec file in your Magma session.
-
 Inside Magma, load the package with a single line:
 
 ```magma
 AttachSpec("spec");
 ```
 
+> **Important:** `AttachSpec("spec")` is a *relative* path. Magma must be launched from the repo root (or, from within Magma, you must `ChangeDirectory("/path/to/AbVarFqIsogenies")` first). The same applies when running any script in this repo with `magma some_script.m` — every worked example and test starts with `AttachSpec("spec");` and will fail to load if your working directory is elsewhere.
+
+> **Note:** To use `NonPrincipalPolarizations.m`, also clone [`https://github.com/stmar89/AbVarFq`](https://github.com/stmar89/AbVarFq) and attach its spec file in your Magma session.
+
 ---
 
 ## Where to Start
 
-Two worked examples from the paper are included:
+Four worked examples from the paper are included:
 
 | File | What it demonstrates |
 |------|----------------------|
+| `magma_ex_2.3.ad_f.m` | Example 4.5: no 2-isogenies over $\mathbb{F}_3$ for the class `2.3.ad_f`, but they appear after specific field extensions |
+| `magma_ex_2.5.a_g.m` | Example 3.7: a descending 2-isogeny $A \to B$ with non-minimal `End(B) < End(A)` (impossible for elliptic curves) |
 | `magma_ex_2.11.a_ac.m` | Example 3.10: horizontal vs. descending isogenies for a surface over $\mathbb{F}_{11}$ |
 | `magma_ex_4.3.c_ab_af_ai.m` | Example 1.1: 2-isogeny graph for a 4-fold over $\mathbb{F}_3$ and its base change to $\mathbb{F}_9$ |
 
@@ -75,7 +79,7 @@ G, vert, Pi := ComputeIsogenyGraph(h, D);
 | Name | Type | Description |
 |------|------|-------------|
 | `G` | `GrphMult` | The $D$-isogeny graph as a Magma directed multigraph |
-| `vert` | `SeqEnum` | Sequence of fractional $R$-ideals, one per vertex; vertex $i$ corresponds to `vert[i]` |
+| `vert` | `SeqEnum` | One entry per vertex: `vert[i] = [*W, L*]` with `W` a weak-equivalence class (`AlgEtQWECMElt`) and `L` an element of an abstract group representing `Pic(MultiplicatorRing(W))` |
 | `Pi` | `SeqEnum` | Partition of `{1..#vert}` by endomorphism ring; each cell is a sorted list of vertex indices sharing the same endomorphism ring (`MultiplicatorRing`), cells sorted lexicographically |
 
 ### Working with components
@@ -102,17 +106,11 @@ Pi   := PartitionByEndomorphismRing(vert, R);
 
 ---
 
-## Visualization with phitigra
+## Visualization
 
-Graph figures are produced in SageMath using the [phitigra](https://github.com/phitigra/phitigra) interactive graph editor.
+Graph figures are produced in SageMath. Two workflows are supported: a non-interactive matplotlib pipeline (Option A) and an interactive phitigra notebook (Option B). Only Option B requires `phitigra`.
 
-### Installing phitigra
-
-```bash
-pip install phitigra
-```
-
-### Option A: Standalone script (automated, no browser needed)
+### Option A: Standalone script (matplotlib, automated, no browser)
 
 To reproduce all figures at once:
 
@@ -120,7 +118,7 @@ To reproduce all figures at once:
 bash gen_v4_plots.sh
 ```
 
-This runs the full pipeline: Magma computes both isogeny graphs (F3 and its F9 base change), splits the output into per-component data files, and calls `sage plot_isogeny_graph.sage` to render each component to a PNG in `figures/`. The F3 graph produces 5 images (one per strongly connected component); the F9 base change produces 35 images (all components of sizes 17, 32, 49, and 94). Colors are consistent across components of the same graph: the same endomorphism ring always appears in the same color. The F9 computation takes approximately 6 minutes.
+This runs the full pipeline: Magma computes both isogeny graphs (F3 and its F9 base change), splits the output into per-component data files, and calls `sage plot_isogeny_graph.sage` to render each component to a PNG in `figures/`. The F3 graph produces 5 images (one per strongly connected component); the F9 base change produces 35 images (all components of sizes 17, 32, 49, and 94). Colors are consistent across components of the same graph: the same endomorphism ring always appears in the same color. The F9 computation takes approximately 3 minutes.
 
 To plot a **single component**:
 
@@ -134,15 +132,21 @@ To plot a **single component**:
    magma -b my_script.m > component.txt
    ```
 
-2. **Run the plotting script** to produce a PNG or PDF:
+2. **Run the plotting script** to produce a PNG, PDF, or SVG (the output extension determines the format):
 
    ```bash
    sage plot_isogeny_graph.sage component.txt figure.png
    ```
 
-   The script implements the full concentric-ring layout (one ring per endomorphism ring level, angular order by DFS of the minor cluster tree) and saves directly to PDF or PNG.
+   The script implements the full concentric-ring layout (one ring per endomorphism ring level, angular order by DFS of the minor cluster tree).
 
 ### Option B: Interactive notebook (phitigra, fine-tuned export)
+
+This option uses the [phitigra](https://github.com/phitigra/phitigra) interactive graph editor. Install it first:
+
+```bash
+pip install phitigra
+```
 
 1. Call `PrintIsogenyGraphForSage` and paste the printed output into `isogeny-graphs.ipynb` as the `edges` and `Pi` variables.
 
@@ -158,9 +162,17 @@ Re-run the cell that constructs the graph editor widget (`ed = graph_editor(G, .
 | Example | Vertices | $D$ | Time |
 |---------|----------|-----|------|
 | `4.3.c_ab_af_ai` over $\mathbb{F}_3$ | 14 | 2 | < 1 second |
-| `4.3.c_ab_af_ai` base-changed to $\mathbb{F}_9$ | 1749 | 2 | ~6 minutes |
+| `4.3.c_ab_af_ai` base-changed to $\mathbb{F}_9$ | 1763 | 2 | ~3 minutes |
 
-Timings are approximate and depend on hardware. The $\mathbb{F}_9$ computation is the most expensive example in the paper.
+End-to-end `gen_v4_plots.sh` (both graphs above, plus splitting and rendering all 40 figures):
+
+| Stage | Wall time | Peak RSS |
+|-------|-----------|----------|
+| Magma — graph computation (F3 + F9) | ~3 min 10s | 551 MB |
+| Python split + Sage render (40 figures) | ~50s | 282 MB |
+| **Overall peak** | — | **551 MB** |
+
+Measured on an Intel Core i9-13900KS (32 threads, 188 GiB RAM) with Magma 2.29-7 and SageMath 10.8. Timings and memory are approximate and depend on hardware. The $\mathbb{F}_9$ computation is the most expensive example in the paper.
 
 ---
 
@@ -170,6 +182,7 @@ Timings are approximate and depend on hardware. The $\mathbb{F}_9$ computation i
 |-----------|-------------|
 | `ComputeIsogenyGraph(h, D)` | Main entry point: Weil polynomial + degree → graph, vertices, partition |
 | `IsogenyGraphBuilder(R, D)` | Lower-level: Frobenius order + degree → vertex and edge sequences |
+| `MinimalIsogenyGraphBuilder(R, D)` | First stage of the paper algorithm: minimal-degree edges only (`IsogenyGraphBuilder` composes these) |
 | `ConstructStandardGrphMultDir(vert, edges)` | Build the Magma multigraph from vertex/edge sequences |
 | `PartitionByEndomorphismRing(vert, R)` | Partition vertices by endomorphism ring |
 | `RestrictPartition(G, G0, Pi)` | Restrict a partition to a connected component |
@@ -198,9 +211,22 @@ Timings are approximate and depend on hardware. The $\mathbb{F}_9$ computation i
 | `magma_split_sections.py` | Splits `magma_gen_all_plots.m` output into per-figure data files |
 | `gen_v4_plots.sh` | Shell script: runs the full Magma → split → Sage pipeline, producing all 40 figures |
 | `isogeny-graphs.ipynb` | Interactive SageMath notebook for figures with phitigra |
+| `magma_ex_2.3.ad_f.m` | Worked example: Example 4.5 from the paper |
+| `magma_ex_2.5.a_g.m` | Worked example: Example 3.7 from the paper |
 | `magma_ex_2.11.a_ac.m` | Worked example: Example 3.10 from the paper |
 | `magma_ex_4.3.c_ab_af_ai.m` | Worked example: Example 1.1 from the paper |
 
 ---
 
-*README.md generated by Claude Sonnet 4.6, May 7 2026.*
+## How to cite
+
+If you use this code in your research, please cite the accompanying paper:
+
+```bibtex
+@inproceedings{CDMRV-OrdinaryAbVarIsogenies,
+  title     = {Ordinary abelian varieties: isogeny graphs and polarizations},
+  author    = {Costa, Edgar and Dupuy, Taylor and Marseglia, Stefano and Roe, David and Vincent, Christelle},
+  booktitle = {Proceedings of the Seventeenth Algorithmic Number Theory Symposium (ANTS-XVII)},
+  year      = {2026}
+}
+```

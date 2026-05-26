@@ -15,7 +15,8 @@
         return str;
     end function;
 
-    AttachSpec("~/AbVarFqIsogenies/spec");
+    // Run from the AbVarFqIsogenies/ directory
+    AttachSpec("spec");
     SetColumns(0);
     _<x>:=PolynomialRing(Integers());
     h:=x^4-3*x^3+5*x^2-9*x+9;
@@ -29,8 +30,8 @@
     for i in [1..20] do
         // Consider the Frobenius order of the extension of the isogeny class to F_q^i
         Ri:=Order([pi^i,(q/pi)^i]);
-        if i le 12 then
-            // if the computation of the icm becomes too expensive, change 12 to a lower number in the previous line
+        if i le 11 then
+            // if the computation of the icm becomes too expensive, change 11 to a lower number in the previous line
             icm:=#Classes(IdealClassMonoidAbstract(Ri));
             icm:=IntegerToString(icm);
         else
@@ -51,3 +52,27 @@
                 i,icm,pp,pretty_fac_Z(ind_new),pretty_fac_Z(ind_old);
     end for;
 
+/*
+Expected output:
+
+i=1	#icm=         1	[Ri:P]=[ 16 ]	[R:Ri]_new=                   1	[R:Ri]_old=                   1
+i=2	#icm=         5	[Ri:P]=[ 16 ]	[R:Ri]_new=                 3^2	[R:Ri]_old=                   1
+i=3	#icm=        25	[Ri:P]=[ 16 ]	[R:Ri]_new=                  23	[R:Ri]_old=                   1
+i=4	#icm=       145	[Ri:P]=[ 16 ]	[R:Ri]_new=                  29	[R:Ri]_old=                 3^2
+i=5	#icm=      5246	[Ri:P]=[ 2 ]	[R:Ri]_new=              2^6*61	[R:Ri]_old=                   1
+i=6	#icm=      8075	[Ri:P]=[ 16 ]	[R:Ri]_new=              3^2*17	[R:Ri]_old=              3^2*23
+i=7	#icm=    201707	[Ri:P]=[ 16 ]	[R:Ri]_new=           29^2*1667	[R:Ri]_old=                   1
+i=8	#icm=    672945	[Ri:P]=[ 16 ]	[R:Ri]_new=            23^2*103	[R:Ri]_old=              3^2*29
+i=9	#icm=    234025	[Ri:P]=[ 16 ]	[R:Ri]_new=            17^2*251	[R:Ri]_old=                  23
+i=10	#icm=  10677440	[Ri:P]=[ 2 ]	[R:Ri]_new=                 2^8	[R:Ri]_old=          2^6*3^2*61
+i=11	#icm=  10716555	[Ri:P]=[ 16 ]	[R:Ri]_new=         419^2*25453	[R:Ri]_old=                   1
+i=12	#icm=         -	[Ri:P]=[ 16 ]	[R:Ri]_new=             23*61^2	[R:Ri]_old=        3^4*17*23*29
+i=13	#icm=         -	[Ri:P]=[ 16 ]	[R:Ri]_new=        5^2*13^6*131	[R:Ri]_old=                   1
+i=14	#icm=         -	[Ri:P]=[ 16 ]	[R:Ri]_new=                2731	[R:Ri]_old=       3^2*29^2*1667
+i=15	#icm=         -	[Ri:P]=[ 2 ]	[R:Ri]_new=           569^2*719	[R:Ri]_old=           2^6*23*61
+i=16	#icm=         -	[Ri:P]=[ 16 ]	[R:Ri]_new=               15473	[R:Ri]_old=     3^2*23^2*29*103
+i=17	#icm=         -	[Ri:P]=[ 16 ]	[R:Ri]_new=     9283^2*10449287	[R:Ri]_old=                   1
+i=18	#icm=         -	[Ri:P]=[ 16 ]	[R:Ri]_new=        3^2*17^4*179	[R:Ri]_old=     3^4*17^2*23*251
+i=19	#icm=         -	[Ri:P]=[ 16 ]	[R:Ri]_new=   191*1901^2*276337	[R:Ri]_old=                   1
+i=20	#icm=         -	[Ri:P]=[ 2 ]	[R:Ri]_new=      2^6*199^2*1301	[R:Ri]_old=      2^14*3^2*29*61
+*/

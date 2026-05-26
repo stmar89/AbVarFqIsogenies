@@ -35,11 +35,15 @@
     end function;
 
     // Print one section: label, graph data, and global color info.
-    procedure PrintSection(label, G, C, Pi_C, Pi_global)
+    //   global_num_levels        = #Pi_global, controls color spread
+    //   global_level_indices     = position of each Pi_C cell in Pi_global, controls per-vertex color
+    //   global_max_local_levels  = max #Pi_C across siblings, controls canvas extent
+    procedure PrintSection(label, G, C, Pi_C, Pi_global, max_local_levels)
         ("==SECTION " cat label cat "==");
         PrintIsogenyGraphForSage(G, C, Pi_C);
         printf "global_num_levels=%o\n", #Pi_global;
         printf "global_level_indices=%o\n", GlobalLevelIndices(Pi_C, Pi_global);
+        printf "global_max_local_levels=%o\n", max_local_levels;
     end procedure;
 
     // Sort components by minimum vertex index for a stable ordering.
@@ -56,9 +60,11 @@
     G, vert, Pi := ComputeIsogenyGraph(h, D);
     comps_F3 := SortByMinVertex(
         [Component(Random(c)) : c in StronglyConnectedComponents(G)], G);
+    Pi_C_F3 := [RestrictPartition(G, C, Pi) : C in comps_F3];
+    max_local_F3 := Max([#p : p in Pi_C_F3]);
     for i in [1..#comps_F3] do
-        Pi_C := RestrictPartition(G, comps_F3[i], Pi);
-        PrintSection("F3_comp_" cat IntegerToString(i), G, comps_F3[i], Pi_C, Pi);
+        PrintSection("F3_comp_" cat IntegerToString(i),
+                     G, comps_F3[i], Pi_C_F3[i], Pi, max_local_F3);
     end for;
 
     // ---------------------------------------------------------------
@@ -67,12 +73,13 @@
     h2 := WeilBaseChange(h, 2);
     G2, vert2, Pi2 := ComputeIsogenyGraph(h2, D);
     comps2 := [Component(Random(c)) : c in StronglyConnectedComponents(G2)];
+    max_local_F9 := Max([#RestrictPartition(G2, C, Pi2) : C in comps2]);
 
     for sz in [17, 32, 49, 94] do
         group := SortByMinVertex([C : C in comps2 | #Vertices(C) eq sz], G2);
         for i in [1..#group] do
             Pi_C := RestrictPartition(G2, group[i], Pi2);
             label := IntegerToString(sz) cat "_" cat IntegerToString(i);
-            PrintSection("F9_" cat label, G2, group[i], Pi_C, Pi2);
+            PrintSection("F9_" cat label, G2, group[i], Pi_C, Pi2, max_local_F9);
         end for;
     end for;

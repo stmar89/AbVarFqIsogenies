@@ -183,7 +183,7 @@ end intrinsic;
 
 /* TESTS
 
-    AttachSpec("~/AbVarFqIsogenies/spec");
+    AttachSpec("spec");
     _<x>:=PolynomialRing(Integers());
     f:=x^8+16; //not ordinary, but it has non-conjugate stable overorders
     q:=Round(ConstantCoefficient(f)^(2/Degree(f)));
@@ -203,7 +203,7 @@ end intrinsic;
     SetAssertions(2);
     SetColumns(0);
     AttachSpec("~/AbVarFq/spec");
-    AttachSpec("~/AbVarFqIsogenies/spec");
+    AttachSpec("spec");
     _<x>:=PolynomialRing(Integers());
     //f:=x^4-2*x^2+121;
     f:=x^4 - 4*x^3 + 11*x^2 - 16*x + 16;
