@@ -3,6 +3,7 @@
     IsogenyGraphBuilder against each other.
 */
 
+    // Run from the AbVarFqIsogenies/ directory
     AttachSpec("spec");
     _<x>:=PolynomialRing(Integers());
     f:=x^4-2*x^2+121;

@@ -4,7 +4,7 @@
     This example is about the 2-isogenies in the isogeny class 2.11.a_ac of abelian surfaces over F11.
     We show that there exists an abelian surface A with endomorphism ring S_4 of index 4 in the maximal
     order of the endomorphism algebra with a horizontal 2-isogeny B->A.
-    This cannot happend for elliptic curves.
+    This cannot happen for elliptic curves.
 */
 
     // Run from the AbVarFqIsogenies/ directory
