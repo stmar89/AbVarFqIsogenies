@@ -168,7 +168,7 @@ function compute_orbits_GSUT_on_Ms(T, Ms, R, Wt)
     // Analogue of compute_orbits_UT_on_Ms from IsogenyGraphBuilders.m
     // But also taking representatives for the orbit of G_{S,T} (in order to stay among the ideals in Ms, only have an action of ker(eT) / (ker(eT) meet ker(eS)))
     if #Ms eq 0 then
-        return 0;
+        return [];
     end if;
     remaining := {@ M:M in Ms @};
     orbits := [];
