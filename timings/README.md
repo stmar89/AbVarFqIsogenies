@@ -59,8 +59,14 @@ The script is **resumable**. A crash, OOM-kill, or Ctrl-C mid-sweep is
 recovered by re-running — every `(label, D, alg)` row already in
 `timings.tsv` is skipped.
 
-Expected wall-clock: budget ~24 hours on the pinned P-core. The two anchor
-rows and the highest-`|Pic|` bucket dominate the total.
+Expected wall-clock: on an Intel i9-13900KS the bundled `timings.tsv`
+records 8.4 hours of single-core compute summed across 120 cells (116 `ok`,
+4 `error`). The recorded sweep was split across 4 P-core sibling pairs
+(workers pinned to `8,9`, `10,11`, `12,13`, `14,15`) and finished in
+~4 hours 45 minutes of wall-clock, with the heaviest row
+($|\mathrm{Pic}|{=}1000$, $g{=}3$) dominating the long tail and peak memory
+hitting ~5.7 GB. Each cell is capped at `HARD_LIMIT` seconds (default
+7200 = 2 hours).
 
 ### 4. Emit the LaTeX
 
