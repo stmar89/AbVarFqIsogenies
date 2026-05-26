@@ -224,11 +224,10 @@ def emit_combined_table(selected, timings):
     orbit_tab = _tabular_for_alg(selected, timings, 'IsogenyOrbitBuilder')
     pol_tab = _tabular_for_overhead(selected, timings)
     caption = (
-        r'Wall-clock seconds per cell on one P-core of an Intel '
-        r'i9-13900KS, Magma~\magmaVersion. Each cell is a single '
-        r'cold run; \(<0.1\) is below the single-run noise floor. '
-        r'Rows are ordered by increasing \(|\Pic(R)|\); the row '
-        r'marked ' + BC_MARK + r' is the base change to \(\F_9\) of '
+        r'Wall-clock seconds per cell, single-threaded on an Intel '
+        r'i9-13900KS, Magma~\magmaVersion. \(<0.1\) is below the '
+        r'noise floor. Rows ordered by \(|\Pic(R)|\); '
+        + BC_MARK + r' marks the base change to \(\F_9\) of '
         + F3_ANCHOR_TEX + r'.'
     )
     out = [
