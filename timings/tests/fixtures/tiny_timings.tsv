@@ -5,33 +5,33 @@
 # fallback_budget=3600
 # date=2026-05-25T00:00:00+00:00
 label	D	alg	walltime_seconds	peak_memory_mb	status
-4.3.[81,54,-9,-15,-8,-5,-1,2,1]	4	IsogenyGraphBuilder	0.05	120.0	ok
-4.3.[81,54,-9,-15,-8,-5,-1,2,1]	4	IsogenyOrbitBuilder	0.04	119.0	ok
-4.3.[81,54,-9,-15,-8,-5,-1,2,1]	4	Polarization	0.12	121.0	ok
-4.3.[81,54,-9,-15,-8,-5,-1,2,1]	9	IsogenyGraphBuilder	0.4	130.0	ok
-4.3.[81,54,-9,-15,-8,-5,-1,2,1]	9	IsogenyOrbitBuilder	0.3	129.0	ok
-4.3.[81,54,-9,-15,-8,-5,-1,2,1]	9	Polarization	0.6	131.0	ok
-4.3.[81,54,-9,-15,-8,-5,-1,2,1]	12	IsogenyGraphBuilder	3600	-	timeout
-4.3.[81,54,-9,-15,-8,-5,-1,2,1]	12	IsogenyOrbitBuilder	1.2	140.0	ok
-4.3.[81,54,-9,-15,-8,-5,-1,2,1]	12	Polarization	3600	-	oom
-4.3.[81,54,-9,-15,-8,-5,-1,2,1]	36	IsogenyGraphBuilder	120.5	500.0	ok
-4.3.[81,54,-9,-15,-8,-5,-1,2,1]	36	IsogenyOrbitBuilder	2.1	150.0	ok
-4.3.[81,54,-9,-15,-8,-5,-1,2,1]	36	Polarization	125.0	510.0	error
-4.3.[81,54,-9,-15,-8,-5,-1,2,1]	100	IsogenyGraphBuilder	3600	-	timeout
-4.3.[81,54,-9,-15,-8,-5,-1,2,1]	100	IsogenyOrbitBuilder	10.0	200.0	ok
-4.3.[81,54,-9,-15,-8,-5,-1,2,1]	100	Polarization	3600	-	timeout
-1.2.[4,-3,1]	4	IsogenyGraphBuilder	0.01	50.0	ok
-1.2.[4,-3,1]	4	IsogenyOrbitBuilder	0.02	51.0	ok
-1.2.[4,-3,1]	4	Polarization	0.03	52.0	ok
-1.2.[4,-3,1]	9	IsogenyGraphBuilder	0.05	53.0	ok
-1.2.[4,-3,1]	9	IsogenyOrbitBuilder	0.05	53.0	ok
-1.2.[4,-3,1]	9	Polarization	0.10	54.0	ok
-1.2.[4,-3,1]	12	IsogenyGraphBuilder	0.10	55.0	ok
-1.2.[4,-3,1]	12	IsogenyOrbitBuilder	0.08	55.0	ok
-1.2.[4,-3,1]	12	Polarization	0.15	56.0	ok
-1.2.[4,-3,1]	36	IsogenyGraphBuilder	1.0	60.0	ok
-1.2.[4,-3,1]	36	IsogenyOrbitBuilder	0.8	60.0	ok
-1.2.[4,-3,1]	36	Polarization	1.5	62.0	ok
-1.2.[4,-3,1]	100	IsogenyGraphBuilder	10.0	100.0	ok
-1.2.[4,-3,1]	100	IsogenyOrbitBuilder	7.0	95.0	ok
-1.2.[4,-3,1]	100	Polarization	15.0	105.0	ok
+4.3.[ 81, 54, -9, -15, -8, -5, -1, 2, 1 ]	4	IsogenyGraphBuilder	0.05	120.0	ok
+4.3.[ 81, 54, -9, -15, -8, -5, -1, 2, 1 ]	4	IsogenyOrbitBuilder	0.04	119.0	ok
+4.3.[ 81, 54, -9, -15, -8, -5, -1, 2, 1 ]	4	Polarization	0.12	121.0	ok
+4.3.[ 81, 54, -9, -15, -8, -5, -1, 2, 1 ]	9	IsogenyGraphBuilder	0.4	130.0	ok
+4.3.[ 81, 54, -9, -15, -8, -5, -1, 2, 1 ]	9	IsogenyOrbitBuilder	0.3	129.0	ok
+4.3.[ 81, 54, -9, -15, -8, -5, -1, 2, 1 ]	9	Polarization	0.6	131.0	ok
+4.3.[ 81, 54, -9, -15, -8, -5, -1, 2, 1 ]	12	IsogenyGraphBuilder	3600	-	timeout
+4.3.[ 81, 54, -9, -15, -8, -5, -1, 2, 1 ]	12	IsogenyOrbitBuilder	1.2	140.0	ok
+4.3.[ 81, 54, -9, -15, -8, -5, -1, 2, 1 ]	12	Polarization	3600	-	oom
+4.3.[ 81, 54, -9, -15, -8, -5, -1, 2, 1 ]	36	IsogenyGraphBuilder	120.5	500.0	ok
+4.3.[ 81, 54, -9, -15, -8, -5, -1, 2, 1 ]	36	IsogenyOrbitBuilder	2.1	150.0	ok
+4.3.[ 81, 54, -9, -15, -8, -5, -1, 2, 1 ]	36	Polarization	125.0	510.0	error
+4.3.[ 81, 54, -9, -15, -8, -5, -1, 2, 1 ]	100	IsogenyGraphBuilder	3600	-	timeout
+4.3.[ 81, 54, -9, -15, -8, -5, -1, 2, 1 ]	100	IsogenyOrbitBuilder	10.0	200.0	ok
+4.3.[ 81, 54, -9, -15, -8, -5, -1, 2, 1 ]	100	Polarization	3600	-	timeout
+1.101.[ 101, 13, 1 ]	4	IsogenyGraphBuilder	0.01	50.0	ok
+1.101.[ 101, 13, 1 ]	4	IsogenyOrbitBuilder	0.02	51.0	ok
+1.101.[ 101, 13, 1 ]	4	Polarization	0.03	52.0	ok
+1.101.[ 101, 13, 1 ]	9	IsogenyGraphBuilder	0.05	53.0	ok
+1.101.[ 101, 13, 1 ]	9	IsogenyOrbitBuilder	0.05	53.0	ok
+1.101.[ 101, 13, 1 ]	9	Polarization	0.10	54.0	ok
+1.101.[ 101, 13, 1 ]	12	IsogenyGraphBuilder	0.10	55.0	ok
+1.101.[ 101, 13, 1 ]	12	IsogenyOrbitBuilder	0.08	55.0	ok
+1.101.[ 101, 13, 1 ]	12	Polarization	0.15	56.0	ok
+1.101.[ 101, 13, 1 ]	36	IsogenyGraphBuilder	1.0	60.0	ok
+1.101.[ 101, 13, 1 ]	36	IsogenyOrbitBuilder	0.8	60.0	ok
+1.101.[ 101, 13, 1 ]	36	Polarization	1.5	62.0	ok
+1.101.[ 101, 13, 1 ]	100	IsogenyGraphBuilder	10.0	100.0	ok
+1.101.[ 101, 13, 1 ]	100	IsogenyOrbitBuilder	7.0	95.0	ok
+1.101.[ 101, 13, 1 ]	100	Polarization	15.0	105.0	ok

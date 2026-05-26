@@ -12,10 +12,10 @@ isogeny graphs and polarizations*.
 | `time_one.m` | Magma script: time one `(h, D, algorithm)` triple. |
 | `run_all.sh` | Bash orchestrator: runs `time_one.m` for every cell, appends `timings.tsv`, resumable. |
 | `timings.tsv` | Recorded data. Committed. |
-| `emit_table.py` | Python: read TSV → emit `table8.tex`, `magma_version.tex`, `table8.sha256`. |
-| `table8.tex` | Generated LaTeX. Committed. Hand-copied to `private/tex/` for the paper build. |
+| `emit_table.py` | Python: read TSV → emit `tables_section8.tex`, `magma_version.tex`, `tables_section8.sha256`. |
+| `tables_section8.tex` | Generated LaTeX: one portrait `\begin{table}` float with three stacked tabulars (Graph / Orbit / Pol-filter-overhead) under one caption. Committed; hand-copied to `private/tex/` for the paper build. |
 | `magma_version.tex` | Generated `\newcommand{\magmaVersion}{…}` snippet; `\input{}`ed from `paper.tex`. |
-| `table8.sha256` | Generated sha256 of `table8.tex` for cross-repo sync verification. |
+| `tables_section8.sha256` | Generated sha256 of `tables_section8.tex` for cross-repo sync verification. |
 
 ## Reproducing the table
 
@@ -77,29 +77,29 @@ under `IsogenyOrbitBuilder`. Each cell is capped at `HARD_LIMIT` seconds
 python3 emit_table.py -t timings.tsv -s selected_polynomials.txt -o .
 ```
 
-This writes `table8.tex`, `magma_version.tex`, and `table8.sha256`.
+This writes `tables_section8.tex`, `magma_version.tex`, and
+`tables_section8.sha256`.
 
 ### 5. Sync into the paper
 
 The paper source `private/tex/paper.tex` lives in a sibling private repo.
-Hand-copy `table8.tex` and `magma_version.tex` into `private/tex/`, then
-verify the copy:
+Hand-copy `tables_section8.tex` and `magma_version.tex` into
+`private/tex/`, then verify the copy:
 
 ```bash
-sha256sum -c table8.sha256        # in private/tex/, after copying
+sha256sum -c tables_section8.sha256   # in private/tex/, after copying
 ```
 
-If the check fails, re-copy from `public/timings/table8.tex`.
+If the check fails, re-copy from `public/timings/tables_section8.tex`.
 
-The paper preamble must load `rotating` (for `sidewaystable`) and `booktabs`
-(for `\toprule`/`\midrule`/`\bottomrule`/`\cmidrule`):
+The paper preamble must load `booktabs` (for `\toprule`/`\midrule`/
+`\bottomrule`):
 
 ```latex
-\usepackage{rotating}
 \usepackage{booktabs}
 ```
 
-If your paper already loads these, no action is needed.
+If your paper already loads this, no action is needed.
 
 ## Methodology
 
