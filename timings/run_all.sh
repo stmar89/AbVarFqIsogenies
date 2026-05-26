@@ -14,11 +14,12 @@ set -euo pipefail
 : "${ABVARFQ_SPEC:=$HOME/AbVarFq/spec}"
 [ -r "$ABVARFQ_SPEC" ] || { echo "ABVARFQ_SPEC does not resolve to a readable file: $ABVARFQ_SPEC" >&2; exit 1; }
 : "${FALLBACK_BUDGET:=3600}"
+: "${HARD_LIMIT:=7200}"     # max wall-clock per cell (seconds); cap on the orbit-adaptive budget
 
 cd "$(dirname "$0")"
 
-SEL="selected_polynomials.txt"
-TSV="timings.tsv"
+: "${SEL:=selected_polynomials.txt}"
+: "${TSV:=timings.tsv}"
 D_VALUES=(4 9 12 36 100)
 ALGS_AFTER_ORBIT=(IsogenyGraphBuilder Polarization)
 
@@ -127,6 +128,8 @@ while IFS=$'\t' read -r label coef g q pic icm; do
                 budget=$(( computed > FALLBACK_BUDGET ? computed : FALLBACK_BUDGET ))
                 ;;
         esac
+        # Cap the budget at the hard per-cell wall-clock limit
+        budget=$(( budget > HARD_LIMIT ? HARD_LIMIT : budget ))
         for alg in "${ALGS_AFTER_ORBIT[@]}"; do
             run_cell "$label" "$coef" "$dd" "$alg" "$budget"
         done
