@@ -1,0 +1,62 @@
+\begin{table}[!ht]
+\centering
+\small
+
+\textbf{(a)}~\texttt{IsogenyGraphBuilder}
+
+\begin{tabular}{l c c r rrrrr}
+\toprule
+isogeny class & \(g\) & \(q\) & \(|\Pic(R)|\) & \(D{=}4\) & \(D{=}9\) & \(D{=}12\) & \(D{=}36\) & \(D{=}100\) \\
+\midrule
+\avlink{1.101.n} & 1 & 101 & 2 & \(<0.1\) & \(<0.1\) & \(<0.1\) & \(<0.1\) & \(<0.1\) \\
+\avlink{3.5.a\_ab\_l} & 3 & 5 & 5 & \(<0.1\) & \(<0.1\) & \(<0.1\) & \(<0.1\) & 0.3 \\
+\avlink{4.3.c\_ab\_af\_ai} & 4 & 3 & 6 & 0.9 & 1.1 & 0.9 & 1.6 & 4.0 \\
+\avlink{2.101.ax\_mo} & 2 & 101 & 30 & 0.2 & 0.1 & 0.2 & 0.3 & 0.2 \\
+\avlink{2.101.ak\_bk} & 2 & 101 & 100 & 0.4 & \(<0.1\) & 0.4 & 0.4 & 0.7 \\
+\avlink{2.101.k\_dy} & 2 & 101 & 300 & 21.9 & 0.3 & 24.3 & 21.4 & 215 \\
+\textsf{4.9.ag\_f\_bh\_aes}\(^*\) & 4 & 9 & 576 & 236 & 401 & 287 & 735 & 1344 \\
+\avlink{3.16.ac\_c\_abb} & 3 & 16 & 1000 & 1764 & 0.1 & 1696 & 1700 & 1937 \\
+\bottomrule
+\end{tabular}
+
+\medskip
+
+\textbf{(b)}~\texttt{IsogenyOrbitBuilder}
+
+\begin{tabular}{l c c r rrrrr}
+\toprule
+isogeny class & \(g\) & \(q\) & \(|\Pic(R)|\) & \(D{=}4\) & \(D{=}9\) & \(D{=}12\) & \(D{=}36\) & \(D{=}100\) \\
+\midrule
+\avlink{1.101.n} & 1 & 101 & 2 & \(<0.1\) & \(<0.1\) & \(<0.1\) & \(<0.1\) & \(<0.1\) \\
+\avlink{3.5.a\_ab\_l} & 3 & 5 & 5 & \(<0.1\) & \(<0.1\) & \(<0.1\) & \(<0.1\) & 0.3 \\
+\avlink{4.3.c\_ab\_af\_ai} & 4 & 3 & 6 & 1.4 & 1.1 & 1.5 & 8.3 & 108 \\
+\avlink{2.101.ax\_mo} & 2 & 101 & 30 & \(<0.1\) & \(<0.1\) & \(<0.1\) & 0.1 & \(<0.1\) \\
+\avlink{2.101.ak\_bk} & 2 & 101 & 100 & \(<0.1\) & \(<0.1\) & \(<0.1\) & \(<0.1\) & 0.1 \\
+\avlink{2.101.k\_dy} & 2 & 101 & 300 & 1.4 & 0.3 & 1.4 & 1.5 & 111 \\
+\textsf{4.9.ag\_f\_bh\_aes}\(^*\) & 4 & 9 & 576 & 32.0 & 14.3 & 34.0 & 235 & 2361 \\
+\avlink{3.16.ac\_c\_abb} & 3 & 16 & 1000 & 7.3 & 0.1 & 7.3 & 7.3 & 22.4 \\
+\bottomrule
+\end{tabular}
+
+\medskip
+
+\textbf{(c)}~Polarization filter overhead, i.e.\ Pol \(-\) Graph
+
+\begin{tabular}{l c c r rrrrr}
+\toprule
+isogeny class & \(g\) & \(q\) & \(|\Pic(R)|\) & \(D{=}4\) & \(D{=}9\) & \(D{=}12\) & \(D{=}36\) & \(D{=}100\) \\
+\midrule
+\avlink{1.101.n} & 1 & 101 & 2 & \(<0.1\) & \(<0.1\) & \(<0.1\) & \(<0.1\) & \(<0.1\) \\
+\avlink{3.5.a\_ab\_l} & 3 & 5 & 5 & 0.1 & \(<0.1\) & 0.1 & 0.1 & 0.2 \\
+\avlink{4.3.c\_ab\_af\_ai} & 4 & 3 & 6 & 0.6 & 0.6 & 0.6 & 0.5 & 0.5 \\
+\avlink{2.101.ax\_mo} & 2 & 101 & 30 & 0.2 & 0.2 & 0.2 & 0.2 & 0.2 \\
+\avlink{2.101.ak\_bk} & 2 & 101 & 100 & 0.6 & 0.6 & 0.6 & 0.6 & 0.7 \\
+\avlink{2.101.k\_dy} & 2 & 101 & 300 & 54.4 & 31.6 & 41.1 & 32.3 & 157 \\
+\textsf{4.9.ag\_f\_bh\_aes}\(^*\) & 4 & 9 & 576 & 613 & 288 & 560 & 442 & 1377 \\
+\avlink{3.16.ac\_c\_abb} & 3 & 16 & 1000 & 554 & 560 & 559 & 552 & 607 \\
+\bottomrule
+\end{tabular}
+
+\caption{Wall-clock seconds per cell, single-threaded on an Intel i9-13900KS, Magma~\magmaVersion. \(<0.1\) is below the noise floor. Rows ordered by \(|\Pic(R)|\); \(^*\) marks the base change to \(\F_9\) of \avlink{4.3.c\_ab\_af\_ai}.}
+\label{tab:section8-timings}
+\end{table}

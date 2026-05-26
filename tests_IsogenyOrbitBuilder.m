@@ -65,3 +65,16 @@
         R:=Order([F,V]);
         time _:=IsogenyOrbitBuilder(R,D);
     end for;
+
+    // Regression: OrbitBuilder empty-Ms branch used to return 0 instead of [].
+    SetClassGroupBounds("GRH");
+    AttachSpec("spec");
+    _<x>:=PolynomialRing(Integers());
+    f:=x^4 - 10*x^3 + 36*x^2 - 1010*x + 10201;
+    q:=Round(ConstantCoefficient(f)^(2/Degree(f)));
+    K:=EtaleAlgebra(f);
+    F:=PrimitiveElement(K);
+    V:=q/F;
+    R:=Order([F,V]);
+    _:=IsogenyOrbitBuilder(R, 9); // would error on the broken code
+    printf "regression D=9 on %o: ok\n", f;

@@ -202,7 +202,7 @@ end intrinsic;
     SetDebugOnError(true);
     SetAssertions(2);
     SetColumns(0);
-    AttachSpec("~/AbVarFq/spec");
+    AttachSpec("../AbVarFq/spec"); // adjust to your local clone of github.com/stmar89/AbVarFq
     AttachSpec("spec");
     _<x>:=PolynomialRing(Integers());
     //f:=x^4-2*x^2+121;
