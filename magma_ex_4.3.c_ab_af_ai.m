@@ -8,7 +8,7 @@
     adjust D to the desired isogeny degree.
 
     Run from the AbVarFqIsogenies/ directory.
-    This code is paired with isogeny-graphs.ipynb for the graphical outputs.
+    This code is paired with plot_isogeny_graph.sage for the graphical outputs (see README).
 */
 
     AttachSpec("spec");
@@ -54,8 +54,8 @@
     [<s, comp_sizes[s]> : s in Sort([k : k in Keys(comp_sizes)])];
 
     // ---------------------------------------------------------------
-    // Print graph data for one component to use in isogeny-graphs.ipynb
-    // Paste the output into the notebook to produce figures like Figure 1.1.
+    // Print graph data for one component to feed into plot_isogeny_graph.sage
+    // to produce figures like Figure 1.1 (see README for the pipeline).
     // ---------------------------------------------------------------
 
     C := comps[1];

@@ -12,7 +12,7 @@ Given an ordinary squarefree isogeny class of abelian varieties over $\mathbb{F}
 ## Requirements
 
 - **Magma ≥ 2.29** (required for `EtaleAlgebra`)
-- **SageMath** with the [phitigra](https://github.com/phitigra/phitigra) package (required only for graph visualization)
+- **SageMath** (required only for graph visualization)
 
 ---
 
@@ -108,9 +108,7 @@ Pi   := PartitionByEndomorphismRing(vert, R);
 
 ## Visualization
 
-Graph figures are produced in SageMath. Two workflows are supported: a non-interactive matplotlib pipeline (Option A) and an interactive phitigra notebook (Option B). Only Option B requires `phitigra`.
-
-### Option A: Standalone script (matplotlib, automated, no browser)
+Graph figures are produced in SageMath via `plot_isogeny_graph.sage`, which uses matplotlib directly (no browser, no widget dependency).
 
 To reproduce all figures at once:
 
@@ -139,21 +137,6 @@ To plot a **single component**:
    ```
 
    The script implements the full concentric-ring layout (one ring per endomorphism ring level, angular order by DFS of the minor cluster tree).
-
-### Option B: Interactive notebook (phitigra, fine-tuned export)
-
-This option uses the [phitigra](https://github.com/phitigra/phitigra) interactive graph editor. Install it first:
-
-```bash
-pip install phitigra
-```
-
-1. Call `PrintIsogenyGraphForSage` and paste the printed output into `isogeny-graphs.ipynb` as the `edges` and `Pi` variables.
-
-2. Run the notebook to produce the figure in the phitigra widget and export the PNG manually from the browser.
-
-**Workaround: phitigra shows a string after restarting the notebook server.**
-Re-run the cell that constructs the graph editor widget (`ed = graph_editor(G, ...)`) before calling `ed.show()`. The widget loses its state on restart and must be rebuilt.
 
 ---
 
@@ -210,7 +193,6 @@ Measured on an Intel Core i9-13900KS (32 threads, 188 GiB RAM) with Magma 2.29-7
 | `magma_gen_all_plots.m` | Generates graph data for all 40 figures (all F3 and F9 components) in one Magma run |
 | `magma_split_sections.py` | Splits `magma_gen_all_plots.m` output into per-figure data files |
 | `gen_v4_plots.sh` | Shell script: runs the full Magma → split → Sage pipeline, producing all 40 figures |
-| `isogeny-graphs.ipynb` | Interactive SageMath notebook for figures with phitigra |
 | `magma_ex_2.3.ad_f.m` | Worked example: Example 4.5 from the paper |
 | `magma_ex_2.5.a_g.m` | Worked example: Example 3.7 from the paper |
 | `magma_ex_2.11.a_ac.m` | Worked example: Example 3.10 from the paper |

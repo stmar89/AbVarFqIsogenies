@@ -44,7 +44,7 @@ corresponding ordinary isogeny class. Returns:
   Pi   -- partition of vertex indices 1..#vert by endomorphism ring; a sequence of sequences
           of vertex indices, one per endomorphism ring, sorted lexicographically
 To plot a component C of G, call RestrictPartition(G, C, Pi) then PrintIsogenyGraphForSage,
-and paste the printed output into isogeny-graphs.ipynb.}
+and feed the printed output into plot_isogeny_graph.sage (see README).}
     g, q, p := Getgqp(h);
     K    := EtaleAlgebra(h);
     pi   := PrimitiveElement(K);
@@ -57,8 +57,8 @@ end intrinsic;
 
 intrinsic PrintIsogenyGraphForSage(G::GrphMult, G0::GrphMult, Pi0::SeqEnum)
 {Prints edge list and vertex partition for the component G0 of the isogeny graph G,
-using global vertex indices from G. Paste the printed output into isogeny-graphs.ipynb
-to produce the figure.}
+using global vertex indices from G. Feed the printed output into plot_isogeny_graph.sage
+to produce the figure (see README for the pipeline).}
     V         := Vertices(G);
     E0        := Edges(G0);
     num_edges := #E0;
