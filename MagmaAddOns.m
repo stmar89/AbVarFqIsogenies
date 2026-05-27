@@ -91,33 +91,6 @@ to produce the figure (see README for the pipeline).}
     printf "Pi=%o\n", Pi0;
 end intrinsic;
 
-intrinsic GraphOverOrders0(R:AlgEtQOrd)->GrphDir
-{
-This is a replacement for https://magma.maths.usyd.edu.au/magma/handbook/text/455#4979 which is slower. 
-Given an order R returns the graph G of minimal inclusions of the overorders of R. More precisely, the vertices of G are integers between 1 and the number of OverOrders(R), and there is an edge [i, j] if and only if OverOrders(R)[j] is a minimal overorder of OverOrders(R)[i].
-}
-    ords:=OverOrders(R);
-    pairs:=[[i,j] : i in [1..#ords], j in [1..#ords] | i ne j];
-    subs:=[];
-    for pair in pairs do
-        i,j:=Explode(pair);
-        Oi:=ords[i];
-        Oj:=ords[j];
-        if Oi subset Oj then
-            Append(~subs,pair);
-        end if;
-    end for; 
-    
-    function is_primitive(pair)
-        i,j:=Explode(pair);
-        return not exists(k){ k : k in [1..#ords] | [i,k] in subs and [k,j] in subs };
-    end function;
-    
-    edges:=[ pair : pair in subs | is_primitive(pair)];
-    return Digraph<#ords|edges>;
-end intrinsic;
-
-
 ////////////////////
 // Weil Polynomial Intrinsics
 ////////////////////

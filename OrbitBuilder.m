@@ -7,9 +7,6 @@ intrinsic GSTAct(g::GrpAbElt, phi::Tup)->Tup
     x := phi[5];
     R := Order(I);
     PR,pR:=PicardGroup(R);
-    //we,we_map:=WeakEquivalenceClassMonoidAbstract(R);
-    //Ws:=we_map(s);
-    //Wt:=we_map(t);
     S := MultiplicatorRing(s);
     T := MultiplicatorRing(t);
     eS := ExtensionHomPicardGroupsOverOrders(R,S);
@@ -21,8 +18,6 @@ intrinsic GSTAct(g::GrpAbElt, phi::Tup)->Tup
     G := g@pR;
     gI := DistinguishedRepsICM(s, gS);
     gJ := DistinguishedRepsICM(t, gT);
-    //gI := Ws*((gS@@eS)@pR);
-    //gJ := Wt*((gT@@eT)@pR);
 
     test,y := IsIsomorphic(G*I, gI);
     assert test;
@@ -41,25 +36,18 @@ intrinsic GSTOrbit(phi::Tup)->SeqEnum
     x := phi[5];
     R := Order(I);
     PR,pR := PicardGroup(R);
-    //we,we_map:=WeakEquivalenceClassMonoidAbstract(R);
-    //Ws := we_map(s);
-    //Wt := we_map(t);
     S := MultiplicatorRing(s);
     T := MultiplicatorRing(t);
     eS := ExtensionHomPicardGroupsOverOrders(R,S);
     eT := ExtensionHomPicardGroupsOverOrders(R,T);
 
     orb := [];
-    for g in DoubleKernelQuotient(R, S, T) do
+    for g in GSTTransversal(R, S, T) do
         gS := (g@eS)+hS;
         gT := (g@eT)+hT;
         G := g@pR;
-        // FIXME: DistinguishedICMRep from Misc.m should help here
-        // DONE
         gI := DistinguishedRepsICM(s, gS);
         gJ := DistinguishedRepsICM(t, gT);
-        //gI := Ws*((gS@@eS)@pR);
-        //gJ := Wt*((gT@@eT)@pR);
 
         test,y := IsIsomorphic(G*I, gI);
         assert test;
@@ -186,7 +174,7 @@ function compute_orbits_GSUT_on_Ms(T, Ms, R, Wt)
         UST := QuotientsUnitsOverorders(R, T, S);
         for g in DoubleKernelQuotient(R, S, T) do
             I := g @ pR;
-            test,y := IsIsomorphic(Wt, I * Wt); // TODO: Check that reversing this was right
+            test,y := IsIsomorphic(Wt, I * Wt);
             assert test;
             gM1 := y * I * M1;
             assert gM1 subset Wt;
@@ -268,24 +256,26 @@ intrinsic IsogenyOrbitBuilder(R::AlgEtQOrd, D::RngIntElt : dual_only:=false) -> 
             if d2 lt n and n mod d2 eq 0 then
                 d1 := n div d2;
                 for E2 in E_min_d2 do
-                    E2_s := E2[1][1];
+                    E2_s := E2[1][1]; E2_t := E2[2][1]
                     if not IsDefined(reps[d1], E2_s) then reps[d1][E2_s] := AssociativeArray(); end if;
                     // now, we loop over all already computed reps E1 of degree d1=n/d2 such
                     // that target(E1) = source(E2) = E2[1][1], since we want to construct the composition E1*E2
                     // (first apply the isogeny E1 then the isogeny E2)
-                    for E1_t->E1s in reps[d1][E2_s] do
-                        if n eq D and dual_only and E1_t ne dual_we[E2_s] then
+                    for E1_s->E1s in reps[d1][E2_s] do
+                        if n eq D and dual_only and E1_s ne dual_we[E2_t] then
                             // We don't need degree D isogenies for further composition, so skip if not needed for output.
                             continue;
                         end if;
                         for E1 in E1s do
-                            if not IsDefined(reps[n], E2[2][1]) then reps[n][E2[2][1]] := AssociativeArray(); end if;
-                            if not IsDefined(reps[n][E2[2][1]],E1[1][1]) then reps[n][E2[2][1]][E1[1][1]]:=[]; end if;
+                            E1_s := E1[1][1]; E1_t := E1[2][1]
+                            if not IsDefined(reps[n], E2_t) then reps[n][E2_t] := AssociativeArray(); end if;
+                            if not IsDefined(reps[n][E2_t],E1_s) then reps[n][E2_t][E1_s]:=[]; end if;
                             for Ecomp in GSTCompose(E1, E2) do
                                 //if not exists{E:E in reps[n][E2[2][1]][E1[1][1]]|
-                                if not IsDefined(reps[n], Ecomp[2][1]) then reps[n][Ecomp[2][1]] := AssociativeArray(); end if;
-                                if not IsDefined(reps[n][Ecomp[2][1]], Ecomp[1][1]) then reps[n][Ecomp[2][1]][Ecomp[1][1]] := []; end if;
-                                if not exists{E:E in reps[n][Ecomp[2][1]][Ecomp[1][1]]|
+                                Ecomp_s := Ecomp[1][1]; Ecomp_t := Ecomp[2][1];
+                                if not IsDefined(reps[n], Ecomp_t) then reps[n][Ecomp_t] := AssociativeArray(); end if;
+                                if not IsDefined(reps[n][Ecomp_t], Ecomp_s) then reps[n][Ecomp_t][Ecomp_s] := []; end if;
+                                if not exists{E:E in reps[n][Ecomp_t][Ecomp_s]|
                                     AreIsogeniesGSTEquivalent(Ecomp,E)
                                     } then
                                     // Asserts for debugging
@@ -294,7 +284,7 @@ intrinsic IsogenyOrbitBuilder(R::AlgEtQOrd, D::RngIntElt : dual_only:=false) -> 
                                     //    EE := reps[n][Ecomp[2][1]][Ecomp[1][1]][1];
                                     //    assert not AreIsogeniesEquivalent(Ecomp[5],Ecomp[3],Ecomp[4],EE[5],EE[3],EE[4]);
                                     //end if;
-                                    Append(~reps[n][Ecomp[2][1]][Ecomp[1][1]], Ecomp);
+                                    Append(~reps[n][Ecomp_t][Ecomp_s], Ecomp);
                                 end if;
                             end for;
                         end for;
@@ -464,3 +454,4 @@ intrinsic ConstructOrbitGrphMultDir(R::AlgEtQOrd, reps::Assoc) -> GrphMultDir, S
     AddEdges(~G,EE);
     return G, verts, edges;
 end intrinsic;
+
