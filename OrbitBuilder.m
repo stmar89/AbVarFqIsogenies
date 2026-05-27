@@ -50,7 +50,7 @@ intrinsic GSTOrbit(phi::Tup)->SeqEnum
     eT := ExtensionHomPicardGroupsOverOrders(R,T);
 
     orb := [];
-    for g in DoubleKernelQuotient(R, S, T) do
+    for g in GSTTransversal(R, S, T) do
         gS := (g@eS)+hS;
         gT := (g@eT)+hT;
         G := g@pR;
@@ -464,3 +464,4 @@ intrinsic ConstructOrbitGrphMultDir(R::AlgEtQOrd, reps::Assoc) -> GrphMultDir, S
     AddEdges(~G,EE);
     return G, verts, edges;
 end intrinsic;
+
