@@ -57,7 +57,7 @@
     // ---------------------------------------------------------------
     // F3 graph: all SCCs, one section per component
     // ---------------------------------------------------------------
-    G, vert, Pi := ComputeIsogenyGraph(h, D);
+    G, verts, edges, Pi := ComputeIsogenyGraph(h, D);
     comps_F3 := SortByMinVertex(
         [Component(Random(c)) : c in StronglyConnectedComponents(G)], G);
     Pi_C_F3 := [RestrictPartition(G, C, Pi) : C in comps_F3];
@@ -71,7 +71,7 @@
     // F9 graph: all components of every size
     // ---------------------------------------------------------------
     h2 := WeilBaseChange(h, 2);
-    G2, vert2, Pi2 := ComputeIsogenyGraph(h2, D);
+    G2, verts2, edges2, Pi2 := ComputeIsogenyGraph(h2, D);
     comps2 := [Component(Random(c)) : c in StronglyConnectedComponents(G2)];
     max_local_F9 := Max([#RestrictPartition(G2, C, Pi2) : C in comps2]);
 

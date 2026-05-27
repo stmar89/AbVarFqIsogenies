@@ -36,12 +36,13 @@ to the vertices of G0. Empty cells are dropped.}
     return [cell : cell in Pi0 | #cell gt 0];
 end intrinsic;
 
-intrinsic ComputeIsogenyGraph(h::RngUPolElt, D::RngIntElt) -> GrphMult, SeqEnum, SeqEnum
+intrinsic ComputeIsogenyGraph(h::RngUPolElt, D::RngIntElt : use_orbits:=false, weak_equivalence:=false) -> GrphMult, SeqEnum, Assoc, SeqEnum
 {Given a Weil polynomial h and a positive integer D, computes the D-isogeny graph of the
 corresponding ordinary isogeny class. Returns:
   G    -- the D-isogeny graph as a directed multigraph (GrphMult)
-  vert -- sequence of fractional R-ideals indexing vertices, as returned by IsogenyGraphBuilder
-  Pi   -- partition of vertex indices 1..#vert by endomorphism ring; a sequence of sequences
+  verts -- sequence of fractional R-ideals indexing vertices, as returned by IsogenyGraphBuilder, or by ConstructOrbitGrphMultDir (if weak_equivalence is true).  If weak_equivalence is false, then vertices will be pairs [*W,L*] where W is a weak equivalence class and L is an element of an abstract group representing Pic(T) where T is the multiplicator ring of W.  If weak_equivalence is true, then vertices will just be W.
+  edges -- an associative array, indexed by degrees d dividing D. The value at d will be a sequence of 5-tuples <source, target, Is, It, x>.  source and target will be vertices; Is and It ideals in the source and target; and x*Is subset It is an inclusion of index d representing the isogeny.  If weak_equivalence is false, all edges in the isogeny graph will be included.  If true, then only one edge per G_(S,T) orbit will be included, where S is the multiplicator ring of the source and T the multiplicator ring of the target.
+  Pi   -- partition of vertex indices 1..#verts by endomorphism ring; a sequence of sequences
           of vertex indices, one per endomorphism ring, sorted lexicographically
 To plot a component C of G, call RestrictPartition(G, C, Pi) then PrintIsogenyGraphForSage,
 and paste the printed output into isogeny-graphs.ipynb.}
@@ -49,10 +50,24 @@ and paste the printed output into isogeny-graphs.ipynb.}
     K    := EtaleAlgebra(h);
     pi   := PrimitiveElement(K);
     R    := Order([pi, q/pi]);
-    vert, edges := IsogenyGraphBuilder(R, D);
-    G    := ConstructStandardGrphMultDir(vert, edges);
-    Pi   := PartitionByEndomorphismRing(vert, R);
-    return G, vert, Pi;
+    if weak_equivalence then
+        use_orbits := true;
+    end if;
+    if use_orbits then
+        reps := IsogenyOrbitBuilder(R, D);
+        if weak_equivalence then
+            G, verts, edges := ConstructOrbitGrphMultDir(reps);
+        else
+            verts, edges := IsogenyGraphBuilder_FromOrbit(R, D, reps);
+        end if;
+    else
+        verts, edges := IsogenyGraphBuilder(R, D);
+    end if;
+    if not assigned G then
+        G := ConstructStandardGrphMultDir(verts, edges);
+    end if;
+    Pi := PartitionByEndomorphismRing(verts, R);
+    return G, verts, edges, Pi;
 end intrinsic;
 
 intrinsic PrintIsogenyGraphForSage(G::GrphMult, G0::GrphMult, Pi0::SeqEnum)

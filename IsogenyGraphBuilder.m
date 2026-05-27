@@ -191,7 +191,7 @@ intrinsic IsogenyGraphBuilder(R::AlgEtQOrd,D::RngIntElt) -> SeqEnum,Assoc
 end intrinsic;
 
 intrinsic ConstructStandardGrphMultDir(vert::SeqEnum,edges::Assoc) -> GrphMultDir
-{Given the output vert,edges produced by IsogenyGraphBuilders (or IsogenyGraphBuilder_Naive, or IsogenyGraphBuilder_LessNaive) returns the corresponding directed multi graph. The verteces of the output are labelled using integers 1,...,#vert. The i-th vertex conesponds to the ideal class vert[i].}
+{Given the output vert,edges produced by IsogenyGraphBuilders (or IsogenyGraphBuilder_Naive, or IsogenyGraphBuilder_LessNaive) returns the corresponding directed multi graph. The vertices of the output are labelled using integers 1,...,#vert. The i-th vertex conesponds to the ideal class vert[i].}
     n:=#vert;
     G:=MultiDigraph< n | >;
     EE:=[ ]; 

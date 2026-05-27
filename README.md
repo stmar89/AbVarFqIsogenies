@@ -61,7 +61,9 @@ To adapt an example to your own isogeny class, replace the Weil polynomial `h` w
 
 ## Quick Start: Computing an Isogeny Graph
 
-The main entry point is `ComputeIsogenyGraph`, which takes a Weil polynomial and an isogeny degree and returns the graph, vertex data, and a partition by endomorphism ring:
+The main entry point is `ComputeIsogenyGraph`, which takes a Weil polynomial and an isogeny degree and returns the graph, vertex data, edge data, and a partition by endomorphism ring.
+
+There are two keyword arguments: `use_orbits` (default false), which forces the use of the `IsogenyOrbitBuilder` intrinsic rather than `IsogenyGraphBuilder`; and `weak_equivalence` (default false), which changes the returned graph to have vertices given by weak equivalence classes within the isogeny class (rather than isomorphism classes) and edges given by orbits under the action of the group G_{S,T} defined in Definition 6.1 of the paper.
 
 ```magma
 AttachSpec("spec");
@@ -71,7 +73,7 @@ _<x> := PolynomialRing(Integers());
 h := x^8 + 2*x^7 - x^6 - 5*x^5 - 8*x^4 - 15*x^3 - 9*x^2 + 54*x + 81;
 D := 2;
 
-G, vert, Pi := ComputeIsogenyGraph(h, D);
+G, verts, edges, Pi := ComputeIsogenyGraph(h, D);
 ```
 
 ### Output structure
@@ -79,7 +81,8 @@ G, vert, Pi := ComputeIsogenyGraph(h, D);
 | Name | Type | Description |
 |------|------|-------------|
 | `G` | `GrphMult` | The $D$-isogeny graph as a Magma directed multigraph |
-| `vert` | `SeqEnum` | One entry per vertex: `vert[i] = [*W, L*]` with `W` a weak-equivalence class (`AlgEtQWECMElt`) and `L` an element of an abstract group representing `Pic(MultiplicatorRing(W))` |
+| `verts` | `SeqEnum` | One entry per vertex: `vert[i] = [*W, L*]` with `W` a weak-equivalence class (`AlgEtQWECMElt`) and `L` an element of an abstract group representing `Pic(MultiplicatorRing(W))` |
+| `edges` | `Assoc` | An associative array, indexed by degrees d dividing D. The value at d will be a sequence of 5-tuples <source, target, Is, It, x>.  source and target will be vertices; Is and It ideals in the source and target; and x*Is subset It is an inclusion of index d representing the isogeny.  If weak_equivalence is false, all edges in the isogeny graph will be included.  If true, then only one edge per G_{S,T} orbit will be included, where S is the multiplicator ring of the source and T the multiplicator ring of the target.
 | `Pi` | `SeqEnum` | Partition of `{1..#vert}` by endomorphism ring; each cell is a sorted list of vertex indices sharing the same endomorphism ring (`MultiplicatorRing`), cells sorted lexicographically |
 
 ### Working with components

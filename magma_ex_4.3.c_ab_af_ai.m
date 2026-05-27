@@ -20,8 +20,8 @@
 
     h := x^8 + 2*x^7 - x^6 - 5*x^5 - 8*x^4 - 15*x^3 - 9*x^2 + 54*x + 81;
     D := 2;
-    G, vert, Pi := ComputeIsogenyGraph(h, D);
-    "Number of vertices:", #vert;
+    G, verts, edges, Pi := ComputeIsogenyGraph(h, D);
+    "Number of vertices:", #verts;
     "Number of edges:", #Edges(G);
 
     // ---------------------------------------------------------------
@@ -29,8 +29,8 @@
     // ---------------------------------------------------------------
 
     h2 := WeilBaseChange(h, 2);
-    G2, vert2, Pi2 := ComputeIsogenyGraph(h2, D);
-    "Number of vertices (F9):", #vert2;
+    G2, verts2, edges2, Pi2 := ComputeIsogenyGraph(h2, D);
+    "Number of vertices (F9):", #verts2;
 
     // Find isomorphism classes of strongly connected components
     comps := [Component(Random(c)) : c in StronglyConnectedComponents(G2)];

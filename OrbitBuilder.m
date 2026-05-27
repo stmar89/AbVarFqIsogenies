@@ -197,14 +197,12 @@ function compute_orbits_GSUT_on_Ms(T, Ms, R, Wt)
     return orbits;
 end function;
 
-intrinsic IsogenyOrbitBuilder(R::AlgEtQOrd,D::RngIntElt : dual_only:=false) -> .
-{Given the Frobenius order R of a squarefree ordinary isogeny class and a positive integer D, returns an associative array whose value at each integer d dividing D is a sequence of isogenies of degree d so that the set of all isogenies of degree d is obtained by taking orbits for the action of G_(s,t) on each representative.  If the optional parameter dual_only is set, only isogenies mapping from a weak equivalence class to its dual will be included in the output.}
+intrinsic MinimalIsogenyOrbitBuilder(R::AlgEtQOrd,D::RngIntElt) -> .
+{Given the Frobenius order R of a squarefree ordinary isogeny class and a positive integer D, returns an associative array reps so that reps[d][t][s] is a sequence of minimal isogenies of degree d from the weak equivalence class s to the weak equivalence class t so that the set of such isogenies is obtained by taking orbits for the action of G_(S,T) on each representative.}
     we,we_map:=WeakEquivalenceClassMonoidAbstract(R);
     icm,icm_map:=IdealClassMonoidAbstract(R);
     PR,pR:=PicardGroup(R);
-    dual_we:= AssociativeArray();
 
-    reps:=AssociativeArray();
     reps_min:=AssociativeArray(:Default:=[]);
     // a 1-dimensional array
     // reps_min[dM] is the sequence of minimal isogenies of degree dM
@@ -212,13 +210,10 @@ intrinsic IsogenyOrbitBuilder(R::AlgEtQOrd,D::RngIntElt : dual_only:=false) -> .
         T := MultiplicatorRing(t);
         eT := ExtensionHomPicardGroupsOverOrders(R, T);
         Wt := we_map(t);
-        dual_we[t] := TraceDualIdeal(ComplexConjugate(Wt)) @@ we_map;
         Ms := [M : M in IntermediateIdeals(Wt, D*Wt : Maximal:=true) | D mod Index(Wt, M) eq 0]; //sub-frac.R-ideals M<Wt s.t. [Wt:M]|D
         Ms:=compute_orbits_GSUT_on_Ms(T, Ms, R, Wt);
         for M in Ms do
             dM := Index(Wt,M);
-            // REMOVE THE NEXT ONE?
-                if not IsDefined(reps,dM) then reps[dM]:=AssociativeArray(); end if;
             source_M := M@@icm_map;
             s := WEClass(source_M);
             aaS := PicClass(source_M);
@@ -230,15 +225,37 @@ intrinsic IsogenyOrbitBuilder(R::AlgEtQOrd,D::RngIntElt : dual_only:=false) -> .
                 assert2 not AreIsogeniesEquivalent(label[5], label[3], label[4], olabel[5], olabel[3], olabel[4]);
             end for;
             Append(~reps_min[dM], label);
-            // REMOVE THE NEXT TWO IF?
-                if not IsDefined(reps[dM],t) then
-                    reps[dM][t]:=AssociativeArray(); // indexed by the target
-                end if;
-                if not IsDefined(reps[dM][t], s) then
-                    reps[dM][t][s]:=[]; // and then the source
-                end if;
+        end for;
+    end for;
+    return reps_min;
+end intrinsic;
+
+intrinsic IsogenyOrbitBuilder(R::AlgEtQOrd, D::RngIntElt : dual_only:=false) -> .
+{Given the Frobenius order R of a squarefree ordinary isogeny class and a positive integer D, returns an associative array whose value at each integer d dividing D is a sequence of isogenies of degree d so that the set of all isogenies of degree d is obtained by taking orbits for the action of G_(s,t) on each representative.  If the optional parameter dual_only is set, only isogenies mapping from a weak equivalence class to its dual will be included in the output.}
+    reps_min := MinimalIsogenyOrbitBuilder(R, D);
+    reps := AssociativeArray();
+    for dM->E_min in reps_min do
+        if not IsDefined(reps, dM) then
+            reps[dM] := AssociativeArray();
+        end if;
+        for label in E_min do
+            s := label[1][1];
+            t := label[2][1];
+            if not IsDefined(reps[dM], t) then
+                reps[dM][t] := AssociativeArray(); // indexed by the target
+            end if;
+            if not IsDefined(reps[dM][t], s) then
+                reps[dM][t][s]:=[]; // and then the source
+            end if;
             Append(~reps[dM][t][s], label);
         end for;
+    end for;
+
+    we,we_map:=WeakEquivalenceClassMonoidAbstract(R);
+    dual_we:= AssociativeArray();
+    for t in Classes(we) do
+        Wt := we_map(t);
+        dual_we[t] := TraceDualIdeal(ComplexConjugate(Wt)) @@ we_map;
     end for;
 
     // now we have all minimal reps. we compose
@@ -252,8 +269,7 @@ intrinsic IsogenyOrbitBuilder(R::AlgEtQOrd,D::RngIntElt : dual_only:=false) -> .
                 d1 := n div d2;
                 for E2 in E_min_d2 do
                     E2_s := E2[1][1];
-                    // REMOVE?
-                        if not IsDefined(reps[d1], E2_s) then reps[d1][E2_s] := AssociativeArray(); end if;
+                    if not IsDefined(reps[d1], E2_s) then reps[d1][E2_s] := AssociativeArray(); end if;
                     // now, we loop over all already computed reps E1 of degree d1=n/d2 such
                     // that target(E1) = source(E2) = E2[1][1], since we want to construct the composition E1*E2
                     // (first apply the isogeny E1 then the isogeny E2)
@@ -263,16 +279,13 @@ intrinsic IsogenyOrbitBuilder(R::AlgEtQOrd,D::RngIntElt : dual_only:=false) -> .
                             continue;
                         end if;
                         for E1 in E1s do
-                            //REMOVE?
-                                if not IsDefined(reps[n], E2[2][1]) then reps[n][E2[2][1]] := AssociativeArray(); end if;
-                                if not IsDefined(reps[n][E2[2][1]],E1[1][1]) then reps[n][E2[2][1]][E1[1][1]]:=[]; end if;
+                            if not IsDefined(reps[n], E2[2][1]) then reps[n][E2[2][1]] := AssociativeArray(); end if;
+                            if not IsDefined(reps[n][E2[2][1]],E1[1][1]) then reps[n][E2[2][1]][E1[1][1]]:=[]; end if;
                             for Ecomp in GSTCompose(E1, E2) do
                                 //if not exists{E:E in reps[n][E2[2][1]][E1[1][1]]|
                                 if not IsDefined(reps[n], Ecomp[2][1]) then reps[n][Ecomp[2][1]] := AssociativeArray(); end if;
                                 if not IsDefined(reps[n][Ecomp[2][1]], Ecomp[1][1]) then reps[n][Ecomp[2][1]][Ecomp[1][1]] := []; end if;
                                 if not exists{E:E in reps[n][Ecomp[2][1]][Ecomp[1][1]]|
-                                    // OLD INSTINSIC
-                                    // AreIsogeniesGSTEquivalent(Ecomp[5],Ecomp[3],Ecomp[4],E[5],E[3],E[4])
                                     AreIsogeniesGSTEquivalent(Ecomp,E)
                                     } then
                                     // Asserts for debugging
@@ -382,25 +395,16 @@ intrinsic IsogenyGraphBuilder_FromOrbit(R::AlgEtQOrd,D::RngIntElt,A::Assoc) -> .
     PR,pR:=PicardGroup(R);
 
     classes:=[ ];
-    edges_output:=AssociativeArray();
-    for d in Keys(A) do
-        edges_output[d] := [];
-    end for;
     for t in Classes(we) do
         T:=MultiplicatorRing(t);
         PT:=PicardGroup(T);
         for bbT in PT do
             Append(~classes,[* t,bbT *]);
         end for;
-        for d->edges_d in A do
-            if IsDefined(A[d], t) then
-                for s->edges_d_t_s in A[d][t] do
-                    for rep in edges_d_t_s do
-                        edges_output[d] cat:= GSTOrbit(rep);
-                    end for;
-                end for;
-            end if;
-        end for;
+    end for;
+    edges_output:=AssociativeArray();
+    for d->edges_d in A do
+        edges_output[d] := &cat[GSTOrbit(rep) : rep in edges_d];
     end for;
     return classes, edges_output;
 end intrinsic;
@@ -438,4 +442,25 @@ intrinsic IsogenyGraphChecker(R::AlgEtQOrd, D::RngIntElt : reps:=0, classes:=0, 
     mismatches := [<key, by_orb[key], by_edge[key]> : key in Keys(by_orb) join Keys(by_edge) | by_orb[key] ne by_edge[key]];
 
     return mismatches, reps, edges, by_orb, by_edge;
+end intrinsic;
+
+intrinsic ConstructOrbitGrphMultDir(R::AlgEtQOrd, reps::Assoc) -> GrphMultDir, SeqEnum, Assoc
+{Given the output reps produced by IsogenyOrbitBuilder, returns
+ - the corresponding directed multi graph, with vertices labeled using integers 1,...,#vert.
+ - the sequence of weak equivalence classes giving the vertices
+ - an associative array, indexed by degrees d
+}
+    we, we_map := WeakEquivalenceClassMonoidAbstract(R);
+    verts := [t : t in Classes(we)];
+    n:=#verts;
+    G:=MultiDigraph< n | >;
+    EE:=[ ];
+    edges := AssociativeArray();
+    for d->edges_d in reps do
+        edges[d] := [ <E[1][1], E[2][1], E[3], E[4], E[5]> : E in edges_d ];
+        EE_d := [ [Index(verts, E[1][1]), Index(verts, E[2][1])] : E in edges_d ];
+        EE cat:= EE_d;
+    end for;
+    AddEdges(~G,EE);
+    return G, verts, edges;
 end intrinsic;
