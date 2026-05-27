@@ -80,29 +80,10 @@ function is_polarizaton(mu,PHI)
     end if;
 end function;
 
-intrinsic DualIsogenies_FromIter(R::AlgEtQOrd, D::RngIntElt)->Assoc
-{Given the Frobenius order R of an isogeny class of ordinary squarefree abelian varieties over a finite field and an integer D>1, it returns an associative array isog, indexed by divisors d>1 of D where isog[d] is a sequence of isogenies from A to the dual of A, representing all equivalence classes of such isogenies.}
-    classes,edges:=IsogenyGraphBuilder(R,D);
-    ans := AssociativeArray();
-    for vertex in classes do
-        w,aa:=Explode(vertex);
-        IV:=DistinguishedRepsICM(w,aa);
-        wt,aat:=dual_vertex(w,aa);
-        IVv:=DistinguishedRepsICM(wt,aat);
-        for d->edges_d in edges do
-            if not IsDefined(ans, d) then
-                ans[d] := [];
-            end if;
-            ans[d] cat:= [E : E in edges_d | E[3] eq IV and E[4] eq IVv];
-        end for;
-    end for;
-    return ans;
-end intrinsic;
-
-intrinsic IsogeniesToDualOfDegreeDividing(R::AlgEtQOrd,D::RngIntElt : only_square_divisors:=false)->Assoc
-{Given the Frobenius order R of an isogeny class of ordinary squarefree abelian varieties over a finite field, and an integer D>1, it returns a 2-dimensional associative array isogs_to_dual where isogs_to_dual[d][IV_key] a sequence of representatives of equivalence classes of isogenies given by tuples of the form < [* w, aa *] , [* wt, aat *], IV , IVdual , x > where
+intrinsic DualIsogenies_FromIter(R::AlgEtQOrd, D::RngIntElt : only_square_divisors:=false)->Assoc
+{Given the Frobenius order R of an isogeny class of ordinary squarefree abelian varieties over a finite field and an integer D>1, it returns an associative array isog, indexed by divisors d>1 of D where isog[d] is a sequence of isogenies from A to the dual of A, representing all equivalence classes of such isogenies.
+tuples of the form < [* w, aa *] , [* wt, aat *], IV , IVdual , x > where
 - IV is the distinguished representative of the ideal class [* w , aa *];
-- IV_key = myHash(IV);
 - IVdual = ComplexConjugate(TraceDualIdeal(IV));
 - [* wt , aat *] is the ideal class of the dual vertex
 - x*IV < IVdual is an inclusion of degree d.
@@ -110,72 +91,67 @@ Note that IVdual might not be the distinguished representative of [* wt , aat *]
 The vararg only_square_divisors (default true) determines if d in the output must be a square.
 The intrinsic calls internally IsogenyGraphBuilder.}
     classes,edges:=IsogenyGraphBuilder(R,D);
-    pols:=AssociativeArray();
+    ans := AssociativeArray();
     for vertex in classes do
         w,aa:=Explode(vertex);
-        IV:=DistinguishedRepsICM(w,aa); // IV is the same as I in the description.
-        IV_key:=myHash(IV);
+        IV:=DistinguishedRepsICM(w,aa);
         wt,aat:=dual_vertex(w,aa);
         IVv:=DistinguishedRepsICM(wt,aat);
         IVtbar:=ComplexConjugate(TraceDualIdeal(IV));
-        test,i:=IsIsomorphic(IVtbar,IVv); // i*IVv=\bar(IV^t)
+        test,iota:=IsIsomorphic(IVtbar,IVv); // iota*IVv=\bar(IV^t)
         assert test;
-        isogs_to_dual:=AssociativeArray();
         for d->edges_d in edges do
             if IsSquare(d) or not only_square_divisors then
-                if not IsDefined(isogs_to_dual,d) then
-                    isogs_to_dual[d]:=AssociativeArray();
+                if not IsDefined(ans, d) then
+                    ans[d] := [];
                 end if;
-                assert not IsDefined(isogs_to_dual[d],IV_key);
-                isogs_to_dual[d][IV_key]:=[];
                 for E in edges_d do
                     // we check if the source is IV and target is IVv
                     if E[3] eq IV and E[4] eq IVv then 
-                        i_x0:=i*E[5];
+                        i_x0:=iota*E[5];
                         assert2 E[1] eq vertex and E[2] eq [* wt,aat *];
-                        new_tup:=< E[1] , E[2], IV, IVtbar , i_x0 >;
                         // Note: we include the tuple but changing the label:
                         // instead of x0*IV<IVv we put i*x0*IV<\bar{IV}^t. 
-                        Append(~isogs_to_dual[d][IV_key],new_tup);
+                        Append(~ans[d],< E[1] , E[2], IV, IVtbar , i_x0 >);
                     end if;
                 end for;
             end if;
         end for;
     end for;
-    return isogs_to_dual;
+    return ans;
 end intrinsic;
 
-intrinsic NonPrincipalPolarizationsOfDegreeDividing(R::AlgEtQOrd,PHI::AlgEtQCMType,D::RngIntElt)->Assoc
-{Given the Frobenius order R of an isogeny class of ordinary squarefree abelian varieties over a finite field, a p-adic positive CM-type PHI, and an integer D>1, it returns a 2-dimensisonal associative array pols, with pols[d][IV_key] consisting of representatives of isomorphism classes of polarizations of degree d, where d>1 is a divisor of D, given by tuples of the form < [* w, aa *] , [* wt, aat *], IV , IVdual , lambda > where
+intrinsic NonPrincipalPolarizationsOfDegreeDividing(R::AlgEtQOrd,PHI::AlgEtQCMType,D::RngIntElt : method:="FromIter")->Assoc
+{Given the Frobenius order R of an isogeny class of ordinary squarefree abelian varieties over a finite field, a p-adic positive CM-type PHI, and an integer D>1, it returns an associative array pols, with pols[d] consisting of representatives of isomorphism classes of polarizations of degree d, where d>1 is a divisor of D, given by tuples of the form < [* w, aa *] , [* wt, aat *], IV , IVdual , lambda > where
 - IV is the distinguished representative of the ideal class [* w , aa *];
-- IV_key = myHash(IV);
 - IVdual = ComplexConjugate(TraceDualIdeal(IV));
 - [* wt , aat *] is the ideal class of the dual vertex
 - lambda*IV < IVdual is a polarization of degree d.
-Note that IVdual might not be the distinguished representative of [* wt , aat *]. 
-}
-    isogs_to_dual:=IsogeniesToDualOfDegreeDividing(R,D : only_square_divisors:=true );
+Note that IVdual might not be the distinguished representative of [* wt , aat *].
+The parameter method which can have values "FromIter" or"FromOrbit" determines whether DualIsogenies_FromIter, DualIsogenies_FromOrbit is used.}
+    require method in {"FromIter","FromOrbit"} : "the parameter method should equal FromIter or FromOrbit";
+    if method eq "FromIter" then
+        isogs_to_dual:=DualIsogenies_FromIter(R,D : only_square_divisors:=true );
+    else //"FromOrbit"
+        isogs_to_dual:=DualIsogenies_FromOrbit(R,D : only_square_divisors:=true );
+    end if;
     pols:=AssociativeArray();
     for d->isogs_to_dual_d in isogs_to_dual do
         if not IsDefined(pols,d) then
-            pols[d]:=AssociativeArray();
+            pols[d]:=[];
         end if;
-        for IV_key->isogs_IV_d in isogs_to_dual_d do
-            pols_d_IV:=[];
-            for isog in isogs_IV_d do
-                V,Vv,IV,IVbart,x:=Explode(isog);
-                S:=MultiplicatorRing(IV);
-                cS:=UnitsModTotPos(S);
-                for v in cS do
-                    mu:=x*v;
-                    if is_polarizaton(mu,PHI) then
-                        cSp:=TotPosUnitsModUbarU(S);
-                        pols_d_IV cat:= [ <V,Vv,IV,IVbart,mu*vv> : vv in cSp];
-                        break v; // if v such that mu is tot img and PHI-positive exists, then it is unique
-                    end if;
-                end for;
+        for isog in isogs_to_dual_d do
+            V,Vv,IV,IVbart,x:=Explode(isog);
+            S:=MultiplicatorRing(IV);
+            cS:=UnitsModTotPos(S);
+            for v in cS do
+                mu:=x*v;
+                if is_polarizaton(mu,PHI) then
+                    cSp:=TotPosUnitsModUbarU(S);
+                    pols[d] cat:=[<V,Vv,IV,IVbart,mu*vv> : vv in cSp];
+                    break v; // if v such that mu is tot img and PHI-positive exists, then it is unique
+                end if;
             end for;
-            pols[d][IV_key]:=pols_d_IV; // this might be empty
         end for;
     end for;
     return pols;
@@ -198,7 +174,6 @@ end intrinsic;
         _:=TotPosUnitsModUbarU(S);
     end for;
 
- 
     SetDebugOnError(true);
     SetAssertions(2);
     SetColumns(0);
@@ -211,19 +186,18 @@ end intrinsic;
     PHI:=pAdicPosCMType(If);
     R:=ZFVOrder(If);
     Ds:=[2,4,9,25,4*9,9*25,4*9*25];
-    for D in Ds do
-        t0:=Cputime();
-        pols:=NonPrincipalPolarizationsOfDegreeDividing(R,PHI,D);
-        t1:=Cputime(t0);
-        counts:=[];
-        for d->pols_d in pols do
-            counts_d:=0;
-            for I->pols_d_I in pols[d] do
-                counts_d+:=#pols_d_I;
+    for method in ["FromIter"] do
+        method;
+        for D in Ds do
+            t0:=Cputime();
+            pols:=NonPrincipalPolarizationsOfDegreeDividing(R,PHI,D : method:=method);
+            t1:=Cputime(t0);
+            counts:=[];
+            for d->pols_d in pols do
+                Append(~counts,<d,#pols_d>);
             end for;
-            Append(~counts,<d,counts_d>);
+            printf "D=%o,\ttime=%o,\tnum. pols. of deg.=%o\n",D,t1,counts;
         end for;
-        printf "D=%o,\ttime=%o,\tnum. pols. of deg.=%o\n",D,t1,counts;
     end for;
 
 */
