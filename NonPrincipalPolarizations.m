@@ -88,8 +88,10 @@ tuples of the form < [* w, aa *] , [* wt, aat *], IV , IVdual , x > where
 - [* wt , aat *] is the ideal class of the dual vertex
 - x*IV < IVdual is an inclusion of degree d.
 Note that IVdual might not be the distinguished representative of [* wt , aat *].
-The vararg only_square_divisors (default true) determines if d in the output must be a square.
-The intrinsic calls internally IsogenyGraphBuilder.}
+The vararg only_square_divisors (default false) determines if d in the output must be a square.
+The intrinsic calls internally IsogenyGraphBuilder.
+
+Compare with DualIsogenies_FromOrbit, which carries out the same task using a different approach.}
     classes,edges:=IsogenyGraphBuilder(R,D);
     ans := AssociativeArray();
     for vertex in classes do
@@ -186,7 +188,7 @@ end intrinsic;
     PHI:=pAdicPosCMType(If);
     R:=ZFVOrder(If);
     Ds:=[2,4,9,25,4*9,9*25,4*9*25];
-    for method in ["FromIter"] do
+    for method in ["FromOrbit","FromIter"] do
         method;
         for D in Ds do
             t0:=Cputime();
