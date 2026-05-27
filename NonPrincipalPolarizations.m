@@ -99,7 +99,7 @@ intrinsic DualIsogenies_FromIter(R::AlgEtQOrd, D::RngIntElt)->Assoc
     return ans;
 end intrinsic;
 
-intrinsic IsogeniesToDualOfDegreeDividing(R::AlgEtQOrd,D::RngIntElt : only_square_divisors:=true)->Assoc
+intrinsic IsogeniesToDualOfDegreeDividing(R::AlgEtQOrd,D::RngIntElt : only_square_divisors:=false)->Assoc
 {Given the Frobenius order R of an isogeny class of ordinary squarefree abelian varieties over a finite field, and an integer D>1, it returns a 2-dimensional associative array isogs_to_dual where isogs_to_dual[d][IV_key] a sequence of representatives of equivalence classes of isogenies given by tuples of the form < [* w, aa *] , [* wt, aat *], IV , IVdual , x > where
 - IV is the distinguished representative of the ideal class [* w , aa *];
 - IV_key = myHash(IV);
