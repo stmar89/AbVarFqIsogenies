@@ -256,7 +256,7 @@ intrinsic IsogenyOrbitBuilder(R::AlgEtQOrd, D::RngIntElt : dual_only:=false) -> 
             if d2 lt n and n mod d2 eq 0 then
                 d1 := n div d2;
                 for E2 in E_min_d2 do
-                    E2_s := E2[1][1]; E2_t := E2[2][1]
+                    E2_s := E2[1][1]; E2_t := E2[2][1];
                     if not IsDefined(reps[d1], E2_s) then reps[d1][E2_s] := AssociativeArray(); end if;
                     // now, we loop over all already computed reps E1 of degree d1=n/d2 such
                     // that target(E1) = source(E2) = E2[1][1], since we want to construct the composition E1*E2
