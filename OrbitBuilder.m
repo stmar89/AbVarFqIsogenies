@@ -41,9 +41,6 @@ intrinsic GSTOrbit(phi::Tup)->SeqEnum
     x := phi[5];
     R := Order(I);
     PR,pR := PicardGroup(R);
-    //we,we_map:=WeakEquivalenceClassMonoidAbstract(R);
-    //Ws := we_map(s);
-    //Wt := we_map(t);
     S := MultiplicatorRing(s);
     T := MultiplicatorRing(t);
     eS := ExtensionHomPicardGroupsOverOrders(R,S);
@@ -54,12 +51,8 @@ intrinsic GSTOrbit(phi::Tup)->SeqEnum
         gS := (g@eS)+hS;
         gT := (g@eT)+hT;
         G := g@pR;
-        // FIXME: DistinguishedICMRep from Misc.m should help here
-        // DONE
         gI := DistinguishedRepsICM(s, gS);
         gJ := DistinguishedRepsICM(t, gT);
-        //gI := Ws*((gS@@eS)@pR);
-        //gJ := Wt*((gT@@eT)@pR);
 
         test,y := IsIsomorphic(G*I, gI);
         assert test;
