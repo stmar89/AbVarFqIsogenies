@@ -267,7 +267,7 @@ intrinsic IsogenyOrbitBuilder(R::AlgEtQOrd, D::RngIntElt : dual_only:=false) -> 
                             continue;
                         end if;
                         for E1 in E1s do
-                            E1_s := E1[1][1]; E1_t := E1[2][1]
+                            E1_s := E1[1][1]; E1_t := E1[2][1];
                             if not IsDefined(reps[n], E2_t) then reps[n][E2_t] := AssociativeArray(); end if;
                             if not IsDefined(reps[n][E2_t],E1_s) then reps[n][E2_t][E1_s]:=[]; end if;
                             for Ecomp in GSTCompose(E1, E2) do
