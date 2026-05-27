@@ -174,7 +174,7 @@ function compute_orbits_GSUT_on_Ms(T, Ms, R, Wt)
         UST := QuotientsUnitsOverorders(R, T, S);
         for g in DoubleKernelQuotient(R, S, T) do
             I := g @ pR;
-            test,y := IsIsomorphic(Wt, I * Wt); // TODO: Check that reversing this was right
+            test,y := IsIsomorphic(Wt, I * Wt);
             assert test;
             gM1 := y * I * M1;
             assert gM1 subset Wt;
