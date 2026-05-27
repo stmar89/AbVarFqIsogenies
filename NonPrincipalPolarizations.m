@@ -186,7 +186,7 @@ end intrinsic;
     PHI:=pAdicPosCMType(If);
     R:=ZFVOrder(If);
     Ds:=[2,4,9,25,4*9,9*25,4*9*25];
-    for method in ["FromIter"] do
+    for method in ["FromOrbit","FromIter"] do
         method;
         for D in Ds do
             t0:=Cputime();

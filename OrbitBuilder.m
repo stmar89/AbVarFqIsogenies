@@ -316,8 +316,10 @@ intrinsic IsogenyOrbitBuilder(R::AlgEtQOrd, D::RngIntElt : dual_only:=false) -> 
     return reps_output;
 end intrinsic;
 
-intrinsic DualIsogenies_FromOrbit(R::AlgEtQOrd,D::RngIntElt : only_square_divisors:=true)->Assoc
-{Given the Frobenius order R of an isogeny class of ordinary squarefree abelian varieties over a finite field and an integer D>1, it returns an associative array isog, indexed by divisors d>1 of D where isog[d] is a sequence of isogenies from A to the dual of A, representing all equivalence classes of such isogenies.}
+intrinsic DualIsogenies_FromOrbit(R::AlgEtQOrd,D::RngIntElt : only_square_divisors:=false)->Assoc
+{Given the Frobenius order R of an isogeny class of ordinary squarefree abelian varieties over a finite field and an integer D>1, it returns an associative array isog, indexed by divisors d>1 of D where isog[d] is a sequence of isogenies from A to the dual of A, representing all equivalence classes of such isogenies.
+//TODO
+}
     we,we_map:=WeakEquivalenceClassMonoidAbstract(R);
     icm,icm_map:=IdealClassMonoidAbstract(R);
     PR,pR:=PicardGroup(R);
@@ -350,30 +352,43 @@ intrinsic DualIsogenies_FromOrbit(R::AlgEtQOrd,D::RngIntElt : only_square_diviso
         end if;
     end for;
     ans := AssociativeArray();
+    dual_reps:=AssociativeArray();
     for d->rep_d in reps do
-        ans[d] := [];
-        for phi in rep_d do
-            s := phi[1][1];
-            t := phi[2][1];
-            if t ne duals[s] then
-                continue;
-            end if;
-            S := MultiplicatorRing(s);
-            Sbar := ComplexConjugate(S);
-            beta, proj, prod_proj, i1, i2, bar := Explode(homs[S]);
-            aa := phi[1][2];
-            ap1 := Js[s] - aa;
-            ap2 := ap1 @ bar;
-            try
-                b0 := ((ap1 @ i1) + (ap2 @ i2)) @@ prod_proj @@ beta;
-            catch err
-                continue;
-            end try;
-            for c in Kernel(beta) do
-                // TODO: Need to adjust by iota
-                Append(~ans[d], GSTAct((b0 + c) @@ proj, phi));
+        assert not IsDefined(ans,d);
+        if IsSquare(d) or not only_square_divisors then
+            ans[d] := [];
+            for phi in rep_d do
+                s := phi[1][1];
+                t := phi[2][1];
+                if t ne duals[s] then
+                    continue;
+                end if;
+                S := MultiplicatorRing(s);
+                Sbar := ComplexConjugate(S);
+                beta, proj, prod_proj, i1, i2, bar := Explode(homs[S]);
+                aa := phi[1][2];
+                ap1 := Js[s] - aa;
+                ap2 := ap1 @ bar;
+                try
+                    b0 := ((ap1 @ i1) + (ap2 @ i2)) @@ prod_proj @@ beta;
+                catch err
+                    continue;
+                end try;
+                for c in Kernel(beta) do
+                    E:=GSTAct((b0 + c) @@ proj, phi);
+                    _,_,I,Iv,_:=Explode(E);
+                    if not IsDefined(dual_reps,myHash(Iv)) then
+                        Itbar:=ComplexConjugate(TraceDualIdeal(I));
+                        test,iota:=IsIsomorphic(Itbar,Iv); // iota*Iv=\bar(I^t)
+                        assert test;
+                        dual_reps[myHash(Iv)]:=<Itbar,iota>;
+                    end if;
+                    Itbar,iota:=Explode(dual_reps[myHash(Iv)]);
+                    Ev:=<E[1],E[2],I,Itbar,iota*E[5]>;
+                    Append(~ans[d],Ev);
+                end for;
             end for;
-        end for;
+        end if;
     end for;
     return ans;
 end intrinsic;
