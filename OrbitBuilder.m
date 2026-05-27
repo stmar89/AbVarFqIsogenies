@@ -267,7 +267,7 @@ intrinsic IsogenyOrbitBuilder(R::AlgEtQOrd, D::RngIntElt : dual_only:=false) -> 
                             continue;
                         end if;
                         for E1 in E1s do
-                            E1_s := E1[1][1]; E1_t := E1[2][1];
+                            E1_t := E1[2][1];
                             if not IsDefined(reps[n], E2_t) then reps[n][E2_t] := AssociativeArray(); end if;
                             if not IsDefined(reps[n][E2_t],E1_s) then reps[n][E2_t][E1_s]:=[]; end if;
                             for Ecomp in GSTCompose(E1, E2) do
@@ -316,7 +316,7 @@ intrinsic IsogenyOrbitBuilder(R::AlgEtQOrd, D::RngIntElt : dual_only:=false) -> 
     return reps_output;
 end intrinsic;
 
-intrinsic DualIsogenies_FromOrbit(R::AlgEtQOrd,D::RngIntElt)->Assoc
+intrinsic DualIsogenies_FromOrbit(R::AlgEtQOrd,D::RngIntElt : only_square_divisors:=true)->Assoc
 {Given the Frobenius order R of an isogeny class of ordinary squarefree abelian varieties over a finite field and an integer D>1, it returns an associative array isog, indexed by divisors d>1 of D where isog[d] is a sequence of isogenies from A to the dual of A, representing all equivalence classes of such isogenies.}
     we,we_map:=WeakEquivalenceClassMonoidAbstract(R);
     icm,icm_map:=IdealClassMonoidAbstract(R);
