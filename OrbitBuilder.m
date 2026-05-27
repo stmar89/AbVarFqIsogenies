@@ -343,7 +343,7 @@ intrinsic DualIsogenies_FromOrbit(R::AlgEtQOrd,D::RngIntElt : only_square_diviso
             PicS := Codomain(eS);
             eSb := ExtensionHomPicardGroupsOverOrders(R,Sbar);
             PicSbar := Codomain(eSb);
-            bar := hom<PicS -> PicSbar | [<PicS.i, ComplexConjugate((PicS.i @@ eS) @ pR) @@ pR @ eS> : i in [1..Ngens(PicS)]]>;
+            bar := hom<PicS -> PicSbar | [<PicS.i, ComplexConjugate((PicS.i @@ eS) @ pR) @@ pR @ eSb> : i in [1..Ngens(PicS)]]>;
             X, i1, i2 := DirectSum(PicS, PicSbar);
             prod_proj := hom<GSS -> X | [<GSS.i, ((GSS.i @@ proj) @ eS) @ i1 + ((GSS.i @@ proj) @ eSb) @ i2> : i in [1..Ngens(GSS)]]>;
             homs[S] := <beta, proj, prod_proj, i1, i2, bar>;
