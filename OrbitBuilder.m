@@ -7,9 +7,6 @@ intrinsic GSTAct(g::GrpAbElt, phi::Tup)->Tup
     x := phi[5];
     R := Order(I);
     PR,pR:=PicardGroup(R);
-    //we,we_map:=WeakEquivalenceClassMonoidAbstract(R);
-    //Ws:=we_map(s);
-    //Wt:=we_map(t);
     S := MultiplicatorRing(s);
     T := MultiplicatorRing(t);
     eS := ExtensionHomPicardGroupsOverOrders(R,S);
@@ -21,8 +18,6 @@ intrinsic GSTAct(g::GrpAbElt, phi::Tup)->Tup
     G := g@pR;
     gI := DistinguishedRepsICM(s, gS);
     gJ := DistinguishedRepsICM(t, gT);
-    //gI := Ws*((gS@@eS)@pR);
-    //gJ := Wt*((gT@@eT)@pR);
 
     test,y := IsIsomorphic(G*I, gI);
     assert test;
@@ -41,25 +36,18 @@ intrinsic GSTOrbit(phi::Tup)->SeqEnum
     x := phi[5];
     R := Order(I);
     PR,pR := PicardGroup(R);
-    //we,we_map:=WeakEquivalenceClassMonoidAbstract(R);
-    //Ws := we_map(s);
-    //Wt := we_map(t);
     S := MultiplicatorRing(s);
     T := MultiplicatorRing(t);
     eS := ExtensionHomPicardGroupsOverOrders(R,S);
     eT := ExtensionHomPicardGroupsOverOrders(R,T);
 
     orb := [];
-    for g in DoubleKernelQuotient(R, S, T) do
+    for g in GSTTransversal(R, S, T) do
         gS := (g@eS)+hS;
         gT := (g@eT)+hT;
         G := g@pR;
-        // FIXME: DistinguishedICMRep from Misc.m should help here
-        // DONE
         gI := DistinguishedRepsICM(s, gS);
         gJ := DistinguishedRepsICM(t, gT);
-        //gI := Ws*((gS@@eS)@pR);
-        //gJ := Wt*((gT@@eT)@pR);
 
         test,y := IsIsomorphic(G*I, gI);
         assert test;
@@ -186,7 +174,7 @@ function compute_orbits_GSUT_on_Ms(T, Ms, R, Wt)
         UST := QuotientsUnitsOverorders(R, T, S);
         for g in DoubleKernelQuotient(R, S, T) do
             I := g @ pR;
-            test,y := IsIsomorphic(Wt, I * Wt); // TODO: Check that reversing this was right
+            test,y := IsIsomorphic(Wt, I * Wt);
             assert test;
             gM1 := y * I * M1;
             assert gM1 subset Wt;
@@ -197,7 +185,7 @@ function compute_orbits_GSUT_on_Ms(T, Ms, R, Wt)
     return orbits;
 end function;
 
-intrinsic MinimalIsogenyOrbitBuilder(R::AlgEtQOrd,D::RngIntElt) -> .
+intrinsic MinimalIsogenyOrbitBuilder(R::AlgEtQOrd,D::RngIntElt) -> Assoc
 {Given the Frobenius order R of a squarefree ordinary isogeny class and a positive integer D, returns an associative array reps so that reps[d][t][s] is a sequence of minimal isogenies of degree d from the weak equivalence class s to the weak equivalence class t so that the set of such isogenies is obtained by taking orbits for the action of G_(S,T) on each representative.}
     we,we_map:=WeakEquivalenceClassMonoidAbstract(R);
     icm,icm_map:=IdealClassMonoidAbstract(R);
@@ -230,7 +218,7 @@ intrinsic MinimalIsogenyOrbitBuilder(R::AlgEtQOrd,D::RngIntElt) -> .
     return reps_min;
 end intrinsic;
 
-intrinsic IsogenyOrbitBuilder(R::AlgEtQOrd, D::RngIntElt : dual_only:=false) -> .
+intrinsic IsogenyOrbitBuilder(R::AlgEtQOrd, D::RngIntElt : dual_only:=false) -> Assoc
 {Given the Frobenius order R of a squarefree ordinary isogeny class and a positive integer D, returns an associative array whose value at each integer d dividing D is a sequence of isogenies of degree d so that the set of all isogenies of degree d is obtained by taking orbits for the action of G_(s,t) on each representative.  If the optional parameter dual_only is set, only isogenies mapping from a weak equivalence class to its dual will be included in the output.}
     reps_min := MinimalIsogenyOrbitBuilder(R, D);
     reps := AssociativeArray();
@@ -390,7 +378,7 @@ intrinsic DualIsogenies_FromOrbit(R::AlgEtQOrd,D::RngIntElt)->Assoc
     return ans;
 end intrinsic;
 
-intrinsic IsogenyGraphBuilder_FromOrbit(R::AlgEtQOrd,D::RngIntElt,A::Assoc) -> .
+intrinsic IsogenyGraphBuilder_FromOrbit(R::AlgEtQOrd,D::RngIntElt,A::Assoc) -> SeqEnum,Assoc
 {Converts the output of IsogenyOrbitBuilder into the same format as the output of IsogenyGraphBuilder for comparison}
     we,we_map:=WeakEquivalenceClassMonoidAbstract(R);
     icm,icm_map:=IdealClassMonoidAbstract(R);
@@ -466,3 +454,4 @@ intrinsic ConstructOrbitGrphMultDir(R::AlgEtQOrd, reps::Assoc) -> GrphMultDir, S
     AddEdges(~G,EE);
     return G, verts, edges;
 end intrinsic;
+
