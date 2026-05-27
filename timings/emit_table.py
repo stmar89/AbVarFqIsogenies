@@ -225,7 +225,8 @@ def emit_combined_table(selected, timings):
     pol_tab = _tabular_for_overhead(selected, timings)
     caption = (
         r'Wall-clock seconds per cell, single-threaded on an Intel '
-        r'i9-13900KS, Magma~\magmaVersion. \(<0.1\) is below the '
+        r'i9-13900KS (Ubuntu 24.04 LTS, 192~GB RAM), Magma~\magmaVersion. '
+        r'\(<0.1\) is below the '
         r'noise floor. Rows ordered by \(|\Pic(R)|\); '
         + BC_MARK + r' marks the base change to \(\F_9\) of '
         + F3_ANCHOR_TEX + r'.'
