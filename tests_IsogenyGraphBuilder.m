@@ -11,7 +11,9 @@
     q:=Round(ConstantCoefficient(f)^(2/Degree(f)));
     Ns:=[2,4,8,16,32,2*3,2*3*5,4*9];
 
-    //SetAssertions(2);
+    // Run the expensive AreIsogeniesEquivalent duplicate-edge asserts (assert2)
+    // inside the builders during this cross-check (G8): they are gated at level 2.
+    SetAssertions(2);
 
     // Comparing timings 3 algorithms
     for N in Ns do
@@ -175,5 +177,6 @@
         else
             printf "\nISSUE found for %o\t%o\n",h,tests;
         end if;
+        assert &and(tests);
     end for;
 
