@@ -340,7 +340,13 @@ Compare with DualIsogenies_FromIter, which carries out the same task using a dif
     homs := AssociativeArray();
     for s in Classes(we) do
         Ws := we_map(s);
-        t := ComplexConjugate(we_map(s))@@we_map;
+        // The dual of the WE class s is the class of TraceDualIdeal(ComplexConjugate(Ws)),
+        // matching dual_vertex/DualWKClasses (NonPrincipalPolarizations.m) and dual_we
+        // (IsogenyOrbitBuilder). Using ComplexConjugate(Ws) alone (without the trace dual)
+        // gives the wrong dual class for WE classes whose conjugate and trace-dual-of-
+        // conjugate differ, which made the t ne duals[s] filter below drop every isogeny
+        // out of those source classes (A3 undercount).
+        t := TraceDualIdeal(ComplexConjugate(we_map(s)))@@we_map;
         duals[s] := t;
         Wt := we_map(t);
         Wtdual := TraceDualIdeal(ComplexConjugate(Wt));
