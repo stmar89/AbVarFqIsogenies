@@ -57,7 +57,7 @@
     // ---------------------------------------------------------------
     // F3 graph: all SCCs, one section per component
     // ---------------------------------------------------------------
-    G, verts, edges, Pi := ComputeIsogenyGraph(h, D);
+    G, _, _, Pi := ComputeIsogenyGraph(h, D);
     comps_F3 := SortByMinVertex(
         [Component(Random(c)) : c in StronglyConnectedComponents(G)], G);
     Pi_C_F3 := [RestrictPartition(G, C, Pi) : C in comps_F3];
@@ -71,15 +71,25 @@
     // F9 graph: all components of every size
     // ---------------------------------------------------------------
     h2 := WeilBaseChange(h, 2);
-    G2, verts2, edges2, Pi2 := ComputeIsogenyGraph(h2, D);
+    G2, _, _, Pi2 := ComputeIsogenyGraph(h2, D);
     comps2 := [Component(Random(c)) : c in StronglyConnectedComponents(G2)];
-    max_local_F9 := Max([#RestrictPartition(G2, C, Pi2) : C in comps2]);
+    // Cache the restricted partition once per component (used for both the
+    // canvas-extent maximum below and the per-section output).
+    Pi_C_F9 := [RestrictPartition(G2, C, Pi2) : C in comps2];
+    max_local_F9 := Max([#p : p in Pi_C_F9]);
 
-    for sz in [17, 32, 49, 94] do
-        group := SortByMinVertex([C : C in comps2 | #Vertices(C) eq sz], G2);
-        for i in [1..#group] do
-            Pi_C := RestrictPartition(G2, group[i], Pi2);
+    // Compute the distinct component sizes dynamically rather than hardcoding.
+    V2 := Vertices(G2);
+    sizes := Sort(SetToSequence({#Vertices(C) : C in comps2}));
+    for sz in sizes do
+        // Indices of the components of this size, sorted by min vertex index
+        // for a stable ordering (matching SortByMinVertex on the components).
+        idxs := Sort([i : i in [1..#comps2] | #Vertices(comps2[i]) eq sz],
+            func<a, b | Min([Index(V2, v) : v in Vertices(comps2[a])])
+                      - Min([Index(V2, v) : v in Vertices(comps2[b])])>);
+        for i in [1..#idxs] do
+            ci := idxs[i];
             label := IntegerToString(sz) cat "_" cat IntegerToString(i);
-            PrintSection("F9_" cat label, G2, group[i], Pi_C, Pi2, max_local_F9);
+            PrintSection("F9_" cat label, G2, comps2[ci], Pi_C_F9[ci], Pi2, max_local_F9);
         end for;
     end for;
