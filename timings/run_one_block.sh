@@ -60,7 +60,7 @@ run_one() {
         esac
         tsv_line=$(printf "%s\t%s\t%s\t%s\t-\t%s" "$label" "$dd" "$alg" "$budget" "$status")
         mkdir -p failures
-        cp "$tmp" "failures/${label//\//_}_D${dd}_${alg}.log" 2>/dev/null || true
+        cp "$tmp" "failures/${label//\//_}_D${dd}_${alg}.log"
     fi
     echo "$tsv_line" >> "$out_tsv"
     rm -f "$tmp"
@@ -74,13 +74,34 @@ orbit_row=$(awk -F'\t' -v lbl="$label" -v dd="$dd" \
 orbit_status=$(echo "$orbit_row" | awk -F'\t' '{print $6}')
 orbit_time=$(echo "$orbit_row"   | awk -F'\t' '{print $4}')
 
+# Size the graph/pol budget from the orbit walltime when the orbit cell
+# succeeded; otherwise fall back to FALLBACK_BUDGET. Spell out every non-ok
+# case (error / timeout / oom / empty) with a log line stating the assumption,
+# rather than letting a wildcard silently swallow them.
 case "$orbit_status" in
     ok)
         computed=$(awk -v t="$orbit_time" 'BEGIN { print int(10*t + 60) }')
         budget=$(( computed > FALLBACK_BUDGET ? computed : FALLBACK_BUDGET ))
         ;;
+    error)
+        budget="$FALLBACK_BUDGET"
+        echo "  ! $label D=$dd: orbit cell errored; using FALLBACK_BUDGET=${budget}s for graph/pol" >&2
+        ;;
+    timeout)
+        budget="$FALLBACK_BUDGET"
+        echo "  ! $label D=$dd: orbit cell timed out; using FALLBACK_BUDGET=${budget}s for graph/pol" >&2
+        ;;
+    oom)
+        budget="$FALLBACK_BUDGET"
+        echo "  ! $label D=$dd: orbit cell OOM-killed; using FALLBACK_BUDGET=${budget}s for graph/pol" >&2
+        ;;
+    "")
+        budget="$FALLBACK_BUDGET"
+        echo "  ! $label D=$dd: orbit status missing (no parseable orbit row); using FALLBACK_BUDGET=${budget}s for graph/pol" >&2
+        ;;
     *)
         budget="$FALLBACK_BUDGET"
+        echo "  ! $label D=$dd: unexpected orbit status '$orbit_status'; using FALLBACK_BUDGET=${budget}s for graph/pol" >&2
         ;;
 esac
 budget=$(( budget > HARD_LIMIT ? HARD_LIMIT : budget ))
