@@ -46,7 +46,7 @@ intrinsic BarInversePic(S::AlgEtQOrd)->Map
 end intrinsic;
 
 intrinsic DualWKClasses(w::AlgEtQWECMElt)->AlgEtQWECMElt,.
-{Returns the AlEtQWEElt wtbar corresponding to Wtbar:=TraceDualIdeal(ComplexConjugate(Ideal(w))) and the invertible ideal class of the colon ideal (Wtbar,Ideal(wtbar)) as an element of Pic. Data is stored in an attribute populated on demand.}
+{Returns the AlgEtQWECMElt wtbar corresponding to Wtbar:=TraceDualIdeal(ComplexConjugate(Ideal(w))) and the invertible ideal class of the colon ideal (Wtbar,Ideal(wtbar)) as an element of Pic. Data is stored in an attribute populated on demand.}
     if not assigned w`DualWKClasses then
         W_map:=RepresentativeMap(Parent(w));
         Wtbar:=TraceDualIdeal(ComplexConjugate(Ideal(w)));
@@ -81,8 +81,7 @@ function is_polarizaton(mu,PHI)
 end function;
 
 intrinsic DualIsogenies_FromIter(R::AlgEtQOrd, D::RngIntElt : only_square_divisors:=false)->Assoc
-{Given the Frobenius order R of an isogeny class of ordinary squarefree abelian varieties over a finite field and an integer D>1, it returns an associative array isog, indexed by divisors d>1 of D where isog[d] is a sequence of isogenies from A to the dual of A, representing all equivalence classes of such isogenies.
-tuples of the form < [* w, aa *] , [* wt, aat *], IV , IVdual , x > where
+{Given the Frobenius order R of an isogeny class of ordinary squarefree abelian varieties over a finite field and an integer D>1, it returns an associative array isog, indexed by divisors d>1 of D where isog[d] is a sequence of isogenies from A to the dual of A, representing all equivalence classes of such isogenies. Each isogeny is a tuple of the form < [* w, aa *] , [* wt, aat *], IV , IVdual , x > where
 - IV is the distinguished representative of the ideal class [* w , aa *];
 - IVdual = ComplexConjugate(TraceDualIdeal(IV));
 - [* wt , aat *] is the ideal class of the dual vertex
@@ -103,7 +102,10 @@ Compare with DualIsogenies_FromOrbit, which carries out the same task using a di
         test,iota:=IsIsomorphic(IVtbar,IVv); // iota*IVv=\bar(IV^t)
         assert test;
         for d->edges_d in edges do
-            if IsSquare(d) or not only_square_divisors then
+            // d=1 is never a dual/polarization degree; guard explicitly so a
+            // future change to IsogenyGraphBuilder that emits d=1 (IsSquare(1)
+            // is true) does not silently leak degree-1 entries into the output.
+            if (d gt 1) and (IsSquare(d) or not only_square_divisors) then
                 if not IsDefined(ans, d) then
                     ans[d] := [];
                 end if;
@@ -130,7 +132,7 @@ intrinsic NonPrincipalPolarizationsOfDegreeDividing(R::AlgEtQOrd,PHI::AlgEtQCMTy
 - [* wt , aat *] is the ideal class of the dual vertex
 - lambda*IV < IVdual is a polarization of degree d.
 Note that IVdual might not be the distinguished representative of [* wt , aat *].
-The parameter method which can have values "FromIter" or"FromOrbit" determines whether DualIsogenies_FromIter, DualIsogenies_FromOrbit is used.}
+The parameter method which can have values "FromIter" or "FromOrbit" determines whether DualIsogenies_FromIter, DualIsogenies_FromOrbit is used.}
     require method in {"FromIter","FromOrbit"} : "the parameter method should equal FromIter or FromOrbit";
     if method eq "FromIter" then
         isogs_to_dual:=DualIsogenies_FromIter(R,D : only_square_divisors:=true );
