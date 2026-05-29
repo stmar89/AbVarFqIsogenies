@@ -57,6 +57,16 @@ try
     end case;
 catch e
     status := "error";
+    // Surface the caught exception so `status=error` rows carry a diagnostic.
+    // The TSV row is the only thing the orchestrators parse from stdout (they
+    // grep for a well-formed 6-field line ending in ok/error), so write the
+    // exception to a sibling diagnostics file instead of stdout. Magma has no
+    // stderr handle. One file per (label, D, alg); Overwrite:=true so a re-run
+    // of this exact cell starts fresh rather than appending stale traces.
+    diag_path := Sprintf("time_one_error_%o_D%o_%o.log",
+                         label_str, D_int, alg_name);
+    Write(diag_path, Sprintf("ERROR %o D=%o alg=%o\n%o",
+          label_str, D_int, alg_name, e`Object) : Overwrite := true);
 end try;
 elapsed := Realtime(t0);
 mem_mb := GetMaximumMemoryUsage() / (1024.0 * 1024.0);
