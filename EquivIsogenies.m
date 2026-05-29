@@ -35,7 +35,7 @@ intrinsic AreIsogeniesEquivalent(x1::AlgEtQElt, I1::AlgEtQIdl, J1::AlgEtQIdl, x2
         return elt in S and inv in S;
     end if;
     OK:=MaximalOrder(K);
-    if inv notin OK then
+    if elt notin OK or inv notin OK then
         return false;
     end if;
     _,uOK:=UnitGroup(OK);

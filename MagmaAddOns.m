@@ -13,7 +13,11 @@ endomorphism ring (MultiplicatorRing). Cells are sorted lexicographically.}
     oo    := OverOrders(R);
     cells := AssociativeArray();
     for i in [1..#vert] do
-        OI := MultiplicatorRing(vert[i][1]);
+        v  := vert[i];
+        // When weak_equivalence:=true, vert[i] is a bare AlgEtQWECMElt;
+        // otherwise it is a [* W, L *] pair and the WE class is the first entry.
+        OI := Type(v) eq List select MultiplicatorRing(v[1])
+                                else MultiplicatorRing(v);
         j  := Index(oo, OI);
         if IsDefined(cells, j) then
             Append(~cells[j], i);
@@ -56,7 +60,7 @@ and feed the printed output into plot_isogeny_graph.sage (see README).}
     if use_orbits then
         reps := IsogenyOrbitBuilder(R, D);
         if weak_equivalence then
-            G, verts, edges := ConstructOrbitGrphMultDir(reps);
+            G, verts, edges := ConstructOrbitGrphMultDir(R, reps);
         else
             verts, edges := IsogenyGraphBuilder_FromOrbit(R, D, reps);
         end if;
