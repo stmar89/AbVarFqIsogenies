@@ -120,9 +120,21 @@ def read_timings(path):
             continue
         parts = line.split('\t')
         if len(parts) != 6:
+            print(f'WARN: skipping malformed row (expected 6 tab-separated '
+                  f'fields, got {len(parts)}): {line!r}', file=sys.stderr)
             continue
         label, D, alg, walltime, mem, status = parts
-        data[(label, int(D), alg)] = (walltime, mem, status)
+        try:
+            key = (label, int(D), alg)
+        except ValueError:
+            print(f'WARN: skipping row with non-integer D: {line!r}',
+                  file=sys.stderr)
+            continue
+        if key in data:
+            print(f'WARN: duplicate row for {key}; keeping first',
+                  file=sys.stderr)
+            continue
+        data[key] = (walltime, mem, status)
     return header, data
 
 
