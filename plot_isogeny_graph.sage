@@ -29,8 +29,9 @@ Layout algorithm (concentric rings + DFS minor cluster ordering):
       components of the subgraph induced by all vertices up to that level,
       further split so that any two vertices in a cluster have undirected
       distance <= 2.
-    - A minor cluster tree is built, and a lex_DFS traversal determines the
-      angular ordering of clusters around each ring.
+    - A minor cluster graph is built, and an iterative DFS over the minor
+      cluster graph (which may be disconnected for components above the crater)
+      determines the angular ordering of clusters around each ring.
     - Vertices are placed at radius level * r0, uniformly spaced by DFS order.
 """
 
@@ -73,8 +74,12 @@ def make_color_rgb(global_level_index, global_num_levels):
 
     Using global_level_index / global_num_levels ensures that the same order type
     gets the same color across separate plots of different components of the same graph.
+
+    The divisor is global_num_levels (not global_num_levels - 1) to match the
+    historical figure convention: the outermost ring lands at ~75% yellow rather
+    than pure yellow.
     """
-    t = global_level_index / max(global_num_levels - 1, 1)
+    t = global_level_index / max(global_num_levels, 1)
     g = int(t * 255)
     return (1.0, g / 255.0, 0.0)
 
@@ -285,9 +290,17 @@ def draw_graph(G_sage, pos, vertex_level, Pi_sorted, output_file, r0=1.5,
     from collections import Counter
     edge_count = Counter(edge_list)
 
+    # Each distinct (u, v) is drawn at most once. Parallel directed edges of the
+    # same orientation (multiplicity > 1) collapse into a single arrow; warn once
+    # so a multigraph with parallel edges is not silently misrepresented.
+    if any(cnt > 1 for cnt in edge_count.values()):
+        sys.stderr.write(
+            "WARNING: parallel directed edges detected (multiplicity > 1); "
+            "they are rendered as a single arrow.\n")
+
     drawn_pairs = set()
 
-    for (u, v), cnt in edge_count.items():
+    for (u, v) in edge_count:
         bidir = (v, u) in edge_set
         pair_key = (min(u, v), max(u, v))
         if bidir and pair_key in drawn_pairs:
@@ -371,4 +384,5 @@ def main():
     print("Saved: %s" % output_file)
 
 
-main()
+if __name__ == '__main__':
+    main()
