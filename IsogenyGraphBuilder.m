@@ -112,9 +112,14 @@ intrinsic IsogenyGraphBuilder(R::AlgEtQOrd,D::RngIntElt) -> SeqEnum,Assoc
         edges_min_d:=[];
         for t->edges_d_t in edges[d] do
             for s->edges_d_t_s in edges[d][t] do
+                // Cheap level-1 guard: no two edges in a (d,t,s) bucket may be
+                // literal duplicates (same inclusion x*Is < It). This catches
+                // the kind of duplicate-edge regression composition bugs produce
+                // without the O(n^2) AreIsogeniesEquivalent cost.
+                assert #{myHash(E[5]*E[3]) : E in edges_d_t_s} eq #edges_d_t_s;
                 // the following assert is very time consuming
                 assert2 forall{i:i in [1..#edges_d_t_s]|not exists{j:j in [1..i-1]|
-                               AreIsogeniesEquivalent(Ei[5],Ei[3],Ei[4],Ej[5],Ej[3],Ej[4]) 
+                               AreIsogeniesEquivalent(Ei[5],Ei[3],Ei[4],Ej[5],Ej[3],Ej[4])
                                where Ei:=edges_d_t_s[i] where Ej:=edges_d_t_s[j]}};
                 edges_min_d cat:=edges_d_t_s;
             end for;
@@ -176,9 +181,12 @@ intrinsic IsogenyGraphBuilder(R::AlgEtQOrd,D::RngIntElt) -> SeqEnum,Assoc
         edges_output_d:=[];
         for t->edges_d_t in edges[d] do
             for s->edges_d_t_s in edges[d][t] do
+                // Cheap level-1 guard against literal duplicate edges (see the
+                // matching check in the edges_min collapse loop above).
+                assert #{myHash(E[5]*E[3]) : E in edges_d_t_s} eq #edges_d_t_s;
                 // the following assert is very time consuming
                 assert2 forall{i:i in [1..#edges_d_t_s]|not exists{j:j in [1..i-1]|
-                               AreIsogeniesEquivalent(Ei[5],Ei[3],Ei[4],Ej[5],Ej[3],Ej[4]) 
+                               AreIsogeniesEquivalent(Ei[5],Ei[3],Ei[4],Ej[5],Ej[3],Ej[4])
                                where Ei:=edges_d_t_s[i] where Ej:=edges_d_t_s[j]}};
                 edges_output_d cat:=edges_d_t_s;
             end for;
