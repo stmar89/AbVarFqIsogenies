@@ -81,6 +81,34 @@ else
     cp "$jobs_file" "$sorted_jobs"
 fi
 
+# --- Guard against destroying an existing sweep -----------------------------
+# Unlike run_all.sh (which is resumable and skips rows already present), this
+# script REBUILDS timings.tsv from scratch: it wipes block_outputs/ and
+# overwrites $TSV. Re-running it to "top up" an interrupted multi-hour sweep
+# would silently destroy all prior data. So refuse to start if $TSV already
+# holds data rows, unless the caller explicitly opts into overwriting via
+# --clean or OVERWRITE=1.
+: "${OVERWRITE:=0}"
+for arg in "$@"; do
+    case "$arg" in
+        --clean) OVERWRITE=1 ;;
+    esac
+done
+
+existing_rows=0
+if [ -f "$TSV" ]; then
+    # Count non-comment, non-column-header data rows.
+    existing_rows=$(grep -cv '^#\|^label' "$TSV" || true)
+fi
+if [ "$existing_rows" -gt 0 ] && [ "$OVERWRITE" != "1" ]; then
+    echo "Refusing to start: $TSV already has $existing_rows data row(s)." >&2
+    echo "This script REBUILDS $TSV and block_outputs/ from scratch and is NOT" >&2
+    echo "resumable; re-running would destroy the existing sweep. To overwrite" >&2
+    echo "anyway, re-run with --clean or OVERWRITE=1. To top up an interrupted" >&2
+    echo "sweep instead, use run_all.sh (which skips rows already recorded)." >&2
+    exit 1
+fi
+
 # --- Set up output directory ------------------------------------------------
 block_dir="block_outputs"
 rm -rf "$block_dir"
@@ -89,7 +117,8 @@ mkdir -p "$block_dir"
 # --- Write final TSV header up-front ----------------------------------------
 write_header() {
     local magma_ver hostname cpu
-    magma_ver=$(magma -b -e 'a, b, c := GetVersion(); printf "%o.%o-%o\n", a, b, c; quit;' 2>/dev/null | tail -1)
+    magma_ver=$(magma -b -e 'a, b, c := GetVersion(); printf "%o.%o-%o\n", a, b, c; quit;' | tail -1)
+    [ -n "$magma_ver" ] || { echo "magma version probe failed (empty output)" >&2; exit 1; }
     hostname=$(hostname)
     cpu=$(lscpu | awk -F: '/Model name/ {sub(/^ +/, "", $2); print $2; exit}')
     {
@@ -119,13 +148,22 @@ export CORE_ARRAY_STR="$PINNED_CORES"
 export BLOCK_DIR="$block_dir"
 
 # Use bare {1}..{4}; parallel handles shell-escaping (quoting fields with spaces).
-parallel -j "$WORKERS" --colsep '\t' --joblog "$block_dir/joblog" \
+# `set -e` + parallel would abort here if ANY worker fails, skipping the
+# concat step below and leaving $TSV empty (header only). Tolerate worker
+# failures so the concat always runs; the per-block presence check at the end
+# is what decides overall success (and exits non-zero on any missing block).
+if ! parallel -j "$WORKERS" --colsep '\t' --joblog "$block_dir/joblog" \
     'IFS=";" read -r -a __c <<< "$CORE_ARRAY_STR"; \
      PINNED_CORE="${__c[$(( {%} - 1 ))]}" \
        bash run_one_block.sh {1} {2} {3} "$BLOCK_DIR/{4}"' \
-    :::: "$sorted_jobs"
+    :::: "$sorted_jobs"; then
+    echo "some jobs failed; see $block_dir/joblog" >&2
+fi
 
 # --- Concatenate block outputs (deterministic order: SEL order x D_VALUES) --
+# Always runs, even if some workers above failed, so partial results are not
+# lost. Track missing blocks so we can exit non-zero at the end.
+missing_blocks=0
 {
     while IFS=$'\t' read -r label coef g q pic icm; do
         [ -n "$label" ] || continue
@@ -136,12 +174,19 @@ parallel -j "$WORKERS" --colsep '\t' --joblog "$block_dir/joblog" \
                 cat "$block_file"
             else
                 echo "  ! missing block: $block_file" >&2
+                missing_blocks=$((missing_blocks + 1))
             fi
         done
     done < "$SEL"
 } >> "$TSV"
 
-echo "All blocks processed. Rows in $TSV: $(grep -cv '^#\|^label' "$TSV")"
+echo "All blocks processed. Rows in $TSV: $(grep -cv '^#\|^label' "$TSV" || true)"
 
 # --- Cleanup ----------------------------------------------------------------
 rm -rf "$jobs_dir"
+
+if [ "$missing_blocks" -gt 0 ]; then
+    echo "$missing_blocks expected block file(s) missing; sweep incomplete." >&2
+    echo "Inspect $block_dir/joblog and re-run the failed jobs." >&2
+    exit 1
+fi
