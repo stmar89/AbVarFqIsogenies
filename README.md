@@ -139,7 +139,16 @@ To plot a **single component**:
    sage plot_isogeny_graph.sage component.txt figure.png
    ```
 
-   The script implements the full concentric-ring layout (one ring per endomorphism ring level, angular order by DFS of the minor cluster tree).
+   The script implements the full concentric-ring layout (one ring per endomorphism ring level, angular order by DFS of the minor cluster graph).
+
+   **Color matching:** a single-component render will *not* color-match the
+   full-pipeline renders unless you supply the global level data. By default
+   `PrintIsogenyGraphForSage(G, C, Pi_C)` emits only the local partition, so the
+   color gradient is computed relative to this component alone. To make the
+   colors agree with the rest of the graph, pass the global partition via
+   `PrintIsogenyGraphForSage`'s optional `Pi_global` argument; this emits the
+   `global_num_levels`/`global_level_indices` lines that the Sage script uses to
+   place each endomorphism ring at the same color across components.
 
 ---
 
@@ -168,7 +177,7 @@ For the systematic timing table from Section 8 of the paper — comparing `Isoge
 
 | Intrinsic | Description |
 |-----------|-------------|
-| `ComputeIsogenyGraph(h, D)` | Main entry point: Weil polynomial + degree → graph, vertices, partition |
+| `ComputeIsogenyGraph(h, D)` | Main entry point: Weil polynomial + degree → graph, vertices, edges, partition |
 | `IsogenyGraphBuilder(R, D)` | Lower-level: Frobenius order + degree → vertex and edge sequences |
 | `MinimalIsogenyGraphBuilder(R, D)` | First stage of the paper algorithm: minimal-degree edges only (`IsogenyGraphBuilder` composes these) |
 | `ConstructStandardGrphMultDir(vert, edges)` | Build the Magma multigraph from vertex/edge sequences |
@@ -176,7 +185,7 @@ For the systematic timing table from Section 8 of the paper — comparing `Isoge
 | `RestrictPartition(G, G0, Pi)` | Restrict a partition to a connected component |
 | `PrintIsogenyGraphForSage(G, G0, Pi0)` | Print edge list and partition for SageMath plotting |
 | `IsogenyOrbitBuilder(R, D)` | Compute isogeny graph using Picard group orbits (more compact output) |
-| `DualIsogenies_FromOrbit(R, D)` | Compute isogenies to the dual abelian variety |
+| `NonPrincipalPolarizationsOfDegreeDividing(R, PHI, D)` | Polarization entry point: representatives of (non-principal) polarizations of degree dividing `D`. The `method` keyword selects the dual-isogeny backend (`"FromIter"`, the default, or `"FromOrbit"`) |
 | `WeilBaseChange(h, r)` | Base-change a Weil polynomial from $\mathbb{F}_q$ to $\mathbb{F}_{q^r}$ |
 | `Getgqp(h)` | Extract genus $g$, field size $q$, and characteristic $p$ from a Weil polynomial |
 
