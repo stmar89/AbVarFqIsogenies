@@ -25,7 +25,8 @@ ALGS_AFTER_ORBIT=(IsogenyGraphBuilder Polarization)
 
 write_header() {
     local magma_ver hostname cpu
-    magma_ver=$(magma -b -e 'a, b, c := GetVersion(); printf "%o.%o-%o\n", a, b, c; quit;' 2>/dev/null | tail -1)
+    magma_ver=$(magma -b -e 'a, b, c := GetVersion(); printf "%o.%o-%o\n", a, b, c; quit;' | tail -1)
+    [ -n "$magma_ver" ] || { echo "magma version probe failed (empty output)" >&2; exit 1; }
     hostname=$(hostname)
     cpu=$(lscpu | awk -F: '/Model name/ {sub(/^ +/, "", $2); print $2; exit}')
     {
@@ -89,7 +90,7 @@ run_cell() {
             printf "%s\t%s\t%s\t%s\t-\terror\n" "$label" "$dd" "$alg" "$budget" >> "$TSV"
             echo "  ! $label D=$dd alg=$alg exit=0 but no TSV row in output" >&2
             mkdir -p failures
-            cp "$tmp" "failures/${label//\//_}_D${dd}_${alg}.log" 2>/dev/null || true
+            cp "$tmp" "failures/${label//\//_}_D${dd}_${alg}.log"
         fi
     else
         local status
