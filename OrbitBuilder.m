@@ -317,8 +317,7 @@ intrinsic IsogenyOrbitBuilder(R::AlgEtQOrd, D::RngIntElt : dual_only:=false) -> 
 end intrinsic;
 
 intrinsic DualIsogenies_FromOrbit(R::AlgEtQOrd,D::RngIntElt : only_square_divisors:=false)->Assoc
-{Given the Frobenius order R of an isogeny class of ordinary squarefree abelian varieties over a finite field and an integer D>1, it returns an associative array isog, indexed by divisors d>1 of D where isog[d] is a sequence of isogenies from A to the dual of A, representing all equivalence classes of such isogenies.
-tuples of the form < [* w, aa *] , [* wt, aat *], IV , IVdual , x > where
+{Given the Frobenius order R of an isogeny class of ordinary squarefree abelian varieties over a finite field and an integer D>1, it returns an associative array isog, indexed by divisors d>1 of D where isog[d] is a sequence of isogenies from A to the dual of A, representing all equivalence classes of such isogenies. Each isogeny is a tuple of the form < [* w, aa *] , [* wt, aat *], IV , IVdual , x > where
 - IV is the distinguished representative of the ideal class [* w , aa *];
 - IVdual = ComplexConjugate(TraceDualIdeal(IV));
 - [* wt , aat *] is the ideal class of the dual vertex
