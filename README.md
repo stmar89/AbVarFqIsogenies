@@ -55,7 +55,7 @@ Run either from the repo directory:
 magma magma_ex_2.11.a_ac.m
 ```
 
-To adapt an example to your own isogeny class, replace the Weil polynomial `h` with your own and keep everything else unchanged.
+Example 3.7 and 3.10 are specifically tailored to a particular isogeny class, but the other two may be adapted to any isogeny class by replacing the Weil polynomial `h` with your own and keeping everything else unchanged.
 
 ---
 

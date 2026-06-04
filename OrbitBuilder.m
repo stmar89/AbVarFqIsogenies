@@ -325,7 +325,7 @@ tuples of the form < [* w, aa *] , [* wt, aat *], IV , IVdual , x > where
 - x*IV < IVdual is an inclusion of degree d.
 Note that IVdual might not be the distinguished representative of [* wt , aat *].
 The vararg only_square_divisors (default false) determines if d in the output must be a square.
-The intrinsic calls internally IsogenyOrbitBuilder.}
+The intrinsic calls internally IsogenyOrbitBuilder.
 
 Compare with DualIsogenies_FromIter, which carries out the same task using a different approach.
 }
