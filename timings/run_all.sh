@@ -102,7 +102,7 @@ run_cell() {
         printf "%s\t%s\t%s\t%s\t-\t%s\n" "$label" "$dd" "$alg" "$budget" "$status" >> "$TSV"
         echo "  ! $label D=$dd alg=$alg exit=$exit_code status=$status" >&2
         mkdir -p failures
-        cp "$tmp" "failures/${label//\//_}_D${dd}_${alg}.log" 2>/dev/null || true
+        cp "$tmp" "failures/${label//\//_}_D${dd}_${alg}.log"
     fi
     rm -f "$tmp"
 }
