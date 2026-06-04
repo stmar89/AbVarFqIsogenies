@@ -15,7 +15,7 @@ declare attributes AlgEtQOrd: QuotientsUnitsOverorders, // transversals in K of 
                               GSTTransversals, // Pic(R) / ker(e_S) meet ker(e_T)
                               GSTQuotients, // Pic(R) / ker(e_S) meet ker(e_T)
                               DoubleKernelQuotients, // ker(e_T) / ker(e_S) meet ker(e_T)
-                              TripleKernelQuotients, // ker(e_T) / (ker(e_T) meet (ker(e_S) + ker(e_U)))
+                              TripleKernelQuotients, // ker(e_T) / ((ker(e_S) meet ker(e_T)) + (ker(e_T) meet ker(e_U)))
                               DistinguishedRepsICM,
                               ExtensionHomPicardGroups; // not cached in AlgEt, since it is defined all pairs of overorders
 
@@ -55,7 +55,10 @@ end intrinsic;
 intrinsic SubIdealsOfIndexDividing(I::AlgEtQIdl,D:RngIntElt)->SetIndx[AlgEtQIdl]
 {Given a fractional R-ideal I and a positive integer D, returns all fractional R-ideals J < I such that [I:J] divides D. They are produced recursively from the maximal ones. I is not part of the output.}
     if D eq 1 then
-        return {@ I @};
+        // Only J=I has [I:J] dividing 1, but I is excluded by contract, so
+        // the output is empty (this makes IsogenyGraphBuilder_Naive(R,1) and
+        // IsogenyGraphBuilder(R,1) agree on the empty edge set).
+        return {@ @};
     end if;
     J:=D*I;
     queue:={@ I @};
@@ -179,7 +182,7 @@ intrinsic DoubleKernelQuotient(R::AlgEtQOrd, S::AlgEtQOrd, T::AlgEtQOrd)->.
 end intrinsic;
 
 intrinsic TripleKernelQuotient(R::AlgEtQOrd, S::AlgEtQOrd, T::AlgEtQOrd, U::AlgEtQOrd)->.
-{Given an order R and three overorders S,T,U of R, returns a transversal for ker(e_T) meet (ker(e_S) + ker(e_U)) within ker(e_T).  The output is stored in an associative array attribute of R, which is populated on demand.}
+{Given an order R and three overorders S,T,U of R, returns a transversal for the subgroup (ker(e_S) meet ker(e_T)) + (ker(e_T) meet ker(e_U)) within ker(e_T). Note that this denominator is in general a strict subgroup of ker(e_T) meet (ker(e_S) + ker(e_U)), so the transversal may be a refinement (some quotient classes split). The caller (GSTCompose) deduplicates compositions with AreIsogeniesGSTEquivalent, so the over-enumeration costs extra work but does not affect correctness. The output is stored in an associative array attribute of R, which is populated on demand.}
     if not assigned R`TripleKernelQuotients then
         R`TripleKernelQuotients := AssociativeArray();
     end if;

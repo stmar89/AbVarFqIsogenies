@@ -186,7 +186,7 @@ function compute_orbits_GSUT_on_Ms(T, Ms, R, Wt)
 end function;
 
 intrinsic MinimalIsogenyOrbitBuilder(R::AlgEtQOrd,D::RngIntElt) -> Assoc
-{Given the Frobenius order R of a squarefree ordinary isogeny class and a positive integer D, returns an associative array reps so that reps[d][t][s] is a sequence of minimal isogenies of degree d from the weak equivalence class s to the weak equivalence class t so that the set of such isogenies is obtained by taking orbits for the action of G_(S,T) on each representative.}
+{Given the Frobenius order R of a squarefree ordinary isogeny class and a positive integer D, returns an associative array reps_min indexed by the degrees d dividing D. reps_min[d] is a flat sequence of minimal isogenies of degree d (5-tuples <source, target, Is, It, x>), one per representative; the full set of degree-d minimal isogenies is recovered by taking orbits for the action of G_(S,T) on each representative.}
     we,we_map:=WeakEquivalenceClassMonoidAbstract(R);
     icm,icm_map:=IdealClassMonoidAbstract(R);
     PR,pR:=PicardGroup(R);
@@ -255,6 +255,9 @@ intrinsic IsogenyOrbitBuilder(R::AlgEtQOrd, D::RngIntElt : dual_only:=false) -> 
         for d2->E_min_d2 in reps_min do
             if d2 lt n and n mod d2 eq 0 then
                 d1 := n div d2;
+                // No minimal isogenies of degree d1 were produced (e.g. d1 is not
+                // an attained edge degree): nothing of degree n=d1*d2 to compose.
+                if not IsDefined(reps, d1) then continue; end if;
                 for E2 in E_min_d2 do
                     E2_s := E2[1][1]; E2_t := E2[2][1];
                     if not IsDefined(reps[d1], E2_s) then reps[d1][E2_s] := AssociativeArray(); end if;
@@ -317,8 +320,7 @@ intrinsic IsogenyOrbitBuilder(R::AlgEtQOrd, D::RngIntElt : dual_only:=false) -> 
 end intrinsic;
 
 intrinsic DualIsogenies_FromOrbit(R::AlgEtQOrd,D::RngIntElt : only_square_divisors:=false)->Assoc
-{Given the Frobenius order R of an isogeny class of ordinary squarefree abelian varieties over a finite field and an integer D>1, it returns an associative array isog, indexed by divisors d>1 of D where isog[d] is a sequence of isogenies from A to the dual of A, representing all equivalence classes of such isogenies.
-tuples of the form < [* w, aa *] , [* wt, aat *], IV , IVdual , x > where
+{Given the Frobenius order R of an isogeny class of ordinary squarefree abelian varieties over a finite field and an integer D>1, it returns an associative array isog, indexed by divisors d>1 of D where isog[d] is a sequence of isogenies from A to the dual of A, representing all equivalence classes of such isogenies. Each isogeny is a tuple of the form < [* w, aa *] , [* wt, aat *], IV , IVdual , x > where
 - IV is the distinguished representative of the ideal class [* w , aa *];
 - IVdual = ComplexConjugate(TraceDualIdeal(IV));
 - [* wt , aat *] is the ideal class of the dual vertex
@@ -338,7 +340,13 @@ Compare with DualIsogenies_FromIter, which carries out the same task using a dif
     homs := AssociativeArray();
     for s in Classes(we) do
         Ws := we_map(s);
-        t := ComplexConjugate(we_map(s))@@we_map;
+        // The dual of the WE class s is the class of TraceDualIdeal(ComplexConjugate(Ws)),
+        // matching dual_vertex/DualWKClasses (NonPrincipalPolarizations.m) and dual_we
+        // (IsogenyOrbitBuilder). Using ComplexConjugate(Ws) alone (without the trace dual)
+        // gives the wrong dual class for WE classes whose conjugate and trace-dual-of-
+        // conjugate differ, which made the t ne duals[s] filter below drop every isogeny
+        // out of those source classes (A3 undercount).
+        t := TraceDualIdeal(ComplexConjugate(we_map(s)))@@we_map;
         duals[s] := t;
         Wt := we_map(t);
         Wtdual := TraceDualIdeal(ComplexConjugate(Wt));
@@ -378,21 +386,30 @@ Compare with DualIsogenies_FromIter, which carries out the same task using a dif
                 aa := phi[1][2];
                 ap1 := Js[s] - aa;
                 ap2 := ap1 @ bar;
-                try
-                    b0 := ((ap1 @ i1) + (ap2 @ i2)) @@ prod_proj @@ beta;
-                catch err
-                    continue;
-                end try;
+                // The intended meaning is "skip this phi when the target has no
+                // preimage", so test that explicitly rather than catching every
+                // exception (which would silently drop isogenies on any unrelated
+                // downstream bug). Mirror the HasPreimage pattern in EquivIsogenies.m.
+                target := (ap1 @ i1) + (ap2 @ i2);
+                test, b0_pre := HasPreimage(target, prod_proj);
+                if not test then continue; end if;
+                test, b0 := HasPreimage(b0_pre, beta);
+                if not test then continue; end if;
                 for c in Kernel(beta) do
                     E:=GSTAct((b0 + c) @@ proj, phi);
                     _,_,I,Iv,_:=Explode(E);
-                    if not IsDefined(dual_reps,myHash(Iv)) then
+                    // The cached value (Itbar, iota) depends on the SOURCE I as well
+                    // as the target Iv (Itbar = ComplexConjugate(TraceDualIdeal(I))),
+                    // so the cache must be keyed on both to stay correct across phis
+                    // with different sources that happen to share a target Iv.
+                    cache_key := <myHash(I), myHash(Iv)>;
+                    if not IsDefined(dual_reps, cache_key) then
                         Itbar:=ComplexConjugate(TraceDualIdeal(I));
                         test,iota:=IsIsomorphic(Itbar,Iv); // iota*Iv=\bar(I^t)
                         assert test;
-                        dual_reps[myHash(Iv)]:=<Itbar,iota>;
+                        dual_reps[cache_key]:=<Itbar,iota>;
                     end if;
-                    Itbar,iota:=Explode(dual_reps[myHash(Iv)]);
+                    Itbar,iota:=Explode(dual_reps[cache_key]);
                     Ev:=<E[1],E[2],I,Itbar,iota*E[5]>;
                     Append(~ans[d],Ev);
                 end for;
@@ -423,8 +440,9 @@ intrinsic IsogenyGraphBuilder_FromOrbit(R::AlgEtQOrd,D::RngIntElt,A::Assoc) -> S
     return classes, edges_output;
 end intrinsic;
 
-intrinsic IsogenyGraphChecker(R::AlgEtQOrd, D::RngIntElt : reps:=0, classes:=0, edges:=0) -> SeqEnum, Assoc, Assoc
-{Checks that the number of isogenies between each pair of weak equivalence classes predicted by IsogenyGraphBuilder and IsogenyOrbitBuilder agrees}
+intrinsic IsogenyGraphChecker(R::AlgEtQOrd, D::RngIntElt : reps:=0, classes:=0, edges:=0) -> SeqEnum, Assoc, Assoc, Assoc, Assoc
+{Checks that the number of isogenies between each pair of weak equivalence classes predicted by IsogenyGraphBuilder and IsogenyOrbitBuilder agrees. Returns five values: mismatches (a sequence of <key, count_by_orbit, count_by_edge> triples for the keys where the two methods disagree; empty iff they agree), reps (the IsogenyOrbitBuilder output), edges (the IsogenyGraphBuilder edge array), by_orb, and by_edge (the two per-key isogeny counts).
+Optional arguments let the caller supply precomputed data to avoid recomputation: reps replaces the IsogenyOrbitBuilder call. The classes and edges arguments are correlated and must be supplied together (they are the two return values of IsogenyGraphBuilder); passing only one leaves the other at its default 0, which is not a valid edge array.}
     if reps cmpeq 0 then
         reps := IsogenyOrbitBuilder(R, D);
     end if;
@@ -461,8 +479,11 @@ end intrinsic;
 intrinsic ConstructOrbitGrphMultDir(R::AlgEtQOrd, reps::Assoc) -> GrphMultDir, SeqEnum, Assoc
 {Given the output reps produced by IsogenyOrbitBuilder, returns
  - the corresponding directed multi graph, with vertices labeled using integers 1,...,#vert.
- - the sequence of weak equivalence classes giving the vertices
- - an associative array, indexed by degrees d
+ - the sequence of weak equivalence classes (type AlgEtQWECMElt) giving the vertices
+ - an associative array edges, indexed by degrees d, where edges[d] is a sequence of
+   5-tuples <W_s, W_t, Is, It, x>. Here W_s, W_t are bare weak equivalence classes
+   (AlgEtQWECMElt) of the source and target -- NOT [* W, L *] pairs; Is, It are the
+   source/target fractional ideals; and x*Is < It is an inclusion of index d.
 }
     we, we_map := WeakEquivalenceClassMonoidAbstract(R);
     verts := [t : t in Classes(we)];
