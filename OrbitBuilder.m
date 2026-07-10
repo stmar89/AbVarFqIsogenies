@@ -1,5 +1,5 @@
 
-declare attributes AlgEtQOrd:MinimalIsogenies;
+declare attributes AlgEtQOrd:MinimalIsogeniesPerPrime;
 
 intrinsic GSTAct(g::GrpAbElt, phi::Tup)->Tup
 {Given an element g of Pic(R) and an isogeny phi from I to J represented by a tuple, returns g*phi as a tuple, mapping from the canonical rep of [g*I] to the canonical rep of [g*J].  Note that this only an action up to equivalence: g*h*phi may not be equal to g*(h*phi), but is guaranteed to be equivalent to it}
@@ -188,51 +188,55 @@ function compute_orbits_GSUT_on_Ms(T, Ms, R, Wt)
     return orbits;
 end function;
 
-intrinsic MinimalIsogenyOrbitBuilder(R::AlgEtQOrd,D::RngIntElt) -> Assoc
-{Given the Frobenius order R of a squarefree ordinary isogeny class and a positive integer D, returns an associative array reps so that reps[d][t][s] is a sequence of minimal isogenies of degree d from the weak equivalence class s to the weak equivalence class t so that the set of such isogenies is obtained by taking orbits for the action of G_(S,T) on each representative.}
-    if not assigned R`MinimalIsogenies then
-        R`MinimalIsogenies := AssociativeArray(:Default:=[]);
+intrinsic MinimalIsogenyOrbitBuilderPerPrime(R::AlgEtQOrd,P::AlgEtQIdl) -> Assoc
+{Given the Frobenius order R of a squarefree ordinary isogeny class and a maximal ideal P of R, returns an associative array reps so that reps[t][s] is a sequence of minimal isogenies xI<J such that J/xI=R/P from the weak equivalence class s to the weak equivalence class t so that the set of such isogenies is obtained by taking orbits for the action of G_(S,T) on each representative.}
+    if not assigned R`MinimalIsogeniesPerPrime then
+        R`MinimalIsogeniesPerPrime := AssociativeArray(:Default:=[]);
     end if;
-    if IsDefined(R`MinimalIsogenies, D) then
+    if IsDefined(R`MinimalIsogenies, P) then
         return R`MinimalIsogenies;
     end if;
-    F := Factorization(D);
-    for pair in F do
-        p, e := Explode(pair);
-        N := LCM([Index(R, P) : P in PrimesAbove(p*R)]);
-        N := GCD(N, p^e);
-        if not IsDefined(R`MinimalIsogenies, N) then
-            known := {q : q in Divisors(N) | IsDefined(R`MinimalIsogenies, q)};
-            we,we_map:=WeakEquivalenceClassMonoidAbstract(R);
-            icm,icm_map:=IdealClassMonoidAbstract(R);
-            PR,pR:=PicardGroup(R);
+    we,we_map:=WeakEquivalenceClassMonoidAbstract(R);
+    icm,icm_map:=IdealClassMonoidAbstract(R);
+    PR,pR:=PicardGroup(R);
 
-            // a 1-dimensional array
-            // reps_min[dM] is the sequence of minimal isogenies of degree dM
-            for t in Classes(we) do
-                T := MultiplicatorRing(t);
-                eT := ExtensionHomPicardGroupsOverOrders(R, T);
-                Wt := we_map(t);
-                Ms := [M : M in IntermediateIdeals(Wt, N*Wt : Maximal:=true) | N mod Index(Wt, M) eq 0 and Index(Wt, M) notin known]; //sub-frac.R-ideals M<Wt s.t. [Wt:M]|N
-                Ms:=compute_orbits_GSUT_on_Ms(T, Ms, R, Wt);
-                for M in Ms do
-                    dM := Index(Wt,M);
-                    source_M := M@@icm_map;
-                    s := WEClass(source_M);
-                    aaS := PicClass(source_M);
-                    WsIaa, Iaa, aa := DistinguishedRepsICM(s, aaS);
-                    test, x := IsIsomorphic(M, WsIaa); // x*Ws*Iaa = M
-                    assert test; // sanity check
-                    label := <[* s,aaS *],[* t, PR.0@eT *], WsIaa, Wt, x>;
-                    for olabel in R`MinimalIsogenies[dM] do
-                        assert2 not AreIsogeniesEquivalent(label[5], label[3], label[4], olabel[5], olabel[3], olabel[4]);
-                    end for;
-                    Append(~R`MinimalIsogenies[dM], label);
-                end for;
+    // a 1-dimensional array
+    // reps_min[dM] is the sequence of minimal isogenies of degree dM
+    for t in Classes(we) do
+        T := MultiplicatorRing(t);
+        eT := ExtensionHomPicardGroupsOverOrders(R, T);
+        Wt := we_map(t);
+        Ms := [M : M in IntermediateIdeals(Wt, P*Wt : Maximal:=true)]; //sub-frac.R-ideals M<Wt s.t. Wt/M = R/P
+        Ms:=compute_orbits_GSUT_on_Ms(T, Ms, R, Wt);
+        for M in Ms do
+            source_M := M@@icm_map;
+            s := WEClass(source_M);
+            aaS := PicClass(source_M);
+            WsIaa, Iaa, aa := DistinguishedRepsICM(s, aaS);
+            test, x := IsIsomorphic(M, WsIaa); // x*Ws*Iaa = M
+            assert test; // sanity check
+            label := <[* s,aaS *],[* t, PR.0@eT *], WsIaa, Wt, x>;
+            for olabel in R`MinimalIsogenies[P] do
+                assert2 not AreIsogeniesEquivalent(label[5], label[3], label[4], olabel[5], olabel[3], olabel[4]);
             end for;
+            Append(~R`MinimalIsogeniesPerPrime[P], label);
+        end for;
+    end for;
+    return R`MinimalIsogeniesPerPrime[P];
+end intrinsic;
+
+intrinsic MinimalIsogenyOrbitBuilder(R::AlgEtQOrd,D::RngIntElt) -> Assoc
+{Given the Frobenius order R of a squarefree ordinary isogeny class and a positive integer D, returns an associative array reps so that reps[d][t][s] is a sequence of minimal isogenies of degree d from the weak equivalence class s to the weak equivalence class t so that the set of such isogenies is obtained by taking orbits for the action of G_(S,T) on each representative.}
+    // we are not caching it: this is very fast, and we do not have to worry about adding the same things multiple 
+    // times when there are multiple primes with the same norm.
+    output:=[];
+    pp:=PrimesAbove(D*R);
+    for P in pp do
+        if D mod Index(R,P) eq 0 then
+            Append(~output,MinimalIsogeniesPerPrime(R,P));
         end if;
     end for;
-    return R`MinimalIsogenies;
+    return output;
 end intrinsic;
 
 intrinsic IsogenyOrbitBuilder(R::AlgEtQOrd, D::RngIntElt : dual_only:=false) -> Assoc
