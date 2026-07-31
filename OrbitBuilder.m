@@ -292,19 +292,12 @@ intrinsic IsogenyOrbitBuilder(R::AlgEtQOrd, D::RngIntElt : dual_only:=false) -> 
                             if not IsDefined(reps[n], E2_t) then reps[n][E2_t] := AssociativeArray(); end if;
                             if not IsDefined(reps[n][E2_t],E1_s) then reps[n][E2_t][E1_s]:=[]; end if;
                             for Ecomp in GSTCompose(E1, E2) do
-                                //if not exists{E:E in reps[n][E2[2][1]][E1[1][1]]|
                                 Ecomp_s := Ecomp[1][1]; Ecomp_t := Ecomp[2][1];
                                 if not IsDefined(reps[n], Ecomp_t) then reps[n][Ecomp_t] := AssociativeArray(); end if;
                                 if not IsDefined(reps[n][Ecomp_t], Ecomp_s) then reps[n][Ecomp_t][Ecomp_s] := []; end if;
                                 if not exists{E:E in reps[n][Ecomp_t][Ecomp_s]|
                                     AreIsogeniesGSTEquivalent(Ecomp,E)
                                     } then
-                                    // Asserts for debugging
-                                    //assert not exists{E:E in reps[n][Ecomp[2][1]][Ecomp[1][1]]|AreIsogeniesEquivalent(Ecomp[5],Ecomp[3],Ecomp[4],E[5],E[3],E[4])};
-                                    //if #reps[n][Ecomp[2][1]][Ecomp[1][1]] eq 1 then
-                                    //    EE := reps[n][Ecomp[2][1]][Ecomp[1][1]][1];
-                                    //    assert not AreIsogeniesEquivalent(Ecomp[5],Ecomp[3],Ecomp[4],EE[5],EE[3],EE[4]);
-                                    //end if;
                                     Append(~reps[n][Ecomp_t][Ecomp_s], Ecomp);
                                 end if;
                             end for;
@@ -324,11 +317,6 @@ intrinsic IsogenyOrbitBuilder(R::AlgEtQOrd, D::RngIntElt : dual_only:=false) -> 
                 if dual_only and t ne dual_we[s] then
                     continue;
                 end if;
-                // For debugging
-                //if #reps_d_t_s eq 2 then
-                //    phi, psi := Explode(reps_d_t_s);
-                //    assert not AreIsogeniesEquivalent(phi[5],phi[3],phi[4],psi[5],psi[3],psi[4]);
-                //end if;
                 reps_output_d cat:=reps_d_t_s;
             end for;
         end for;
