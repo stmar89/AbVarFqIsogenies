@@ -20,6 +20,8 @@ def split_sections(input_file, output_dir):
     for i in range(1, len(parts), 2):
         name = parts[i]
         body = parts[i + 1].strip()
+        if name in sections:
+            raise ValueError("duplicate section: " + name)
         sections[name] = body
 
     for name, body in sections.items():
